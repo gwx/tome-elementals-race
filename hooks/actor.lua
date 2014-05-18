@@ -88,3 +88,15 @@ hook = function(self, data)
 	return true
 end
 class:bindHook('Actor:postUseTalent', hook)
+
+-- Actor:getTalentFullDescription:ressources
+hook = function(self, data)
+	local t, d = data.t, data.str
+	if t.essence then
+		local amount = util.getval(t.essence, self, t)
+		d:add({'color',0x6f,0xff,0x83}, 'Essence cost: ',
+					{'color',164,190,77}, ''..util.getval(t.essence, self, t)..'%',
+					true)
+	end
+end
+class:bindHook('Actor:getTalentFullDescription:ressources', hook)

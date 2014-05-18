@@ -40,9 +40,9 @@ local shader = require "engine.Shader"
 	local font_sha = self.font_sha
 	local sfont_sha = self.sfont_sha
 
-	local jb_c = {0x83/255, 0x7b/255, 0x33/255}
+	local jb_c = {90/255, 90/255, 90/255}
 	local jb_sha = shader.new("resources", {require_shader=4, delay_load=true, color=jb_c, speed=1000, distort={1.5,1.5}})
-	local essence_c = {0x94/255, 0xdf/255, 0xe8/255}
+	local essence_c = {164/255, 190/255, 77/255}
 	local essence_sha = shader.new("resources", {require_shader=4, delay_load=true, color=essence_c, speed=1000, distort={1.5,1.5}})
 
 	-- Jagged Body health bar
