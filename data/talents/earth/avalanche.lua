@@ -15,6 +15,7 @@
 
 
 local stats = require 'engine.interface.ActorStats'
+local object = require 'mod.class.Object'
 
 newTalentType {
 	type = 'elemental/avalanche',
@@ -71,7 +72,70 @@ newTalent {
 		self:talentTemporaryValue(p, 'combat_atk', t.accuracy(self, t))
 	end,
 	recompute_passives = {stats = {stats.STAT_STR,},},
+	on_pre_use = function(self, t, silent)
+		if self:hasEffect('EFF_ZERO_GRAVITY') or false then
+			if not silent then
+				game.logPlayer(self, 'You must be grounded to use this talent.')
+			end
+			return false
+		end
+		return true
+	end,
+	target = function(self, t)
+		return {type = 'hit', range = t.range(self, t), talent = t,}
+	end,
 	action = function(self, t)
+		local tg = self:getTalentTarget(t)
+		local x, y = self:getTarget(tg)
+		if not x or not y then return end
+
+		self:project(tg, x, y, DamageType.PHYSICAL, t.damage(self, t), {type = 'archery'})
+		local terrain_projector = function(x, y, tg, self)
+			local oe = game.level.map(x, y, Map.TERRAIN)
+			if oe and oe.special then return end
+			if oe and oe:attr('temporary') then return end
+			if game.level.map:checkAllEntities(x, y, 'block_move') then return end
+
+			local e = object.new{
+				old_feat = oe,
+				type = oe.type, subtype = oe.subtype,
+				name = self.name:capitalize()..'\'s Boulder',
+				image = 'terrain/huge_rock.png',
+				display = '#', color=colors.WHITE, --back_color=colors.DARK_GREY,
+				always_remember = true,
+				desc = 'a thrown boulder',
+				type = 'wall',
+				can_pass = {pass_wall=1},
+				does_block_move = true,
+				show_tooltip = true,
+				block_move = true,
+				block_sight = true,
+				temporary = t.duration(self, t) + 1,
+				x = x, y = y,
+				canAct = false,
+				act = function(self)
+					self:useEnergy()
+					self.temporary = self.temporary - 1
+					if self.temporary <= 0 then
+						game.level.map(self.x, self.y, engine.Map.TERRAIN, self.old_feat)
+						game.level:removeEntity(self)
+						game.level.map:updateMap(self.x, self.y)
+					end
+				end,
+				dig = function(src, x, y, old)
+					game.level:removeEntity(old)
+					game.level.map:updateMap(self.x, self.y)
+					return nil, old.old_feat
+				end,
+				summoner_gain_exp = true,
+				summoner = self,}
+			e.tooltip = mod.class.Grid.tooltip
+			game.level:addEntity(e)
+			game.level.map(x, y, Map.TERRAIN, e)
+			--game.level.map:updateMap(x, y)
+		end
+		self:project(tg, x, y, terrain_projector)
+
 		return true
 	end,
 	info = function(self, t)
