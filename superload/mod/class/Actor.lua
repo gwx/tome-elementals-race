@@ -15,6 +15,7 @@
 
 
 local _M = loadPrevious(...)
+local eutil = require 'elementals-race.util'
 
 -- Learn Essence Pool
 local learnPool = _M.learnPool
@@ -36,6 +37,66 @@ function _M:regenResources()
 			self.life_regen * util.bound((self.healing_factor or 1), 0, 2.5)
 	end
 	regenResources(self)
+end
+
+-- Add in passive updates on stat changes
+local learnTalent = _M.learnTalent
+function _M:learnTalent(t_id, force, nb, extra)
+	if learnTalent(self, t_id, force, nb, extra) then
+		local t = self:getTalentFromId(t_id)
+		if t.recompute_passives then
+			self.recompute_passives = self.recompute_passives or {stats = {}}
+			for _, stat in pairs(t.recompute_passives.stats or {}) do
+				local self_stats = self.recompute_passives.stats
+				self_stats[stat] = self_stats[stat] or {}
+				self_stats[stat][t_id] = true
+			end
+		end
+		return true
+	end
+end
+
+local unlearnTalent = _M.unlearnTalent
+function _M:unlearnTalent(t_id, nb, no_unsustain, extra)
+	if unlearnTalent(self, t_id, nb, no_unsustain, extra) then
+		-- Strip out passive updates on stat changes
+		if self:getTalentLevelRaw(t_id) <= 0 then
+			local t = self:getTalentFromId(t_id)
+			if t.recompute_passives then
+				self.recompute_passives = self.recompute_passives or {stats = {}}
+				for _, stat in pairs(t.recompute_passives.stats or {}) do
+					local self_stats = self.recompute_passives.stats
+					self_stats[stat] = self_stats[stat] or {}
+					self_stats[stat][t_id] = nil
+				end
+			end
+		end
+		return true
+	end
+end
+
+-- Check for recompute_passives on talents.
+local onStatChange = _M.onStatChange
+function _M:onStatChange(stat, v)
+	onStatChange(self, stat, v)
+	for tid, _ in pairs(eutil.get(self, 'recompute_passives', 'stats', stat) or {}) do
+		local t = self:getTalentFromId(tid)
+		if t.passives then
+			self.talents_learn_vals[t.id] = self.talents_learn_vals[t.id] or {}
+			local p = self.talents_learn_vals[t.id]
+
+			if p.__tmpvals then for i = 1, #p.__tmpvals do
+					self:removeTemporaryValue(p.__tmpvals[i][1], p.__tmpvals[i][2])
+			end end
+
+			if self:knowTalent(tid) then
+				self.talents_learn_vals[t.id] = {}
+				t.passives(self, t, self.talents_learn_vals[t.id])
+			else
+				self.talents_learn_vals[t.id] = nil
+			end
+		end
+	end
 end
 
 return _M

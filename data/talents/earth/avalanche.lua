@@ -14,6 +14,8 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+local stats = require 'engine.interface.ActorStats'
+
 newTalentType {
 	type = 'elemental/avalanche',
 	name = 'Avalanche',
@@ -49,7 +51,7 @@ Also gives each blow a %d%% chance (scaling with Strength) to daze the enemy for
 newTalent {
 	name = 'Pinpoint Toss',
 	type = {'elemental/avalanche', 2,},
-	require = make_require(1),
+	require = make_require(2),
 	points = 5,
 	essence = 15,
 	cooldown = 8,
@@ -68,6 +70,7 @@ newTalent {
 	passives = function(self, t, p)
 		self:talentTemporaryValue(p, 'combat_atk', t.accuracy(self, t))
 	end,
+	recompute_passives = {stats = {stats.STAT_STR,},},
 	action = function(self, t)
 		return true
 	end,

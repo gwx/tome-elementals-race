@@ -13,6 +13,8 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+local stats = require 'engine.interface.ActorStats'
+
 newTalentType {
 	type = 'elemental/mountain',
 	name = 'Mountain',
@@ -53,6 +55,7 @@ newTalent {
 		self:talentTemporaryValue(p, 'jaggedbody_reflect', t.reflect(self, t))
 		self:talentTemporaryValue(p, 'jaggedbody_regen', t.regen(self, t))
 	end,
+	recompute_passives = {stats = {stats.STAT_CON,},},
 	info = function(self, t)
 		return ('Your earthen body sprouts many sharp, rock-hard protrusions, blocking up to %d damage (scaling with Constitution) of any kind, recharging by 2%% per turn. In additon, %d%% of all physical damage this blocks will be returned to the attacker.')
 			:format(t.power(self, t), t.reflect(self, t) * 100)
