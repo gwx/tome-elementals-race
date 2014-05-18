@@ -63,7 +63,7 @@ newTalent {
 		return self:combatTalentPhysicalDamage(t, 50, 300)
 	end,
 	range = function(self, t)
-		return math.min(10, 3 + self:getStr(5))
+		return math.min(10, math.floor(2 + self:getStr(6)))
 	end,
 	duration = function(self, t)
 		return math.floor(self:combatTalentScale(self:getStr(5, true), 2, 5))
