@@ -94,7 +94,6 @@ newTalent {
 			local oe = game.level.map(x, y, Map.TERRAIN)
 			if oe and oe.special then return end
 			if oe and oe:attr('temporary') then return end
-			if game.level.map:checkAllEntities(x, y, 'block_move') then return end
 
 			local e = object.new{
 				old_feat = oe,
