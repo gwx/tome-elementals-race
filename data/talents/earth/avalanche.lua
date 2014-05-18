@@ -136,6 +136,7 @@ newTalent {
 		end
 		self:project(tg, x, y, terrain_projector)
 
+		game:playSoundNear(self, "talents/ice")
 		return true
 	end,
 	info = function(self, t)
