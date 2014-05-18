@@ -14,6 +14,8 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 local hook = function(self, data)
+local shader = require "engine.Shader"
+
 	local a = data.a
   local player = data.player
 	local x = data.x
@@ -25,10 +27,10 @@ local hook = function(self, data)
 
 	local sshat = self.sshat
 	local bshat = self.bshat
-	local life_sha = self.life_sha
-	local equi_sha = self.equi_sha
-	local life_c = self.life_c
-	local equi_c = self.equi_c
+	--local life_c = self.life_c
+	--local life_sha = self.life_sha
+	--local equi_c = self.equi_c
+	--local equi_sha = self.equi_sha
 	local shat = self.shat
 	local fshat = self.fshat
 	local fshat_life_dark = self.fshat_life_dark
@@ -38,15 +40,20 @@ local hook = function(self, data)
 	local font_sha = self.font_sha
 	local sfont_sha = self.sfont_sha
 
+	local jb_c = {0x83/255, 0x7b/255, 0x33/255}
+	local jb_sha = shader.new("resources", {require_shader=4, delay_load=true, color=jb_c, speed=1000, distort={1.5,1.5}})
+	local essence_c = {0x94/255, 0xdf/255, 0xe8/255}
+	local essence_sha = shader.new("resources", {require_shader=4, delay_load=true, color=essence_c, speed=1000, distort={1.5,1.5}})
+
 	-- Jagged Body health bar
 	local jb = player:knowTalent('T_JAGGED_BODY')
 	if jb and not player._hide_resource_jaggedbody then
 		sshat[1]:toScreenFull(x-6, y+8, sshat[6], sshat[7], sshat[2], sshat[3], 1, 1, 1, a)
 		bshat[1]:toScreenFull(x, y, bshat[6], bshat[7], bshat[2], bshat[3], 1, 1, 1, a)
-		if life_sha.shad then life_sha:setUniform("a", a) life_sha.shad:use(true) end
+		if jb_sha.shad then jb_sha:setUniform("a", a) jb_sha.shad:use(true) end
 		local p = math.min(1, math.max(0, player.jaggedbody / player.max_jaggedbody))
-		shat[1]:toScreenPrecise(x+49, y+10, shat[6] * p, shat[7], 0, p * 1/shat[4], 0, 1/shat[5], life_c[1], life_c[2], life_c[3], a)
-		if life_sha.shad then life_sha.shad:use(false) end
+		shat[1]:toScreenPrecise(x+49, y+10, shat[6] * p, shat[7], 0, p * 1/shat[4], 0, 1/shat[5], jb_c[1], jb_c[2], jb_c[3], a)
+		if jb_sha.shad then jb_sha.shad:use(false) end
 
 		local jb_regen = player.jaggedbody_regen
 		if not self.res.jb or self.res.jb.vc ~= player.jaggedbody or self.res.jb.vm ~= player.max_jaggedbody or self.res.jb.vr ~= jb_regen then
@@ -77,10 +84,10 @@ local hook = function(self, data)
 	if player:knowTalent('T_ESSENCE_POOL') and not player._hide_resource_essence then
 		sshat[1]:toScreenFull(x-6, y+8, sshat[6], sshat[7], sshat[2], sshat[3], 1, 1, 1, a)
 		bshat[1]:toScreenFull(x, y, bshat[6], bshat[7], bshat[2], bshat[3], 1, 1, 1, a)
-		if equi_sha.shad then equi_sha:setUniform("a", a) equi_sha.shad:use(true) end
+		if essence_sha.shad then essence_sha:setUniform("a", a) essence_sha.shad:use(true) end
 		local p = math.min(1, math.max(0, player.essence / player.max_essence))
-		shat[1]:toScreenPrecise(x+49, y+10, shat[6] * p, shat[7], 0, p * 1/shat[4], 0, 1/shat[5], equi_c[1], equi_c[2], equi_c[3], a)
-		if equi_sha.shad then equi_sha.shad:use(false) end
+		shat[1]:toScreenPrecise(x+49, y+10, shat[6] * p, shat[7], 0, p * 1/shat[4], 0, 1/shat[5], essence_c[1], essence_c[2], essence_c[3], a)
+		if essence_sha.shad then essence_sha.shad:use(false) end
 
 		local regen = player.essence_regen
 		local max = player.max_essence
