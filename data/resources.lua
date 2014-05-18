@@ -13,12 +13,9 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-local _M = loadPrevious(...)
 
-_M.TOOLTIP_JAGGEDBODY = [[#GOLD#Jagged Body#LAST#
-Your earthen body sprouts many sharp, rock-hard protrusions, blocking damage of any kind.]]
+local resources = require 'engine.interface.ActorResource'
 
-_M.TOOLTIP_ESSENCE = [[#GOLD#Essence#LAST#
-This is your ability to manipulate earth. It regenerates at the same rate as your life, and your Jagged Body shield is increased by 33% of all essence spent.]]
+resources:defineResource('Jagged Body', 'jaggedbody', 'T_JAGGED_BODY', 'jaggedbody_regen', 'Your earthen body sprouts many sharp, rock-hard protrusions, blocking damage of any kind.', 0, 0)
 
-return _M
+resources:defineResource('Essence', 'essence', 'T_ESSENCE_POOL', 'essence_regen', 'Essence is your ability to manipulate the earth. It regenerates at the same rate as your life and your jagged body shield is increased by 33% of all essence spent.')

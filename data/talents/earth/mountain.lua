@@ -33,7 +33,7 @@ newTalent {
 	mode = 'passive',
 	no_unlearn_last = true,
 	callbackOnRest = function(self)
-		return self.jagged_body_regen > 0 and self.jagged_body < self.max_jagged_body
+		return self.jaggedbody_regen > 0 and self.jaggedbody < self.max_jaggedbody
 	end,
 	power = function(self, t)
 		return math.floor(
@@ -43,11 +43,15 @@ newTalent {
 	regen = function(self, t)
 		return 0.02 * t.power(self, t)
 	end,
+	on_learn = function(self, t)
+		if self:getTalentLevelRaw(t) == 1 then
+			self.jaggedbody = t.power(self, t)
+		end
+	end,
 	passives = function(self, t, p)
-		self:talentTemporaryValue(p, 'max_jagged_body', t.power(self, t))
-		if not self.jagged_body then self.jagged_body = self.max_jagged_body end
-		self:talentTemporaryValue(p, 'jagged_body_reflect', t.reflect(self, t))
-		self:talentTemporaryValue(p, 'jagged_body_regen', t.regen(self, t))
+		self:talentTemporaryValue(p, 'max_jaggedbody', t.power(self, t))
+		self:talentTemporaryValue(p, 'jaggedbody_reflect', t.reflect(self, t))
+		self:talentTemporaryValue(p, 'jaggedbody_regen', t.regen(self, t))
 	end,
 	info = function(self, t)
 		return ('Your earthen body sprouts many sharp, rock-hard protrusions, blocking up to %d damage (scaling with Constitution) of any kind, recharging by 2%% per turn. In additon, %d%% of all physical damage this blocks will be returned to the attacker.')

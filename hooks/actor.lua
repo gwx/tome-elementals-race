@@ -15,29 +15,30 @@
 
 
 local DamageType = require 'engine.DamageType'
-local util = require 'elementals-race.util'
+local eutil = require 'elementals-race.util'
 local hook
 
+-- Actor:takeHit
 hook = function(self, data)
 	local value = data.value
 	local src = data.src
-	local damtype = util.get(data, 'death_note', 'damtype')
+	local damtype = eutil.get(data, 'death_note', 'damtype')
 
 	-- Jagged Body
-	if value > 0 and self.jagged_body then
-		local blocked = math.min(self.jagged_body, value)
-		self.jagged_body = self.jagged_body - blocked
+	if value > 0 and self:knowTalent('T_JAGGED_BODY') then
+		local blocked = math.min(self.jaggedbody, value)
+		self.jaggedbody = self.jaggedbody - blocked
 		value = value - blocked
 		game:delayedLogDamage(
 			src, self, 0, ('#SLATE#(%d absorbed)#LAST#'):format(blocked), false)
 
 		if damtype == DamageType.PHYSICAL and
 			src.x and src.y and not src.dead and
-			not self.jagged_body_reflecting
+			not self.jaggedbody_reflecting
 		then
-			self.jagged_body_reflecting = true
+			self.jaggedbody_reflecting = true
 
-			local reflected = self.jagged_body_reflect * blocked
+			local reflected = self.jaggedbody_reflect * blocked
 			src:takeHit(reflected, self)
 
 			game:delayedLogDamage(
@@ -47,7 +48,7 @@ hook = function(self, data)
 				self, src, 'reflection',
 				'#CRIMSON##Source# reflects damage back to #Target#!#LAST#')
 
-			self.jagged_body_reflecting = nil
+			self.jaggedbody_reflecting = nil
 		end
 	end
 
@@ -56,11 +57,34 @@ hook = function(self, data)
 end
 class:bindHook('Actor:takeHit', hook)
 
+-- Actor:preUseTalent
 hook = function(self, data)
-	if self.jagged_body_regen then
-		self.jagged_body = math.min((self.jagged_body or 0) + self.jagged_body_regen,
-																self.max_jagged_body)
+	local ab, silent = data.t, data.silent
+	-- Check for essence requirements.
+	if not self:attr('force_talent_ignore_ressources') then
+		if ab.essence and (100 * self:getEssence() / self:getMaxEssence()) < ab.essence then
+			if not silent then
+				game.logPlayer(self, "You do not have enough essence to cast %s.", ab.name)
+			end
+			return true
+		end
 	end
+end
+class:bindHook('Actor:preUseTalent', hook)
+
+-- Actor:postUseTalent
+hook = function(self, data)
+	local ab, trigger = data.t, data.trigger
+	-- Use up essence
+	if not self:attr('force_talent_ignore_ressources') then
+		if ab.essence and not self:attr('zero_resource_cost') then
+			trigger = true
+			local value = util.getval(ab.essence, self, ab) * 0.01 * self:getMaxEssence()
+			self:incEssence(-value)
+			self:incJaggedbody(value * 0.33)
+		end
+	end
+	data.trigger = trigger
 	return true
 end
-class:bindHook('Actor:actBase:Effects', hook)
+class:bindHook('Actor:postUseTalent', hook)

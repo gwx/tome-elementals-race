@@ -26,29 +26,33 @@ local hook = function(self, data)
 	local sshat = self.sshat
 	local bshat = self.bshat
 	local life_sha = self.life_sha
+	local equi_sha = self.equi_sha
 	local life_c = self.life_c
+	local equi_c = self.equi_c
 	local shat = self.shat
 	local fshat = self.fshat
 	local fshat_life_dark = self.fshat_life_dark
 	local fshat_life = self.fshat_life
+	local fshat_equi_dark = self.fshat_equi_dark
+	local fshat_equi = self.fshat_equi
 	local font_sha = self.font_sha
 	local sfont_sha = self.sfont_sha
 
 	-- Jagged Body health bar
 	local jb = player:knowTalent('T_JAGGED_BODY')
-	if jb and not player._hide_resource_jagged_body then
+	if jb and not player._hide_resource_jaggedbody then
 		sshat[1]:toScreenFull(x-6, y+8, sshat[6], sshat[7], sshat[2], sshat[3], 1, 1, 1, a)
 		bshat[1]:toScreenFull(x, y, bshat[6], bshat[7], bshat[2], bshat[3], 1, 1, 1, a)
 		if life_sha.shad then life_sha:setUniform("a", a) life_sha.shad:use(true) end
-		local p = math.min(1, math.max(0, player.jagged_body / player.max_jagged_body))
+		local p = math.min(1, math.max(0, player.jaggedbody / player.max_jaggedbody))
 		shat[1]:toScreenPrecise(x+49, y+10, shat[6] * p, shat[7], 0, p * 1/shat[4], 0, 1/shat[5], life_c[1], life_c[2], life_c[3], a)
 		if life_sha.shad then life_sha.shad:use(false) end
 
-		local jb_regen = player.jagged_body_regen
-		if not self.res.jb or self.res.jb.vc ~= player.jagged_body or self.res.jb.vm ~= player.max_jagged_body or self.res.jb.vr ~= jb_regen then
+		local jb_regen = player.jaggedbody_regen
+		if not self.res.jb or self.res.jb.vc ~= player.jaggedbody or self.res.jb.vm ~= player.max_jaggedbody or self.res.jb.vr ~= jb_regen then
 			self.res.jb = {
-				vc = player.jagged_body, vm = player.max_jagged_body, vr = jb_regen,
-				cur = {core.display.drawStringBlendedNewSurface(font_sha, (player.jagged_body < 0) and "???" or ("%d/%d"):format(player.jagged_body, player.max_jagged_body), 255, 255, 255):glTexture()},
+				vc = player.jaggedbody, vm = player.max_jaggedbody, vr = jb_regen,
+				cur = {core.display.drawStringBlendedNewSurface(font_sha, (player.jaggedbody < 0) and "???" or ("%d/%d"):format(player.jaggedbody, player.max_jaggedbody), 255, 255, 255):glTexture()},
 				regen={core.display.drawStringBlendedNewSurface(sfont_sha, ("%+0.2f"):format(jb_regen), 255, 255, 255):glTexture()},
 			}
 		end
@@ -60,12 +64,47 @@ local hook = function(self, data)
 		dt[1]:toScreenFull(x+144, y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 1, 1, 1, a)
 
 		local front = fshat_life_dark
-		if player.jagged_body >= player.max_jagged_body then front = fshat_life end
+		if player.jaggedbody >= player.max_jaggedbody then front = fshat_life end
 		front[1]:toScreenFull(x, y, front[6], front[7], front[2], front[3], 1, 1, 1, a)
-		self:showResourceTooltip(bx+x*scale, by+y*scale, fshat[6], fshat[7], "res:jaggedbody", self.TOOLTIP_JAGGED_BODY)
+		self:showResourceTooltip(bx+x*scale, by+y*scale, fshat[6], fshat[7], "res:jaggedbody", self.TOOLTIP_JAGGEDBODY)
 		x, y = self:resourceOrientStep(orient, bx, by, scale, x, y, fshat[6], fshat[7])
 	elseif game.mouse:getZone('res:jaggedbody') then
 		game.mouse:unregisterZone('res:jaggedbody')
+	end
+
+
+	-- Essence Pool
+	if player:knowTalent('T_ESSENCE_POOL') and not player._hide_resource_essence then
+		sshat[1]:toScreenFull(x-6, y+8, sshat[6], sshat[7], sshat[2], sshat[3], 1, 1, 1, a)
+		bshat[1]:toScreenFull(x, y, bshat[6], bshat[7], bshat[2], bshat[3], 1, 1, 1, a)
+		if equi_sha.shad then equi_sha:setUniform("a", a) equi_sha.shad:use(true) end
+		local p = math.min(1, math.max(0, player.essence / player.max_essence))
+		shat[1]:toScreenPrecise(x+49, y+10, shat[6] * p, shat[7], 0, p * 1/shat[4], 0, 1/shat[5], equi_c[1], equi_c[2], equi_c[3], a)
+		if equi_sha.shad then equi_sha.shad:use(false) end
+
+		local regen = player.essence_regen
+		local max = player.max_essence
+		if not self.res.essence or self.res.essence.vc ~= player.essence or self.res.essence.vm ~= max or self.res.essence.vr ~= regen then
+			self.res.essence = {
+				vc = player.essence, vm = max, vr = regen,
+				cur = {core.display.drawStringBlendedNewSurface(font_sha, (player.essence < 0) and "???" or ("%d/%d"):format(player.essence, player.max_essence), 255, 255, 255):glTexture()},
+				regen={core.display.drawStringBlendedNewSurface(sfont_sha, ("%+0.2f"):format(regen), 255, 255, 255):glTexture()},
+			}
+		end
+		local dt = self.res.essence.cur
+		dt[1]:toScreenFull(2+x+64, 2+y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 0, 0, 0, 0.7 * a)
+		dt[1]:toScreenFull(x+64, y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 1, 1, 1, a)
+		dt = self.res.essence.regen
+		dt[1]:toScreenFull(2+x+144, 2+y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 0, 0, 0, 0.7 * a)
+		dt[1]:toScreenFull(x+144, y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 1, 1, 1, a)
+
+		local front = fshat_equi_dark
+		if player.essence >= max then front = fshat_equi end
+		front[1]:toScreenFull(x, y, front[6], front[7], front[2], front[3], 1, 1, 1, a)
+		self:showResourceTooltip(bx+x*scale, by+y*scale, fshat[6], fshat[7], "res:essence", self.TOOLTIP_ESSENCE)
+		x, y = self:resourceOrientStep(orient, bx, by, scale, x, y, fshat[6], fshat[7])
+	elseif game.mouse:getZone('res:essence') then
+		game.mouse:unregisterZone('res:essence')
 	end
 
 	data.x = x

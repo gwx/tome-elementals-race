@@ -13,12 +13,29 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 local _M = loadPrevious(...)
 
-_M.TOOLTIP_JAGGEDBODY = [[#GOLD#Jagged Body#LAST#
-Your earthen body sprouts many sharp, rock-hard protrusions, blocking damage of any kind.]]
+-- Learn Essence Pool
+local learnPool = _M.learnPool
+function _M:learnPool(t)
+	local tt = self:getTalentTypeFrom(t.type[1])
+	if t.essence or t.sustain_essence then
+		self:checkPool(t.id, 'T_ESSENCE_POOL')
+	end
+	learnPool(self, t)
+end
 
-_M.TOOLTIP_ESSENCE = [[#GOLD#Essence#LAST#
-This is your ability to manipulate earth. It regenerates at the same rate as your life, and your Jagged Body shield is increased by 33% of all essence spent.]]
+local regenResources = _M.regenResources
+function _M:regenResources()
+	-- Update essence values with latest life values.
+	if self:knowTalent('T_ESSENCE_POOL') then
+		self.max_essence = self.max_life * 0.67
+		self.essence_regen =
+			self:attr('no_life_regen') and 0 or
+			self.life_regen * util.bound((self.healing_factor or 1), 0, 2.5)
+	end
+	regenResources(self)
+end
 
 return _M

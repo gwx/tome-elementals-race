@@ -45,3 +45,38 @@ Also gives each blow a %d%% chance (scaling with Strength) to daze the enemy for
 							t.getPercentInc(self, t) * 100,
 							t.daze(self, t))
 	end,}
+
+newTalent {
+	name = 'Pinpoint Toss',
+	type = {'elemental/avalanche', 2,},
+	require = make_require(1),
+	points = 5,
+	essence = 15,
+	cooldown = 8,
+	accuracy = function(self, t)
+		return self:combatTalentScale(t, 10, 20) * (5 + self:getStr(5, true))
+	end,
+	damage = function(self, t)
+		return self:combatTalentPhysicalDamage(t, 50, 300)
+	end,
+	range = function(self, t)
+		return math.min(10, 3 + self:getStr(5))
+	end,
+	duration = function(self, t)
+		return math.floor(self:combatTalentScale(self:getStr(5, true), 2, 5))
+	end,
+	passives = function(self, t, p)
+		self:talentTemporaryValue(p, 'combat_atk', t.accuracy(self, t))
+	end,
+	action = function(self, t)
+		return true
+	end,
+	info = function(self, t)
+		return ([[Rip an enormous bulk of stone out of the ground and throw it, dealing %d physical damage and leaving a stone wall there for %d turns.
+This also passively increases your accuracy by %d.
+Cannot be used while in water or floating.
+Damage, range, accuracy, and duration scale with Strength.]])
+			:format(t.damage(self, t),
+							t.duration(self, t),
+							t.accuracy(self, t))
+	end,}

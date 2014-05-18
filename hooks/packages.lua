@@ -16,7 +16,7 @@
 
 -- 1.1.5 require bug workaround. Mark all packages we're going to
 -- superload as unloaded.
-for _, p in pairs {} do
+for _, p in pairs {'Actor', 'interface.Combat',} do
 	package.loaded['mod.class.'..p] = nil
 end
 
