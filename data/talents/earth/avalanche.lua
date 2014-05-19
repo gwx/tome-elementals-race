@@ -222,7 +222,7 @@ newTalent {
 		return math.floor(4 + self:getStr(5, true))
 	end,
 	radius = 2,
-	tactical = {AREAATTACK = 3, DISABLE = {MAIM = 1,},},
+	tactical = {ATTACKAREA = 3, DISABLE = {MAIM = 1,},},
 	target = function(self, t)
 		return {type = 'ball',
 						range = util.getval(t.range, self, t),

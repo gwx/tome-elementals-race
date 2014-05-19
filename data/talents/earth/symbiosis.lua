@@ -44,3 +44,58 @@ Damage done increases with spellpower.]])
 				t.save_per(self, t),
 				t.save_max(self, t))
 	end,}
+
+newTalent {
+	name = 'Put Roots',
+	type = {'elemental/symbiosis', 2,},
+	require = make_require(2),
+	points = 5,
+	essence = 20,
+	cooldown = 25,
+	tactical = {ATTACKAREA = {NATURE = 1,}, DISABLE = {pin = 1,},},
+	range = 0,
+	radius = function(self, t)
+		return math.floor(1.5 + self:getTalentLevel(t) * 0.5)
+	end,
+	duration = function(self, t)
+		return math.floor(4.5 + self:getTalentLevel(t) * 0.5)
+	end,
+	healing = function(self, t)
+		return 0.1 + self:combatTalentSpellDamage(t, 0.2, 0.4)
+	end,
+	save = function(self, t)
+		return 8 + self:combatTalentSpellDamage(t, 6, 18)
+	end,
+	damage = function(self, t)
+		return self:combatTalentSpellDamage(t, 5, 40)
+	end,
+	target = function(self, t)
+		return {type = 'ball',
+						range = util.getval(t.range, self, t),
+						radius = util.getval(t.radius, self, t),
+						selffire = false, talent = t,}
+	end,
+	action = function(self, t)
+		local effect = game.level.map:addEffect(
+			self, self.x, self.y, t.duration(self, t),
+			DamageType.SYMBIOTIC_ROOTS, {
+				healing = t.healing(self, t),
+				save = t.save(self, t),
+				damage = t.damage(self, t),},
+			t.radius(self, t), 5, nil, {
+				type = 'moss',})
+		-- Let damage type know about original effect
+		effect.dam.effect = effect
+		game:playSoundNear(self, 'talents/slime')
+		return true
+	end,
+	info = function(self, t)
+		return ([[Send entangling roots out in radius %d for %d turns. While standing in them, the roots will increase your healing factor by %d%% and your physical save by %d. Any enemy moving through them wil take %d nature damage, and will be pinned for 4 turns the fourth and subsequent times which they receive damage.
+Healing factor, damage and pinning power increase with spellpower.]])
+			:format(
+				util.getval(t.radius, self, t),
+				util.getval(t.duration, self, t),
+				t.healing(self, t) * 100,
+				t.save(self, t),
+				Talents.damDesc(self, DamageType.NATURE, t.damage(self, t)))
+	end,}

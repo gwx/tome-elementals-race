@@ -115,3 +115,19 @@ newEffect {
 			self:removeEffect('EFF_BROKEN_SHELL', nil, true)
 		end
 	end,}
+
+newEffect {
+	name = 'SYMBIOTIC_ROOTS', image = 'talents/put_roots.png',
+	desc = 'Symbiotic Roots',
+	long_desc = function(self, eff)
+		return ('Symbiotic Roots have increased your healing factor by %d%% and your physical save by %d.')
+			:format(eff.healing * 100, eff.save)
+	end,
+	type = 'physical',
+	subtype = {nature = true, earth = true,},
+	status = 'beneficial',
+	parameters = {healing = 0.1, save = 10,},
+	activate = function(self, eff)
+		self:effectTemporaryValue(eff, 'healing_factor', eff.healing)
+		self:effectTemporaryValue(eff, 'combat_physresist', eff.save)
+	end,}

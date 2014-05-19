@@ -55,6 +55,27 @@ function _M.set(table, ...)
 end
 
 --[=[
+  Replace nested value with the result of applying f to it.
+	Return the new value.
+]=]
+function _M.update(f, table, ...)
+  if type(table) ~= 'table' then return end
+  local args = {...}
+  for i = 1, #args - 1 do
+    local key = args[i]
+    local subtable = table[key]
+    if not subtable then
+      subtable = {}
+      table[key] = subtable
+    end
+    table = subtable
+  end
+	local result = f(table[args[#args]])
+  table[args[#args]] = result
+	return result
+end
+
+--[=[
   If the source contains the given value.
   returns the key, the value, and if it succeeded.
 ]=]
