@@ -24,6 +24,12 @@ hook = function(self, data)
 	local src = data.src
 	local damtype = eutil.get(data, 'death_note', 'damtype')
 
+	-- Rock Shell Damage Reduction
+	if self:knowTalent('T_ROCK_SHELL') and value >= self.life * 0.3 then
+		local t = self:getTalentFromId('T_ROCK_SHELL')
+		value = value * (100 - t.damage_reduction(self, t)) * 0.01
+	end
+
 	-- Jagged Body
 	if value > 0 and self:knowTalent('T_JAGGED_BODY') then
 		local blocked = math.min(self.jaggedbody, value)
@@ -52,10 +58,37 @@ hook = function(self, data)
 		end
 	end
 
+	-- Rock Shell Life Save
+	if self:getTalentLevel('T_ROCK_SHELL') >= 5 and
+		value >= self.life - 1 and
+		not self:hasEffect('EFF_BROKEN_SHELL')
+	then
+		if not self.pending_rock_shell_break then
+			game:playSoundNear(self, 'talents/lightning_loud')
+			self.pending_rock_shell_break = true
+		end
+		if self.life < 1 then self.life = 1 end
+		local blocked = value - self.life + 1
+		game:delayedLogDamage(
+			src, self, 0, ('#RED#(%d negated)#LAST#'):format(blocked), false)
+		value = self.life - 1
+	end
+
 	data.value = value
 	return true
 end
 class:bindHook('Actor:takeHit', hook)
+
+
+-- Actor:actBase:Effects
+hook = function(self, data)
+	-- Break the rock shell.
+	if self.pending_rock_shell_break then
+		self:setEffect('EFF_BROKEN_SHELL', 1, {})
+		self.pending_rock_shell_break = nil
+	end
+end
+class:bindHook('Actor:actBase:Effects', hook)
 
 -- Actor:preUseTalent
 hook = function(self, data)

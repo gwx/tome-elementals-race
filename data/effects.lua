@@ -92,3 +92,26 @@ newEffect {
 			eff.save_id = self:addTemporaryValue('combat_spellresist', eff.save)
 		end
 	end,}
+
+newEffect {
+	name = 'BROKEN_SHELL',
+	desc = 'Broken Shell',
+	long_desc = function(self, eff)
+		return 'Your rock shell has broken, and will no longer prevent you from going below 1 Life. This effect will heal when you reach max Life.'
+	end,
+	type = 'other',
+	subtype = {earth = true,},
+	decrease = 0, no_remove = true,
+	status = 'detrimental',
+	parameters = {},
+	on_gain = function(self, eff)
+		return '#RED##Target#\'s rock shell has cracked open!#LAST#', '-Rock Shell'
+	end,
+	on_lose = function(self, eff)
+		return '#Target#\'s rock shell has been repaired!', '+Rock Shell'
+	end,
+	on_timeout = function(self, eff)
+		if self.life >= self.max_life then
+			self:removeEffect('EFF_BROKEN_SHELL', nil, true)
+		end
+	end,}

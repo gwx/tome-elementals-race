@@ -60,3 +60,36 @@ newTalent {
 		return ('Your earthen body sprouts many sharp, rock-hard protrusions, blocking up to %d damage (scaling with Constitution) of any kind, recharging by 2%% per turn. In additon, %d%% of all physical damage this blocks will be returned to the attacker.')
 			:format(t.power(self, t), t.reflect(self, t) * 100)
 	end,}
+
+-- TODO: Should only reduced phys/magic crit instead of all, but
+-- that's really complicated and this is sufficient for now.
+newTalent {
+	name = 'Rock Shell',
+	type = {'elemental/mountain', 2,},
+	require = make_require(2),
+	points = 5,
+	mode = 'passive',
+	crit_reduction = function(self, t)
+		return (0.5 + self:getCon(0.5, true)) * self:combatTalentScale(t, 3, 10)
+	end,
+	damage_reduction = function(self, t)
+		return math.min(50, (0.5 + self:getCon(0.5, true)) * self:combatTalentScale(t, 8, 30))
+	end,
+	armor = function(self, t)
+		return (0.5 + self:getCon(0.5, true)) * self:combatTalentScale(t, 8, 20)
+	end,
+	passives = function(self, t, p)
+		self:talentTemporaryValue(p, 'combat_armor', t.armor(self, t))
+		self:talentTemporaryValue(p, 'ignore_direct_crits', t.crit_reduction(self, t))
+	end,
+	recompute_passives = {stats = {stats.STAT_CON,},},
+	info = function(self, t)
+		return ([[Your body is used to powerful blows and the ravages of magic, decreasing the chance to receive a critical strike by %d%%. Any damage that would deal over 30%% of your current Life is reduced by %d%%.
+Armor is increased by %d.
+At talent level 5, you may avoid mortal damage. For 1 turn all damage which would reduce you below 1 Life is ignored. This effect is regained when you reach full Life.
+Critical chance reduction, armor, and damage reduction scale with Constitution.]])
+			:format(
+				t.crit_reduction(self, t),
+				t.damage_reduction(self, t),
+				t.armor(self, t))
+	end,}
