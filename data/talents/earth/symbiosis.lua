@@ -39,5 +39,8 @@ newTalent {
 		return ([[The Jadir's body has become overgrown with thorny vines, any enemy attacking in melee is poisoned and suffers %d nature damage each turn for 3 turns, halving each turn.
 The fresh residue of the vines increases your spell save by %d, for every enemy currently afflicted with the poison, up to %d.
 Damage done increases with spellpower.]])
-			:format(t.poison(self, t), t.save_per(self, t), t.save_max(self, t))
+			:format(
+				Talents.damDesc(self, DamageType.NATURE, t.poison(self, t)),
+				t.save_per(self, t),
+				t.save_max(self, t))
 	end,}

@@ -149,7 +149,7 @@ newTalent {
 This also passively increases your accuracy by %d.
 Cannot be used while #SLATE#(UNIMPLEMENTED: in water)#LAST# or floating.
 Damage, range, accuracy, and duration scale with Strength.]])
-			:format(t.damage(self, t),
+			:format(Talents.damDesc(self, DamageType.PHYSICAL, t.damage(self, t)),
 							t.duration(self, t),
 							t.accuracy(self, t))
 	end,}
@@ -286,5 +286,8 @@ newTalent {
 	info = function(self, t)
 		return ([[Grab a target enemy and toss them up to %d tiles, dealing %d damage within radius 2 of the landing point. Anything hit which is smaller than the one tossed are squashed, maiming them for %d turns.
 Damage, range and maim duration increase with Strength, damage also increases with target's size.]])
-			:format(util.getval(t.range, self, t), t.damage(self, t), t.duration(self, t))
+			:format(
+				util.getval(t.range, self, t),
+				Talents.damDesc(self, DamageType.PHYSICAL, t.damage(self, t)),
+				t.duration(self, t))
 	end,}
