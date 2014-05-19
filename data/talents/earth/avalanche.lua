@@ -14,6 +14,7 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+local eutil = require 'elementals-race.util'
 local stats = require 'engine.interface.ActorStats'
 local object = require 'mod.class.Object'
 
@@ -29,7 +30,9 @@ local make_require = function(tier)
 end
 
 local grounded_pre_use = function(self, t, silent)
-	if self:hasEffect('EFF_ZERO_GRAVITY') or false then
+	if self:hasEffect('EFF_ZERO_GRAVITY') or
+		self:attr('levitation') or self:attr('fly')
+	then
 		if not silent then
 			game.logPlayer(self, 'You must be grounded to use this talent.')
 		end
@@ -167,7 +170,6 @@ newTalent {
 		return {type = 'ball', range = t.range, radius = t.radius(self, t),
 						selffire = false, talent = t,}
 	end,
-	tactical = { ATTACK = { PHYSICAL = 1 } },
 	damage = function(self, t)
 		return 0.5 + self:combatTalentScale(t, 0.5, 1) * (0.5 + self:getStr(0.5, true))
 	end,
@@ -206,4 +208,83 @@ newTalent {
 Cannot be used while #SLATE#(UNIMPLEMENTED: in water)#LAST# or floating.
 Damage and pinning duration scale with strength.]])
 			:format(t.damage(self, t) * 100, t.radius(self, t), t.duration(self, t))
+	end,}
+
+newTalent {
+	name = 'Catapult',
+	type = {'elemental/avalanche', 4,},
+	require = make_require(4),
+	points = 5,
+	essence = 20,
+	cooldown = 18,
+	grab_range = 1,
+	range = function(self, t)
+		return math.floor(4 + self:getStr(5, true))
+	end,
+	radius = 2,
+	tactical = {AREAATTACK = 3, DISABLE = {MAIM = 1,},},
+	target = function(self, t)
+		return {type = 'ball',
+						range = util.getval(t.range, self, t),
+						radius = util.getval(t.radius, self, t),
+						selffire = false, talent = t,}
+	end,
+	damage = function(self, t)
+		return self:combatTalentPhysicalDamage(t, 80, 280)
+	end,
+	duration = function(self, t)
+		return math.floor(3 + self:getStr(3, true))
+	end,
+	-- Don't allow repeated throw attempts.
+	on_pre_use = function(self, t, silent)
+		return not self.turn_procs.catapult_failed
+	end,
+	action = function(self, t)
+		local tg = {type = 'hit', range = util.getval(t.grab_range, self, t),}
+		local x1, y1, target1 = self:getTarget(tg)
+		if not x1 or not y1 or not target1 then return end
+		if core.fov.distance(self.x, self.y, x1, y1) > tg.range then return end
+
+		-- Let player retarget same enemy without worrying about knockback resistance.
+		if not eutil.get(self.turn_procs, 'catapult_succeeded', target1.uid) then
+			if target1:canBe('knockback') then
+				eutil.set(self.turn_procs, 'catapult_succeeded', target1.uid, true)
+			else
+				game.logPlayer(self, '%s resists being thrown!', target1.name:capitalize())
+				self.turn_procs.catapult_failed = true
+				return
+			end
+		end
+
+		tg = util.getval(t.target, self, t)
+		local x2, y2 = self:getTarget(tg)
+		if not x2 or not y2 then return end
+		if core.fov.distance(self.x, self.y, x2, y2) > tg.range then return end
+		if game.level.map:checkAllEntities(x2, y2, 'block_move', target1) then
+			game.logPlayer(self, '%s cannot be thrown there!', target1.name:capitalize())
+			return
+		end
+
+		target1:move(x2, y2, true)
+
+		local damage = t.damage(self, t)
+		local duration = t.duration(self, t)
+		local projector = function(x, y)
+			local target = game.level.map(x, y, Map.ACTOR)
+			if target and target ~= self then
+				DamageType:get(DamageType.PHYSICAL).projector(
+					self, x, y, DamageType.PHYSICAL, damage)
+				if target.size_category < target1.size_category then
+					target:setEffect('EFF_MAIMED', duration, {})
+				end
+			end
+		end
+		self:project(tg, x2, y2, projector)
+		game:playSoundNear(target1, "talents/ice")
+		return true
+	end,
+	info = function(self, t)
+		return ([[Grab a target enemy and toss them up to %d tiles, dealing %d damage within radius 2 of the landing point. Anything hit which is smaller than the one tossed are squashed, maiming them for %d turns.
+Damage, range and maim duration increase with Strength, damage also increases with target's size.]])
+			:format(util.getval(t.range, self, t), t.damage(self, t), t.duration(self, t))
 	end,}
