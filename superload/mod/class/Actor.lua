@@ -32,9 +32,13 @@ function _M:regenResources()
 	-- Update essence values with latest life values.
 	if self:knowTalent('T_ESSENCE_POOL') then
 		self.max_essence = self.max_life * 0.67
-		self.essence_regen =
-			self:attr('no_life_regen') and 0 or
-			self.life_regen * util.bound((self.healing_factor or 1), 0, 2.5)
+		if self:attr('no_life_regen') then
+			self.essence_regen = 0
+		else
+			self.essence_regen =
+				(self.max_essence * 0.02 + self.life_regen) *
+				util.bound((self.healing_factor or 1), 0, 2.5)
+		end
 	end
 	regenResources(self)
 end

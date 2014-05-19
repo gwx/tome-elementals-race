@@ -126,10 +126,10 @@ class:bindHook('Actor:postUseTalent', hook)
 hook = function(self, data)
 	local t, d = data.t, data.str
 	if t.essence then
-		local amount = util.getval(t.essence, self, t)
-		d:add({'color',0x6f,0xff,0x83}, 'Essence cost: ',
-					{'color',164,190,77}, ''..util.getval(t.essence, self, t)..'%',
-					true)
+		local percent = util.getval(t.essence, self, t)
+		local amount = self.max_essence * percent * 0.01
+		local str = ('%d%% (%d)'):format(percent, amount)
+		d:add({'color',0x6f,0xff,0x83}, 'Essence cost: ', {'color',164,190,77}, str, true)
 	end
 end
 class:bindHook('Actor:getTalentFullDescription:ressources', hook)
