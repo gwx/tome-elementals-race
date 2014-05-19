@@ -14,6 +14,9 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+local talents = require 'engine.interface.ActorTalents'
+local damDesc = talents.damDesc
+
 newEffect {
 	name = 'IVY_MESH_POISON', image = 'effects/poisoned.png',
 	desc = 'Symbiotic Poison',
@@ -31,6 +34,11 @@ This effect also contributes spell save to its source.]])
 	end,
 	on_lose = function(self, eff)
 		return '#Target# is no longer poisoned!', '-Symbiotic Poison'
+	end,
+	activate = function(self, eff)
+		if eff.src then
+			eff.src:setEffect('EFF_IVY_MESH', 1, {targets = {[self.uid] = true,},})
+		end
 	end,
 	on_timeout = function(self, eff)
 		if self:attr('purify_poison') then
@@ -130,4 +138,50 @@ newEffect {
 	activate = function(self, eff)
 		self:effectTemporaryValue(eff, 'healing_factor', eff.healing)
 		self:effectTemporaryValue(eff, 'combat_physresist', eff.save)
+	end,}
+
+newEffect {
+	name = 'PREDATORY_VINES', image = 'talents/predatory_vines.png',
+	desc = 'Predatory Vines',
+	long_desc = function(self, eff)
+		local damage = eff.damage
+		local leash = ''
+		if eff.src then
+			damage = damDesc(self, DamageType.NATURE, damage)
+			leash = (' and preventing you from moving more than %d tiles away from %s.')
+				:format(eff.leash, eff.src.name)
+		end
+		return ('Predatory vines have latched onto your body, dealing %d nature damage per turn%s.')
+			:format(damage, leash)
+	end,
+	type = 'physical',
+	subtype = {nature = true, earth = true,},
+	status = 'detrimental',
+	parameters = {damage = 10,},
+	activate = function(self, eff)
+		if eff.src then
+			-- Add leash range.
+			self:effectTemporaryValue(eff, 'hard_leash', {[eff.src.uid] = eff.leash})
+			-- Add ivy mesh poison.
+			if eff.src:knowTalent('T_IVY_MESH') and self:canBe('poison') then
+				local t = eff.src:getTalentFromId('T_IVY_MESH')
+				self:setEffect('EFF_IVY_MESH_POISON', 3, {
+												 src = eff.src,
+												 power = t.poison(eff.src, t),
+												 no_ct_effect = true,})
+			end
+		end
+	end,
+	on_timeout = function(self, eff)
+		-- Direct Damage
+		DamageType:get(DamageType.NATURE).projector(
+			eff.src, self.x, self.y, DamageType.NATURE, eff.damage)
+		-- Refresh ivy mesh poison.
+		if eff.src and eff.src:knowTalent('T_IVY_MESH') and self:canBe('poison') then
+			local t = eff.src:getTalentFromId('T_IVY_MESH')
+			self:setEffect('EFF_IVY_MESH_POISON', 3, {
+											 src = eff.src,
+											 power = t.poison(eff.src, t),
+											 no_ct_effect = true,})
+		end
 	end,}

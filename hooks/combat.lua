@@ -45,8 +45,9 @@ hook = function(self, data)
 	if target:knowTalent('T_IVY_MESH') and hitted then
 		if self:canBe('poison') then
 			self:setEffect('EFF_IVY_MESH_POISON', 3, {
-											 src = target, power = t.poison(target, t), no_ct_effect = true,})
-			target:setEffect('EFF_IVY_MESH', 1, {targets = {[self.uid] = true,},})
+											 src = target,
+											 power = t.poison(target, t),
+											 no_ct_effect = true,})
 		end
 	end
 	return true

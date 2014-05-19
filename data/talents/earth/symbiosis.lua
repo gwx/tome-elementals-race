@@ -14,6 +14,8 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+local eutil = require 'elementals-race.util'
+
 newTalentType {
 	type = 'elemental/symbiosis',
 	name = 'Symbiosis',
@@ -98,4 +100,66 @@ Healing factor, damage and pinning power increase with spellpower.]])
 				t.healing(self, t) * 100,
 				t.save(self, t),
 				Talents.damDesc(self, DamageType.NATURE, t.damage(self, t)))
+	end,}
+
+newTalent {
+	name = 'Predatory Vines',
+	type = {'elemental/symbiosis', 3,},
+	require = make_require(3),
+	points = 5,
+	essence = 10,
+	cooldown = 12,
+	tactical = {ATTACKAREA = {NATURE = 2,}, DISABLE = {pin = 2,},},
+	range = 0,
+	radius = 3,
+	duration = 5,
+	damage = function(self, t) return self:combatTalentSpellDamage(t, 15, 30) end,
+	shots = function(self, t) return 1 + math.floor(self:getTalentLevel(t) * 0.4) end,
+	target = function(self, t)
+		return {type = 'ball',
+						range = util.getval(t.range, self, t),
+						radius = util.getval(t.radius, self, t),
+						selffire = false, talent = t,}
+	end,
+	action = function(self, t)
+		-- Grab valid targets.
+		local tg = util.getval(t.target, self, t)
+		local targets = {}
+		local is_hostile = function(target) return self:reactionToward(target) < 0 end
+		self:project(tg, self.x, self.y, eutil.actor_grabber(targets, is_hostile))
+		if 0 == #targets then return end
+
+		-- Fill hits table with {target -> hit count}
+		local hits = {}
+		table.shuffle(targets)
+		local shots = util.getval(t.shots, self, t)
+		while shots > 0 do
+			for _, target in pairs(targets) do
+				hits[target] = (hits[target] or 0) + 1
+				shots = shots - 1
+				if shots == 0 then goto no_shots end
+			end
+		end
+	  ::no_shots::
+
+		-- Apply debuff to each target
+		local damage = t.damage(self, t)
+		for target, power in pairs(hits) do
+			target:setEffect('EFF_PREDATORY_VINES', 5, {
+												 src = self,
+												 damage = damage * power,
+												 leash = 6 - power,})
+			game.level.map:particleEmitter(target.x, target.y, 1, 'slime')
+		end
+		game:playSoundNear(self, 'talents/slime')
+		return true
+	end,
+	info = function(self, t)
+		return ([[An entire ecosystem begins to form on your body. At your command, %d carnivorous vines shoot forth, attaching themselves to a random enemy in radius %d for 5 turns. Each turn they deal %d nature damage and apply or refresh the Ivy Mesh poison. Affected enemies cannot escape the leash range of 5 tiles away from you.
+Multiple vines may stack onto the same target if there are no other targets present, stacking the damage and decreasing the leash range by 1 for each extra vine attached.
+Damage increases with spellpower.]])
+			:format(
+				util.getval(t.shots, self, t),
+				util.getval(t.radius, self, t),
+				Talents.damDesc(self, DamageType.NATURE, util.getval(t.damage, self, t)))
 	end,}

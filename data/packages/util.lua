@@ -86,4 +86,27 @@ function _M.hasv(source, value)
   return nil, nil, false
 end
 
+--[=[
+	Create a new function(x, y, tg, self) which adds the actor at x, y
+	to fill_table.  If filter is a function, it only does this if
+	filter(target, x, y, tg, self) is truthy.
+
+	Meant to be used in a project call:
+
+	local targets = {}
+	local is_hostile =
+	  function(target) return self:reactionToward(target) < 0 end
+	self:project(tg, x, y, eutil.actor_grabber(targets, is_hostile))
+]=]
+function _M.actor_grabber(fill_table, filter)
+	local Map = require 'engine.Map'
+	return function(x, y, tg, self)
+		local actor = game.level.map(x, y, Map.ACTOR)
+		if not actor then return end
+		if type(filter) ~= 'function' or filter(actor, x, y, tg, self) then
+			table.insert(fill_table, actor)
+		end
+	end
+end
+
 return _M
