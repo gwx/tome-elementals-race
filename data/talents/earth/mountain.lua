@@ -93,3 +93,66 @@ Critical chance reduction, armor, and damage reduction scale with Constitution.]
 				t.damage_reduction(self, t),
 				t.armor(self, t))
 	end,}
+
+newTalent {
+	name = 'Teluric Fist',
+	type = {'elemental/mountain', 3,},
+	require = make_require(3),
+	points = 5,
+	essence = 12,
+	cooldown = 10,
+	range = 1,
+	requires_target = true,
+	no_energy = 'fake',
+	tactical = {ATTACK = {weapon = 2}, ESCAPE = {knockback = 2,},},
+	target = function(self, t)
+		return {type = 'hit', range = util.getval(t.range, self, t),}
+	end,
+	tactical = { ATTACK = { PHYSICAL = 1 } },
+	damage = function(self, t)
+		return 1 + self:combatTalentScale(t, 0, 1) * (0.5 + self:getCon(0.5, true))
+	end,
+	distance = function(self, t)
+		return math.floor(self:combatTalentScale(t, 3, 5))
+	end,
+	action = function(self, t)
+		local tg = t.target(self, t)
+		local x, y, target = self:getTarget(tg)
+		if not x or not y or not target then return end
+		if core.fov.distance(self.x, self.y, x, y) > tg.range then return end
+
+		if self:attackTarget(target, nil, t.damage(self, t)) then
+			if target.dead then return true end
+			if target:canBe('knockback') then
+				-- Try to dig out terrain.
+				local on_terrain = function(terrain, x, y)
+					if terrain and terrain.dig and rng.percent(50) then
+						-- Dig the location.
+						local new_name, new_terrain = terrain.dig, nil, false
+						if type(terrain.dig) == 'function' then
+							new_name, new_terrain = terrain.dig(self, x, y, terrain)
+						end
+						new_terrain = new_terrain or game.zone.grid_list[new_name]
+						if new_terrain then
+							game.level.map(x, y, Map.TERRAIN, new_terrain)
+							-- Makes trees change, so took it out.
+							--game.nicer_tiles:updateAround(game.level, x, y)
+						end
+						-- Take damage.
+						game.logSeen(target, '%s breaks through %s',
+												 target.name:capitalize(), terrain.name)
+						self:attackTarget(target, DamageType.PHYSICAL, 0.1, true)
+					end
+				end
+				target:knockback(self.x, self.y, t.distance(self, t), nil, on_terrain)
+			else
+				game.logSeen(target, "%s resists being knocked back!", target.name:capitalize())
+			end
+		end
+		return true
+	end,
+	info = function(self, t)
+		return ([[Hit the target enemy for %d%% damage, knocking it back %d tiles. If the enemy hits a wall during the knockback, there is a 50%% chance to break through it, receiving an additional 10%% extra damage.
+Damage increases with Constitution.]])
+			:format(t.damage(self, t) * 100, t.distance(self, t))
+	end,}
