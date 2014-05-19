@@ -79,7 +79,7 @@ newBirthDescriptor {
 		'Jadir is, if the element doesn\'t betray it already, the beefier of the four classes. If it hits, it hits hard, if it tanks, it tanks even harder. I wanted this class to have the most "inert" of skillsets, that is skills that don\'t require complex targeting, as it would be more fitting for a class that\'s supposed to rely less on mobility and more on the raw stat bulk - hence the majority of the skills having a focus on point-blank AoE skills, sustains or enhancements.',
 		'',
 		'This does of course not mean that it\'s a class entirely grounded in it\'s ability to manipulate the game elements beyond just punching them. To compensate for the lack of speed it has a variety of skills that affect the environment, in particular walls. It felt very fitting, both for the lore and the general playstyle, an earth elemental controlling natural solid physical obstacles.'},
-	inc_stats = {str = 3, con = 3, mag = 3,},
+	inc_stats = {str = 4, dex = -2, con = 5, mag = 4, cun = -2,},
 	power_source = {nature = true,},
 	talents_types = {
 		['elemental/mountain'] = {true, 0.3,},
