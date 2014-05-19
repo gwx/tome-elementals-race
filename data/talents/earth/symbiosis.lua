@@ -137,10 +137,9 @@ newTalent {
 			for _, target in pairs(targets) do
 				hits[target] = (hits[target] or 0) + 1
 				shots = shots - 1
-				if shots == 0 then goto no_shots end
+				if shots == 0 then break end
 			end
 		end
-	  ::no_shots::
 
 		-- Apply debuff to each target
 		local damage = t.damage(self, t)
