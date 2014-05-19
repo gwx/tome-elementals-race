@@ -39,6 +39,26 @@ function _M:regenResources()
 	regenResources(self)
 end
 
+-- Recompute the passives on a given talent.
+function _M:recomputePassives(talent)
+	local t = self:getTalentFromId(talent)
+	if t.passives then
+		self.talents_learn_vals[t.id] = self.talents_learn_vals[t.id] or {}
+		local p = self.talents_learn_vals[t.id]
+
+		if p.__tmpvals then for i = 1, #p.__tmpvals do
+				self:removeTemporaryValue(p.__tmpvals[i][1], p.__tmpvals[i][2])
+		end end
+
+		if self:knowTalent(t.id) then
+			self.talents_learn_vals[t.id] = {}
+			t.passives(self, t, self.talents_learn_vals[t.id])
+		else
+			self.talents_learn_vals[t.id] = nil
+		end
+	end
+end
+
 -- Add in passive updates on stat changes
 local learnTalent = _M.learnTalent
 function _M:learnTalent(t_id, force, nb, extra)
@@ -80,22 +100,7 @@ local onStatChange = _M.onStatChange
 function _M:onStatChange(stat, v)
 	onStatChange(self, stat, v)
 	for tid, _ in pairs(eutil.get(self, 'recompute_passives', 'stats', stat) or {}) do
-		local t = self:getTalentFromId(tid)
-		if t.passives then
-			self.talents_learn_vals[t.id] = self.talents_learn_vals[t.id] or {}
-			local p = self.talents_learn_vals[t.id]
-
-			if p.__tmpvals then for i = 1, #p.__tmpvals do
-					self:removeTemporaryValue(p.__tmpvals[i][1], p.__tmpvals[i][2])
-			end end
-
-			if self:knowTalent(tid) then
-				self.talents_learn_vals[t.id] = {}
-				t.passives(self, t, self.talents_learn_vals[t.id])
-			else
-				self.talents_learn_vals[t.id] = nil
-			end
-		end
+		self:recomputePassives(tid)
 	end
 end
 

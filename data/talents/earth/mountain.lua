@@ -27,6 +27,11 @@ local make_require = function(tier)
 		level = function(level) return -5 + tier * 4 + level end,}
 end
 
+local set_jaggedbody_regen = function(self)
+	self.jaggedbody_regen =
+		self.jaggedbody_regen_percent * 0.01 * self.max_jaggedbody
+end
+
 newTalent {
 	name = 'Jagged Body',
 	type = {'elemental/mountain', 1,},
@@ -42,9 +47,6 @@ newTalent {
 			(5 + self:getCon(5, true)) * self:combatTalentLimit(t, 25, 10, 20))
 	end,
 	reflect = function(self, t) return self:combatTalentScale(t, 0.15, 0.3) end,
-	regen = function(self, t)
-		return 0.02 * t.power(self, t)
-	end,
 	on_learn = function(self, t)
 		if self:getTalentLevelRaw(t) == 1 then
 			self.jaggedbody = t.power(self, t)
@@ -53,7 +55,8 @@ newTalent {
 	passives = function(self, t, p)
 		self:talentTemporaryValue(p, 'max_jaggedbody', t.power(self, t))
 		self:talentTemporaryValue(p, 'jaggedbody_reflect', t.reflect(self, t))
-		self:talentTemporaryValue(p, 'jaggedbody_regen', t.regen(self, t))
+		self:talentTemporaryValue(p, 'jaggedbody_regen_percent', 2)
+		set_jaggedbody_regen(self)
 	end,
 	recompute_passives = {stats = {stats.STAT_CON,},},
 	info = function(self, t)
@@ -121,12 +124,14 @@ newTalent {
 		if not x or not y or not target then return end
 		if core.fov.distance(self.x, self.y, x, y) > tg.range then return end
 
+		local enhanced = self:attr('enhanced_teluric_fist')
+
 		if self:attackTarget(target, nil, t.damage(self, t)) then
 			if target.dead then return true end
-			if target:canBe('knockback') then
+			if (enhanced and rng.percent(25)) or target:canBe('knockback') then
 				-- Try to dig out terrain.
 				local on_terrain = function(terrain, x, y)
-					if terrain and terrain.dig and rng.percent(50) then
+					if terrain and terrain.dig and (enhanced or rng.percent(50)) then
 						-- Dig the location.
 						local new_name, new_terrain = terrain.dig, nil, false
 						if type(terrain.dig) == 'function' then
@@ -155,4 +160,39 @@ newTalent {
 		return ([[Hit the target enemy for %d%% damage, knocking it back %d tiles. If the enemy hits a wall during the knockback, there is a 50%% chance to break through it, receiving an additional 10%% extra damage.
 Damage increases with Constitution.]])
 			:format(t.damage(self, t) * 100, t.distance(self, t))
+	end,}
+
+newTalent {
+	name = 'Composure',
+	type = {'elemental/mountain', 4,},
+	require = make_require(4),
+	points = 5,
+	mode = 'passive',
+	life = function(self, t)
+		return self:combatTalentScale(t, 30, 80) * (0.5 + self:getCon(0.5, true))
+	end,
+	passives = function(self, t, p)
+		local level = self:getTalentLevelRaw(t)
+		if level >= 1 then self:talentTemporaryValue(p, 'combat_armor_hardiness', 25) end
+		if level >= 2 then
+			self:talentTemporaryValue(p, 'stun_immune', 0.25)
+			self:talentTemporaryValue(p, 'knockback_immune', 0.25)
+		end
+		if level >= 3 then self:talentTemporaryValue(p, 'jaggedbody_regen_percent', 2) end
+		if level >= 4 then self:talentTemporaryValue(p, 'enhanced_teluric_fist', 1) end
+		if level >= 5 then
+			self:talentTemporaryValue(p, 'resists', {[DamageType.PHYSICAL] = 10,})
+		end
+		self:talentTemporaryValue(p, 'max_life', t.life(self, t))
+		set_jaggedbody_regen(self)
+	end,
+	recompute_passives = {stats = {stats.STAT_CON,},},
+	info = function(self, t)
+		return ([[Change the material composition of your body, increasing max life by %d and conferring an additional benefit for each talent point:
+1 Point:  Increases armor hardiness by 25%%.
+2 Points: Increases Stun and Knockback resistance by 25%%.
+3 Points: Increases Jagged Body shield regeneration by an extra 2%%.
+4 Points: Teluric Fist's breakthrough chance is now 100%% and will ignore target's knockback resistance 25%% of the time.
+5 Points: Physical resistance raised by 10%%.]])
+			:format(t.life(self, t))
 	end,}
