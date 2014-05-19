@@ -28,6 +28,16 @@ local make_require = function(tier)
 		level = function(level) return -5 + tier * 4 + level end,}
 end
 
+local grounded_pre_use = function(self, t, silent)
+	if self:hasEffect('EFF_ZERO_GRAVITY') or false then
+		if not silent then
+			game.logPlayer(self, 'You must be grounded to use this talent.')
+		end
+		return false
+	end
+	return true
+end
+
 newTalent {
 	name = 'Heavy Arms',
 	type = {'elemental/avalanche', 1,},
@@ -56,6 +66,7 @@ newTalent {
 	points = 5,
 	essence = 15,
 	cooldown = 8,
+	tactical = {ATTACK = 3,},
 	accuracy = function(self, t)
 		return self:combatTalentScale(t, 10, 20) * (5 + self:getStr(5, true))
 	end,
@@ -72,18 +83,10 @@ newTalent {
 		self:talentTemporaryValue(p, 'combat_atk', t.accuracy(self, t))
 	end,
 	recompute_passives = {stats = {stats.STAT_STR,},},
-	on_pre_use = function(self, t, silent)
-		if self:hasEffect('EFF_ZERO_GRAVITY') or false then
-			if not silent then
-				game.logPlayer(self, 'You must be grounded to use this talent.')
-			end
-			return false
-		end
-		return true
-	end,
 	target = function(self, t)
 		return {type = 'hit', range = t.range(self, t), talent = t,}
 	end,
+ 	on_pre_use = grounded_pre_use,
 	action = function(self, t)
 		local tg = self:getTalentTarget(t)
 		local x, y = self:getTarget(tg)
@@ -141,9 +144,66 @@ newTalent {
 	info = function(self, t)
 		return ([[Rip an enormous bulk of stone out of the ground and throw it, dealing %d physical damage and leaving a stone wall there for %d turns.
 This also passively increases your accuracy by %d.
-Cannot be used while in water or floating.
+Cannot be used while #SLATE#(UNIMPLEMENTED: in water)#LAST# or floating.
 Damage, range, accuracy, and duration scale with Strength.]])
 			:format(t.damage(self, t),
 							t.duration(self, t),
 							t.accuracy(self, t))
+	end,}
+
+newTalent {
+	name = 'Tremor',
+	type = {'elemental/avalanche', 3,},
+	require = make_require(3),
+	points = 5,
+	essence = 15,
+	cooldown = 15,
+	range = 0,
+	radius = function(self, t)
+		return math.floor(util.bound(self:getTalentLevel(t), 1, 6))
+	end,
+	tactical = {ATTACK = 3, DISABLE = {PIN = 1,},},
+	target = function(self, t)
+		return {type = 'ball', range = t.range, radius = t.radius(self, t),
+						selffire = false, talent = t,}
+	end,
+	tactical = { ATTACK = { PHYSICAL = 1 } },
+	damage = function(self, t)
+		return 0.5 + self:combatTalentScale(t, 0.5, 1) * (0.5 + self:getStr(0.5, true))
+	end,
+	duration = function(self, t)
+		return math.floor(3 + self:getStr(3, true))
+	end,
+ 	on_pre_use = grounded_pre_use,
+	action = function(self, t)
+		local tg = self:getTalentTarget(t)
+		local base_damage = t.damage(self, t)
+		local duration = t.duration(self, t)
+		local projector = function(x, y, tg, self)
+			local target = game.level.map(x, y, Map.ACTOR)
+			if target and target ~= self then
+				local damage = base_damage
+				if target:attr('stoned') then damage = damage + 0.5 end
+				-- TODO: figure out how to tell if we're in a wall
+				local in_wall = false
+				if in_wall then damage = damage + 0.5 end
+				local hit = self:attackTarget(target, DamageType.PHYSICAL, damage, true)
+				if hit and
+					(target:attr('stunned') or target:attr('dazed') or target:attr('confused')) and
+					target:canBe('pin')
+				then
+					target:setEffect('EFF_PINNED', duration, {})
+				end
+			end
+		end
+		self:project(tg, self.x, self.y, projector)
+		--self:addParticles(Particles.new("meleestorm", 1, {radius=4, img="spinningwinds_blue"}))
+		game:playSoundNear(self, "talents/earth")
+		return true
+	end,
+	info = function(self, t)
+		return ([[Deal %d%% weapon damage in radius %d, pinning down any stunned, confused or dazed target for %d turns. Any petrified targets will take an additional 50%% weapon damage, #SLATE#(UNIMPLEMENTED: and any targets standing in a wall will take an additional 50%% weapon damage)#LAST#.
+Cannot be used while #SLATE#(UNIMPLEMENTED: in water)#LAST# or floating.
+Damage and pinning duration scale with strength.]])
+			:format(t.damage(self, t) * 100, t.radius(self, t), t.duration(self, t))
 	end,}
