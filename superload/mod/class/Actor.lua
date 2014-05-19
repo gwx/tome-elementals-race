@@ -108,4 +108,22 @@ function _M:onStatChange(stat, v)
 	end
 end
 
+-- Leash
+local move = _M.move
+function _M:move(x, y, force)
+	if not force and self.hard_leash then
+		for src, distance in pairs(self.hard_leash) do
+			if not src.dead then
+				local cur_dist = core.fov.distance(self.x, self.y, src.x, src.y)
+				local new_dist = core.fov.distance(x, y, src.x, src.y)
+				if new_dist > distance and new_dist > cur_dist then
+					game.logPlayer(self, 'You are leashed to %s and cannot move there!', src.name)
+					return
+				end
+			end
+		end
+	end
+	return move(self, x, y, force)
+end
+
 return _M

@@ -16,6 +16,7 @@
 
 local talents = require 'engine.interface.ActorTalents'
 local damDesc = talents.damDesc
+local particles = require 'engine.Particles'
 
 newEffect {
 	name = 'IVY_MESH_POISON', image = 'effects/poisoned.png',
@@ -161,7 +162,7 @@ newEffect {
 	activate = function(self, eff)
 		if eff.src then
 			-- Add leash range.
-			self:effectTemporaryValue(eff, 'hard_leash', {[eff.src.uid] = eff.leash})
+			self:effectTemporaryValue(eff, 'hard_leash', {[eff.src] = eff.leash})
 			-- Add ivy mesh poison.
 			if eff.src:knowTalent('T_IVY_MESH') and self:canBe('poison') then
 				local t = eff.src:getTalentFromId('T_IVY_MESH')
@@ -170,6 +171,13 @@ newEffect {
 												 power = t.poison(eff.src, t),
 												 no_ct_effect = true,})
 			end
+			self.tempeffect_def.EFF_PREDATORY_VINES.update_particles(self, eff)
+		end
+	end,
+	deactivate = function(self, eff)
+		if eff.particles then
+			self:removeParticles(eff.particles)
+			eff.particles = nil
 		end
 	end,
 	on_timeout = function(self, eff)
@@ -183,5 +191,38 @@ newEffect {
 											 src = eff.src,
 											 power = t.poison(eff.src, t),
 											 no_ct_effect = true,})
+		end
+	end,
+	update_particles = function(self, eff)
+		if not eff.src or eff.src.dead or self.dead or
+			not game.level:hasEntity(eff.src) or
+			not game.level:hasEntity(self)
+		then
+			if eff.particles then
+				self:removeParticles(eff.particles)
+				eff.particles = nil
+			end
+			return
+		end
+
+		-- update particles position
+		if not eff.particles or
+			eff.particles.x ~= eff.src.x or
+			eff.particles.y ~= eff.src.y or
+			eff.particles.tx ~= self.x or
+			eff.particles.ty ~= self.y
+		then
+			if eff.particles then
+				self:removeParticles(eff.particles)
+			end
+			-- add updated particle emitter
+			local dx, dy = eff.src.x - self.x, eff.src.y - self.y
+			eff.particles = particles.new(
+				'predatory_vines', math.max(math.abs(dx), math.abs(dy)), {tx = dx, ty = dy,})
+			eff.particles.tx = eff.src.x
+			eff.particles.ty = eff.src.y
+			eff.particles.x = self.x
+			eff.particles.y = self.y
+			self:addParticles(eff.particles)
 		end
 	end,}

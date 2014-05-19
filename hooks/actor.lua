@@ -133,3 +133,14 @@ hook = function(self, data)
 	end
 end
 class:bindHook('Actor:getTalentFullDescription:ressources', hook)
+
+-- self:triggerHook{"Actor:move", moved=moved, force=force, ox=ox, oy=oy}
+-- Actor:move
+hook = function(self, data)
+	local predatory_vines = self:hasEffect('EFF_PREDATORY_VINES')
+	if predatory_vines then
+		self.tempeffect_def.EFF_PREDATORY_VINES
+			.update_particles(self, predatory_vines)
+	end
+end
+class:bindHook('Actor:move', hook)
