@@ -189,5 +189,5 @@ newTalent {
 	info = function(self, t)
 		return ([[Surge essence through your body to make it bloom with life. Consumes 10%% of your current essence each turn, healing you for %d%% of the essence used.
 This also gives you passive nature and blight resistance, ranging from 0%% at 0%% essence to %d%% at 100%% essence (scaling with spellpower).]])
-			:format(t.heal(self, t) * 100, t.resist(self, t) * 100)
+			:format(t.heal(self, t) * 100, t.resist(self, t))
 	end,}
