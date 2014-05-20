@@ -53,7 +53,7 @@ newTalent {
 	require = make_require(2),
 	points = 5,
 	essence = 20,
-	cooldown = 25,
+	cooldown = 26,
 	tactical = {ATTACKAREA = {NATURE = 1,}, DISABLE = {pin = 1,},},
 	range = 0,
 	radius = function(self, t)
@@ -108,7 +108,7 @@ newTalent {
 	require = make_require(3),
 	points = 5,
 	essence = 10,
-	cooldown = 12,
+	cooldown = 13,
 	tactical = {ATTACKAREA = {NATURE = 2,}, DISABLE = {pin = 2,},},
 	range = 0,
 	radius = 3,

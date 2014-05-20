@@ -69,7 +69,7 @@ newTalent {
 	require = make_require(2),
 	points = 5,
 	essence = 15,
-	cooldown = 8,
+	cooldown = 9,
 	tactical = {ATTACK = 3,},
 	accuracy = function(self, t)
 		return self:combatTalentScale(t, 10, 20) * (5 + self:getStr(5, true))
@@ -162,7 +162,7 @@ newTalent {
 	require = make_require(3),
 	points = 5,
 	essence = 15,
-	cooldown = 15,
+	cooldown = 16,
 	range = 0,
 	radius = function(self, t)
 		return math.floor(util.bound(self:getTalentLevel(t), 1, 6))
@@ -218,7 +218,7 @@ newTalent {
 	require = make_require(4),
 	points = 5,
 	essence = 20,
-	cooldown = 18,
+	cooldown = 19,
 	grab_range = 1,
 	range = function(self, t)
 		return math.floor(4 + self:getStr(5, true))
