@@ -63,17 +63,23 @@ function _M:recomputePassives(talent)
 	end
 end
 
--- Add in passive updates on stat changes
 local learnTalent = _M.learnTalent
 function _M:learnTalent(t_id, force, nb, extra)
 	if learnTalent(self, t_id, force, nb, extra) then
 		local t = self:getTalentFromId(t_id)
+		-- Add in passive updates on changes
 		if t.recompute_passives then
-			self.recompute_passives = self.recompute_passives or {stats = {}}
+			self.recompute_passives =
+				self.recompute_passives or {stats = {}, attributes = {}}
 			for _, stat in pairs(t.recompute_passives.stats or {}) do
 				local self_stats = self.recompute_passives.stats
 				self_stats[stat] = self_stats[stat] or {}
 				self_stats[stat][t_id] = true
+			end
+			for _, attribute in pairs(t.recompute_passives.attributes or {}) do
+				local self_attributes = self.recompute_passives.attributes
+				self_attributes[attribute] = self_attributes[attribute] or {}
+				self_attributes[attribute][t_id] = true
 			end
 		end
 		return true
@@ -93,6 +99,11 @@ function _M:unlearnTalent(t_id, nb, no_unsustain, extra)
 					self_stats[stat] = self_stats[stat] or {}
 					self_stats[stat][t_id] = nil
 				end
+				for _, attribute in pairs(t.recompute_passives.attributes or {}) do
+					local self_attributes = self.recompute_passives.attributes
+					self_attributes[attribute] = self_attributes[attribute] or {}
+					self_attributes[attribute][t_id] = nil
+				end
 			end
 		end
 		return true
@@ -105,6 +116,17 @@ function _M:onStatChange(stat, v)
 	onStatChange(self, stat, v)
 	for tid, _ in pairs(eutil.get(self, 'recompute_passives', 'stats', stat) or {}) do
 		self:recomputePassives(tid)
+	end
+end
+
+local onTemporaryValueChange = _M.onTemporaryValueChange
+function _M:onTemporaryValueChange(prop, v, base)
+	onTemporaryValueChange(self, prop, v, base)
+	if base == self then
+		local rp = eutil.get(self, 'recompute_passives', 'attributes', prop) or {}
+		for tid, _ in pairs(rp) do
+			self:recomputePassives(tid)
+		end
 	end
 end
 

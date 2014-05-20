@@ -82,10 +82,23 @@ class:bindHook('Actor:takeHit', hook)
 
 -- Actor:actBase:Effects
 hook = function(self, data)
+	-- Yggdrasil heal.
+	if self:attr('essence_consumption') then
+		local value = self:getEssence() * self.essence_consumption
+		self:heal(value * (self.essence_consumption_heal or 0), self)
+		self:incEssence(-value)
+		self:incJaggedbody(value * 0.33)
+	end
+
 	-- Break the rock shell.
 	if self.pending_rock_shell_break then
 		self:setEffect('EFF_BROKEN_SHELL', 1, {})
 		self.pending_rock_shell_break = nil
+	end
+
+	-- Update Yggdrasil passive.
+	if self:knowTalent('T_YGGDRASIL') then
+		self:recomputePassives('T_YGGDRASIL')
 	end
 end
 class:bindHook('Actor:actBase:Effects', hook)

@@ -162,3 +162,32 @@ Damage increases with spellpower.]])
 				util.getval(t.radius, self, t),
 				Talents.damDesc(self, DamageType.NATURE, util.getval(t.damage, self, t)))
 	end,}
+
+newTalent {
+	name = 'Yggdrasil',
+	type = {'elemental/symbiosis', 4,},
+	require = make_require(4),
+	points = 5,
+	mode = 'sustained',
+	heal = function(self, t) return 0.3 + self:getTalentLevel(t) * 0.05 end,
+	resist = function(self, t)
+		return 15 + self:combatTalentSpellDamage(t, 0, 30)
+	end,
+	activate = function(self, t)
+		local p = {}
+		self:talentTemporaryValue(p, 'essence_consumption', 0.1)
+		self:talentTemporaryValue(p, 'essence_consumption_heal', t.heal(self, t))
+		return p
+	end,
+	deactivate = function(self, t, p) return true end,
+	passives = function(self, t, p)
+		local resist = t.resist(self, t) * self:getEssence() / self:getMaxEssence()
+		self:talentTemporaryValue(p, 'resists', {
+																[DamageType.NATURE] = resist,
+																[DamageType.BLIGHT] = resist,})
+	end,
+	info = function(self, t)
+		return ([[Surge essence through your body to make it bloom with life. Consumes 10%% of your current essence each turn, healing you for %d%% of the essence used.
+This also gives you passive nature and blight resistance, ranging from 0%% at 0%% essence to %d%% at 100%% essence (scaling with spellpower).]])
+			:format(t.heal(self, t) * 100, t.resist(self, t) * 100)
+	end,}
