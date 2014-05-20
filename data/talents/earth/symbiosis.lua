@@ -83,7 +83,7 @@ newTalent {
 			DamageType.SYMBIOTIC_ROOTS, {
 				healing = t.healing(self, t),
 				save = t.save(self, t),
-				damage = t.damage(self, t),},
+				damage = self:spellCrit(t.damage(self, t)),},
 			t.radius(self, t), 5, nil, {
 				type = 'moss',})
 		-- Let damage type know about original effect

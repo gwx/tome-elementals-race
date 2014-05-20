@@ -148,4 +148,52 @@ function _M:move(x, y, force)
 	return move(self, x, y, force)
 end
 
+-- Allow overrideable archery weapon.
+local hasArcheryWeapon = _M.hasArcheryWeapon
+function _M:hasArcheryWeapon(type)
+	if self:attr('disarmed') then return nil, 'disarmed' end
+	if self.archery_weapon_override then
+		return unpack(self.archery_weapon_override)
+	end
+	return hasArcheryWeapon(self, type)
+end
+
+-- Let projectiles modify their movement.
+local projectDoMove = _M.projectDoMove
+function _M:projectDoMove(typ, tgtx, tgty, x, y, srcx, srcy)
+	local lx, ly, act, stop = projectDoMove(self, typ, tgtx, tgty, x, y, srcx, srcy)
+	if typ.on_move then
+		lx, ly, act, stop = typ.on_move(
+			self, typ, tgtx, tgty, x, y, srcx, srcy, lx, ly, act, stop)
+	end
+	return lx, ly, act, stop
+end
+
+-- Earthen Gun allows you to substitute mag for dex.
+-- Remove shield reqs if you know buckler stuff
+local canWearObject = _M.canWearObject
+function _M:canWearObject(o, try_slot)
+  if self:attr('shots_sub_mag') and o.subtype == 'shot' then
+		local dex, mag
+		local req = rawget(o, 'require')
+		if req.stat then
+			dex = req.stat.dex
+			mag = req.stat.mag
+			req.stat.dex = nil
+			if dex then req.stat.mag = math.max(dex, mag or 0) end
+		end
+
+		local result = {canWearObject(self, o, try_slot)}
+
+		if req.stat then
+			req.stat.dex = dex
+			req.stat.mag = mag
+		end
+
+		return unpack(result)
+	end
+
+	return canWearObject(self, o, try_slot)
+end
+
 return _M

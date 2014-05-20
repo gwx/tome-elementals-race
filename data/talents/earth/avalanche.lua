@@ -95,7 +95,8 @@ newTalent {
 		local x, y = self:getTarget(tg)
 		if not x or not y then return end
 
-		self:project(tg, x, y, DamageType.PHYSICAL, t.damage(self, t), {type = 'archery'})
+		local dam = self:phsyicalCrit(t.damage(self, t))
+		self:project(tg, x, y, DamageType.PHYSICAL, dam, {type = 'archery'})
 		local terrain_projector = function(x, y, tg, self)
 			local oe = game.level.map(x, y, Map.TERRAIN)
 			if oe and oe.special then return end
@@ -267,7 +268,7 @@ newTalent {
 
 		target1:move(x2, y2, true)
 
-		local damage = t.damage(self, t)
+		local damage = self:physicalCrit(t.damage(self, t))
 		local duration = t.duration(self, t)
 		local projector = function(x, y)
 			local target = game.level.map(x, y, Map.ACTOR)

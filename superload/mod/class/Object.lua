@@ -14,10 +14,31 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-for folder, files in pairs {
-	earth = {'misc', 'mountain', 'avalanche', 'symbiosis', 'geokinesis',},}
-do
-	for _, file in pairs(files) do
-		load('/data-elementals-race/talents/'..folder..'/'..file..'.lua')
+local _M = loadPrevious(...)
+
+local getRequirementDesc = _M.getRequirementDesc
+function _M:getRequirementDesc(who)
+	if who:attr('shots_sub_mag') and self.subtype == 'shot' then
+		local dex, mag
+		local req = rawget(self, 'require')
+		if req.stat then
+			dex = req.stat.dex
+			mag = req.stat.mag
+			req.stat.dex = nil
+			if dex then req.stat.mag = math.max(dex, mag or 0) end
+		end
+
+		local result = {getRequirementDesc(self, who)}
+
+		if req.stat then
+			req.stat.dex = dex
+			req.stat.mag = mag
+		end
+
+		return unpack(result)
 	end
+
+  return getRequirementDesc(self, who)
 end
+
+return _M

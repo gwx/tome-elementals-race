@@ -109,4 +109,9 @@ function _M.actor_grabber(fill_table, filter)
 	end
 end
 
+-- Various Functions:
+function _M.adder(amt)
+	return function(x) return amt + (x or 0) end
+end
+
 return _M
