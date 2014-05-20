@@ -42,7 +42,7 @@ newTalent {
 		return {type = 'beam', on_move = t.on_move, pierce = t.pierce(self, t),
 						range = util.getval(t.range, self, t),}
 	end,
-	damage = function(self, t) return self:combatTalentSpellDamage(t, 30, 70) end,
+	damage = function(self, t) return self:combatTalentSpellDamage(t, 50, 200) end,
 	pierce = function(self, t) return 30 + self:combatSpellpower() * 0.7 end,
 	shooter = entity.new {
 		name = 'earthen gun',
