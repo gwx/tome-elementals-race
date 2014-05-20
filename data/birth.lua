@@ -91,7 +91,7 @@ newBirthDescriptor {
 		['elemental/eyal-resolver'] = {true, 0.3,},
 		['technique/combat-training'] = {true, 0.3,},
 		['elemental/tectonic'] = {false, 0.3,},
-		['elemental/earth metamorphosis'] = {false, 0.3,},},
+		['elemental/earth-metamorphosis'] = {false, 0.3,},},
 	talents = {
 		[ActorTalents.T_HEAVY_ARMS] = 1,
 		[ActorTalents.T_ARMOUR_TRAINING] = 1,
