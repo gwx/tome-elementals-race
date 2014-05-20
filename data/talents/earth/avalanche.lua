@@ -96,7 +96,7 @@ newTalent {
 		local x, y = self:getTarget(tg)
 		if not x or not y then return end
 
-		local dam = self:phsyicalCrit(t.damage(self, t))
+		local dam = self:physicalCrit(t.damage(self, t))
 		self:project(tg, x, y, DamageType.PHYSICAL, dam, {type = 'archery'})
 		local terrain_projector = function(x, y, tg, self)
 			local oe = game.level.map(x, y, Map.TERRAIN)

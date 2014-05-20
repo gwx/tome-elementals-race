@@ -145,7 +145,6 @@ newTalent {
 	end,
 	action = function(self, t)
 		return true
-		return true
 	end,
 	info = function(self, t)
 		return ([[Engulfs the target in a cloud of dust, suffocating it for %d turns. Each turn it will take %d physical damage and lose %d air. It will also have %d less ranged accuracy and have a %d%% chance to misaim its ranged attacks by up to %d%% of the original distance.
