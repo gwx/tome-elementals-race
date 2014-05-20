@@ -86,8 +86,12 @@ newBirthDescriptor {
 		['elemental/avalanche'] = {true, 0.3,},
 		['elemental/symbiosis'] = {true, 0.3,},
 		['elemental/geokinesis'] = {true, 0.3,},
+		['elemental/geothermal'] = {true, 0.3,},
+		['elemental/erosion'] = {true, 0.3,},
+		['elemental/eyal-resolver'] = {true, 0.3,},
 		['technique/combat-training'] = {true, 0.3,},
-		['advanced/earth metamorphosis'] = {false, 0.3,},},
+		['elemental/tectonic'] = {false, 0.3,},
+		['elemental/earth metamorphosis'] = {false, 0.3,},},
 	talents = {
 		[ActorTalents.T_HEAVY_ARMS] = 1,
 		[ActorTalents.T_ARMOUR_TRAINING] = 1,
