@@ -92,24 +92,28 @@ newTalent {
 			return
 		end
 
-		ammo = ammo:clone()
-		ammo.name = 'earthen bullet'
-		ammo.combat.dammod.str = (ammo.combat.dammod.str or 0) + ammo.combat.dammod.dex
-		ammo.combat.dammod.mag = (ammo.combat.dammod.mag or 0) + ammo.combat.dammod.cun
-		ammo.combat.dammod.dex = nil
-		ammo.combat.dammod.cun = nil
+		local combat = table.clone(ammo.combat)
+		combat.dammod.mag = (ammo.combat.dammod.mag or 0) + (combat.dammod.dex or 0)
+		combat.dammod.str = (ammo.combat.dammod.str or 0) + (combat.dammod.cun or 0)
+		combat.dammod.dex = nil
+		combat.dammod.cun = nil
 		eutil.update(
 			eutil.adder(self:spellCrit(t.damage(self, t))),
-			ammo.combat, 'ranged_project', DamageType.PHYSICAL)
+			combat, 'ranged_project', DamageType.PHYSICAL)
+
 		self.archery_weapon_override = {t.shooter, ammo,}
-		self:archeryShoot(targets, t, tg, {})
+		for _, target in pairs(targets) do
+			target.ammo = combat
+		end
+
+		self:archeryShoot(targets, t, tg, {atk = self:getMag() - self:getDex()})
 
 		self.archery_weapon_override = archery_weapon_override
 		return true
 	end,
 	info = function(self, t)
 		return ([[Picks up a small pebble and accelerates it to 1000%% base speed to hit the target enemy for %d physical damage. If you are wearing shots in your ammo slot this applies the possible ammo effects to the shot, increases speed to 2000%% of base and allows the shot to pierce targets with %d%% chance.
-Damage increases with spellpower, strength, and magic. Pierce chance increase with spellpower.
+Damage increases with spellpower, strength, and magic. Pierce chance increase with spellpower. Uses magic for accuracy instead of dexterity.
 This allows you to substitute magic for dexterity when equipping shots.]])
 			:format(t.damage(self, t), t.pierce(self, t))
 	end,}
