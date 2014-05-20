@@ -73,7 +73,9 @@ newTalent {
 	action = function(self, t)
 		local default_ammo = false
 		local ammo = eutil.get(self:getInven('QUIVER'), 1)
-		if not ammo then
+		if not ammo or
+			((eutil.get(ammo, 'combat', 'shots_left') or 0) == 0 and not ammo.infinite)
+		then
 			default_ammo = true
 			ammo = t.default_ammo
 		end
