@@ -112,3 +112,51 @@ Damage increases with spellpower, strength, and magic. Pierce chance increase wi
 This allows you to substitute magic for dexterity when equipping shots.]])
 			:format(t.damage(self, t), t.pierce(self, t))
 	end,}
+
+newTalent {
+	name = 'Choking Dust',
+	type = {'elemental/geokinesis', 2,},
+	require = make_require(2),
+	points = 5,
+	essence = 10,
+	cooldown = 14,
+	range = 4,
+	no_energy = 'fake',
+	tactical = {ATTACK = 2, DISABLE = {SILENCE = 2,},},
+	target = function(self, t)
+		return {type = 'hit', range = util.getval(t.range, self, t),}
+	end,
+	damage = function(self, t) return self:combatTalentSpellDamage(t, 30, 80) end,
+	air = function(self, t) return 10 + self:combatTalentSpellDamage(t, 10, 20) end,
+	ranged_penalty = function(self, t)
+		return 10 + self:combatTalentSpellDamage(t, 0, 30)
+	end,
+	mistarget_chance = function(self, t)
+		return 10 + self:combatTalentSpellDamage(t, 0, 50)
+	end,
+	mistarget_percent = function(self, t)
+		return 0.2 + self:combatTalentSpellDamage(t, 0, 0.2)
+	end,
+	duration = function(self, t)
+		return math.floor(2.5 + self:getTalentLevel(t) * 0.4)
+	end,
+	silence = function(self, t)
+		return math.floor(self:getTalentLevel(t) * 0.35)
+	end,
+	action = function(self, t)
+		return true
+		return true
+	end,
+	info = function(self, t)
+		return ([[Engulfs the target in a cloud of dust, suffocating it for %d turns. Each turn it will take %d physical damage and lose %d air. It will also have %d less ranged accuracy and have a %d%% chance to misaim its ranged attacks by up to %d%% of the original distance.
+You will also silence the target for %d turns.
+Damage and penalty strengths scale with spellpower.]])
+			:format(
+				t.duration(self, t),
+				t.damage(self, t),
+				t.air(self, t),
+				t.ranged_penalty(self, t),
+				t.mistarget_chance(self, t),
+				t.mistarget_percent(self, t) * 100,
+				t.silence(self, t))
+	end,}
