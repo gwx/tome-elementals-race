@@ -31,7 +31,8 @@ end
 
 local grounded_pre_use = function(self, t, silent)
 	if self:hasEffect('EFF_ZERO_GRAVITY') or
-		self:attr('levitation') or self:attr('fly')
+		self:attr('levitation') or self:attr('fly') or
+		game.level.map:checkEntity(self.x, self.y, Map.TERRAIN, 'air_condition') == 'water'
 	then
 		if not silent then
 			game.logPlayer(self, 'You must be grounded to use this talent.')
@@ -148,7 +149,7 @@ newTalent {
 	info = function(self, t)
 		return ([[Rip an enormous bulk of stone out of the ground and throw it, dealing %d physical damage and leaving a stone wall there for %d turns.
 This also passively increases your accuracy by %d.
-Cannot be used while #SLATE#(UNIMPLEMENTED: in water)#LAST# or floating.
+Cannot be used while in water or floating.
 Damage, range, accuracy, and duration scale with Strength.]])
 			:format(Talents.damDesc(self, DamageType.PHYSICAL, t.damage(self, t)),
 							t.duration(self, t),
@@ -206,7 +207,7 @@ newTalent {
 	end,
 	info = function(self, t)
 		return ([[Deal %d%% weapon damage in radius %d, pinning down any stunned, confused or dazed target for %d turns. Any petrified targets will take an additional 50%% weapon damage, #SLATE#(UNIMPLEMENTED: and any targets standing in a wall will take an additional 50%% weapon damage)#LAST#.
-Cannot be used while #SLATE#(UNIMPLEMENTED: in water)#LAST# or floating.
+Cannot be used while in water or floating.
 Damage and pinning duration scale with strength.]])
 			:format(t.damage(self, t) * 100, t.radius(self, t), t.duration(self, t))
 	end,}
