@@ -89,8 +89,9 @@ newBirthDescriptor {
 		['technique/combat-training'] = {true, 0.3,},
 		['advanced/earth metamorphosis'] = {false, 0.3,},},
 	talents = {
-		[ActorTalents.T_WEAPON_COMBAT] = 1,
+		[ActorTalents.T_HEAVY_ARMS] = 1,
 		[ActorTalents.T_ARMOUR_TRAINING] = 1,
+		[ActorTalents.T_EARTHEN_GUN] = 1,
 		[ActorTalents.T_JAGGED_BODY] = 1,},
 	copy = {
 		subtype = 'earth',
@@ -102,4 +103,6 @@ newBirthDescriptor {
 			{type = 'weapon', subtype = 'greatmaul', name = 'iron greatmaul',
 			 autoreq = true, ego_chance = -1000, ego_chance = -1000},
  			{type = 'armor', subtype = 'heavy', name = 'iron mail armour',
-			 autoreq = true, ego_chance = -1000, ego_chance = -1000},},},}
+			 autoreq = true, ego_chance = -1000, ego_chance = -1000},
+			{type = 'ammo', subtype = 'shot', name = 'pouch of iron shots',
+			 autoreq = false, ego_chance = -1000},},},}
