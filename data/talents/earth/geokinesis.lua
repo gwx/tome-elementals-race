@@ -286,3 +286,35 @@ Defense increases with spellpower.]])
 			:format(util.getval(t.defense, self, t),
 							util.getval(t.spellpower, self, t))
 	end,}
+
+newTalent {
+	name = 'Architect\'s Wrath', short_name = 'ARCHITECTS_WRATH',
+	type = {'elemental/geokinesis', 4,},
+	require = make_require(4),
+	points = 5,
+	cooldown = 21,
+	essence = 25,
+	range = function(self, t)
+		return 2 + math.floor(self:getTalentLevel(t) * 0.35)
+	end,
+	move = function(self, t)
+		return 1 + math.floor(self:getTalentLevel(t) * 0.7)
+	end,
+	damage = function(self, t)
+		return self:combatTalentSpellDamage(t, 70, 250)
+	end,
+	size = function(self, t)
+		return math.min(3, 1 + math.floor(self:getTalentLevel(t) * 0.5))
+	end,
+	duration = 3,
+	action = function(self, t)
+		return true
+	end,
+	info = function(self, t)
+		local size = util.getval(t.size, self, t)
+		return ([[Move a chunk of walls up to %dx%d big in a line up to %d tiles. The rushing wall deals %d physical damage to any enemy hit, and the same amount again and a 3 turn stun if there is a wall directly behind them to slam them into. After 3 turns the walls will return to their original position.
+Damage increases with spellpower.]])
+			:format(size, size,
+							util.getval(t.move, self, t),
+							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)))
+	end,}
