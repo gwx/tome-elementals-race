@@ -211,6 +211,7 @@ newTalent {
 	require = make_require(3),
 	points = 5,
 	mode = 'sustained',
+	sustain_essence = 10,
 	cooldown = 26,
 	defense = function(self, t)
 		return self:combatTalentSpellDamage(t, 8, 20)

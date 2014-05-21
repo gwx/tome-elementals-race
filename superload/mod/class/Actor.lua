@@ -31,7 +31,7 @@ local regenResources = _M.regenResources
 function _M:regenResources()
 	-- Update essence values with latest life values.
 	if self:knowTalent('T_ESSENCE_POOL') then
-		self.max_essence = self.max_life * 0.67
+		self.max_essence = self.max_life * 0.67 * (100 - (self.sustain_essence or 0)) * 0.01
 		if self:attr('no_life_regen') then
 			self.essence_regen = 0
 		else
@@ -41,6 +41,16 @@ function _M:regenResources()
 		end
 	end
 	regenResources(self)
+end
+
+-- Retrieve the actual essence cost.
+function _M:essenceCost(percent)
+	return percent * self:realMaxEssence() * 0.01
+end
+
+-- Get the actualy max essence, minus sustains.
+function _M:realMaxEssence()
+	return 100 * self:getMaxEssence() / (100 - (self.sustain_essence or 0))
 end
 
 -- Recompute the passives on a given talent.

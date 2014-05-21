@@ -107,10 +107,19 @@ class:bindHook('Actor:actBase:Effects', hook)
 hook = function(self, data)
 	local ab, silent, fake = data.t, data.silent, data.fale
 	-- Check for essence requirements.
-	if not self:attr('force_talent_ignore_ressources') then
-		if ab.essence and (100 * self:getEssence() / self:getMaxEssence()) < ab.essence then
+	if ab.mode == 'sustained' then
+		if ab.sustain_essence and
+			((self.sustain_essence or 0) + ab.sustain_essence) > 99 -- 100 will cause div by 0 later.
+		then
 			if not silent then
-				game.logPlayer(self, "You do not have enough essence to cast %s.", ab.name)
+				game.logPlayer(self, 'You do not have enough essence to activate %s.', ab.name)
+			end
+			return true
+		end
+	elseif not self:attr('force_talent_ignore_ressources') then
+		if ab.essence and self:essenceCost(ab.essence) > self:getEssence() then
+			if not silent then
+				game.logPlayer(self, 'You do not have enough essence to cast %s.', ab.name)
 			end
 			return true
 		end
@@ -127,10 +136,24 @@ class:bindHook('Actor:preUseTalent', hook)
 hook = function(self, data)
 	local ab, trigger = data.t, data.trigger
 	-- Use up essence
-	if not self:attr('force_talent_ignore_ressources') then
+	if ab.mode == 'sustained' then
+		if not self:isTalentActive(ab.id) then
+			if ab.sustain_essence then
+				trigger = true
+				local essence = util.getval(ab.sustain_essence, self, ab)
+				self.sustain_essence = (self.sustain_essence or 0) + essence
+			end
+		else
+			if ab.sustain_essence then
+				trigger = true
+				local essence = util.getval(ab.sustain_essence, self, ab)
+				self.sustain_essence = (self.sustain_essence or 0) - essence
+			end
+		end
+	elseif not self:attr('force_talent_ignore_ressources') then
 		if ab.essence and not self:attr('zero_resource_cost') then
 			trigger = true
-			local value = util.getval(ab.essence, self, ab) * 0.01 * self:getMaxEssence()
+			local value = self:essenceCost(util.getval(ab.essence, self, ab))
 			self:incEssence(-value)
 			self:incJaggedbody(value * 0.33)
 		end
@@ -145,9 +168,15 @@ hook = function(self, data)
 	local t, d = data.t, data.str
 	if t.essence then
 		local percent = util.getval(t.essence, self, t)
-		local amount = self.max_essence * percent * 0.01
+		local amount = self:essenceCost(percent)
 		local str = ('%d%% (%d)'):format(percent, amount)
 		d:add({'color',0x6f,0xff,0x83}, 'Essence cost: ', {'color',164,190,77}, str, true)
+	end
+	if t.sustain_essence then
+		local percent = util.getval(t.sustain_essence, self, t)
+		local amount = self:realMaxEssence() * percent * 0.01
+		local str = ('%d%% (%d)'):format(percent, amount)
+		d:add({'color',0x6f,0xff,0x83}, 'Sustain essence cost: ', {'color',164,190,77}, str, true)
 	end
 end
 class:bindHook('Actor:getTalentFullDescription:ressources', hook)
