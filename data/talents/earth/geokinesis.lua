@@ -193,6 +193,18 @@ Damage and penalty strengths scale with spellpower.]])
 				t.silence(self, t))
 	end,}
 
+local lm_preuse = function(self, t, silent)
+	local pass = eutil.get(self, 'can_pass', 'pass_wall')
+	eutil.set(self, 'can_pass', 'pass_wall', 0)
+	local use = self:canMove(self.x, self.y, true)
+	self.can_pass.pass_wall = pass
+
+	if not use and not silent then
+		game.logPlayer(self, 'You cannot use this talent while on a solid tile.')
+	end
+	return use
+end
+
 newTalent {
 	name = 'Living Mural',
 	type = {'elemental/geokinesis', 3,},
@@ -206,17 +218,8 @@ newTalent {
 	spellpower = function(self, t)
 		return self:getTalentLevel(t) * 4
 	end,
-	on_pre_use = function(self, t, silent)
-		local pass = eutil.get(self, 'can_pass', 'pass_wall')
-		eutil.set(self, 'can_pass', 'pass_wall', 0)
-		local use = self:canMove(self.x, self.y, true)
-		self.can_pass.pass_wall = pass
-
-		if not use and not silent then
-			game.logPlayer(self, 'You cannot use this talent while on a solid tile.')
-		end
-		return use
-	end,
+	on_pre_use = lm_preuse,
+	on_pre_deactivate = lm_preuse,
 	activate = function(self, t)
 		local p = {}
 		self:talentTemporaryValue(p, 'can_pass', {pass_wall = 70,})

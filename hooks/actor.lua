@@ -105,7 +105,7 @@ class:bindHook('Actor:actBase:Effects', hook)
 
 -- Actor:preUseTalent
 hook = function(self, data)
-	local ab, silent = data.t, data.silent
+	local ab, silent, fake = data.t, data.silent, data.fale
 	-- Check for essence requirements.
 	if not self:attr('force_talent_ignore_ressources') then
 		if ab.essence and (100 * self:getEssence() / self:getMaxEssence()) < ab.essence then
@@ -115,6 +115,11 @@ hook = function(self, data)
 			return true
 		end
 	end
+
+	-- Check for a on_pre_deactivate.
+	if (ab.mode == "sustained" and self:isTalentActive(ab.id)) and
+		ab.on_pre_deactivate and not ab.on_pre_deactivate(self, ab, silent, fake)
+	then return true end
 end
 class:bindHook('Actor:preUseTalent', hook)
 
