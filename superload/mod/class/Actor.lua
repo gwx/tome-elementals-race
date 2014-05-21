@@ -230,6 +230,26 @@ function _M:move(x, y, force)
 	return result
 end
 
+-- Turn off living mural for knockback.
+local knockback = _M.knockback
+function _M:knockback(srcx, srcy, dist, recursive, on_terrain)
+	if self:isTalentActive('T_LIVING_MURAL') then
+		local ox, oy = self.x, self.y
+		local pass = eutil.get(self, 'can_pass', 'pass_wall')
+		local pass_id = self:addTemporaryValue('can_pass', {pass_wall = pass})
+
+		local result = {knockback(self, srcx, srcy, dist, recursive, on_terrain)}
+
+		self:removeTemporaryValue('can_pass', pass_id)
+		if ox ~= self.x or oy ~= self.y then
+			self.living_mural_anchor = nil
+		end
+		return unpack(result)
+	end
+
+	return knockback(self, srcx, srcy, dist, recursive, on_terrain)
+end
+
 -- Allow overrideable archery weapon.
 local hasArcheryWeapon = _M.hasArcheryWeapon
 function _M:hasArcheryWeapon(type)

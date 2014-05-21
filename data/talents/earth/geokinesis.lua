@@ -262,6 +262,14 @@ newTalent {
 		end
 	end,
 	deactivate = function(self, t, p)
+		if p.defense then
+			self:removeTemporaryValue('combat_def', p.defense)
+			p.defense = nil
+		end
+		if p.spell then
+			self:removeTemporaryValue('combat_spellpower', p.spell)
+				p.spell = nil
+		end
 		if p.particles then
 			self:removeParticles(p.particles)
 			p.particles = nil
