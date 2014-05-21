@@ -15,6 +15,8 @@
 
 local eutil = require 'elementals-race.util'
 local entity = require 'engine.Entity'
+local stats = require 'engine.interface.ActorStats'
+local particles = require 'engine.Particles'
 
 newTalentType {
 	type = 'elemental/geokinesis',
@@ -189,4 +191,87 @@ Damage and penalty strengths scale with spellpower.]])
 				t.mistarget_chance(self, t),
 				t.mistarget_percent(self, t) * 100,
 				t.silence(self, t))
+	end,}
+
+newTalent {
+	name = 'Living Mural',
+	type = {'elemental/geokinesis', 3,},
+	require = make_require(3),
+	points = 5,
+	mode = 'sustained',
+	cooldown = 26,
+	defense = function(self, t)
+		return self:combatTalentSpellDamage(t, 8, 20)
+	end,
+	spellpower = function(self, t)
+		return self:getTalentLevel(t) * 4
+	end,
+	on_pre_use = function(self, t, silent)
+		local pass = eutil.get(self, 'can_pass', 'pass_wall')
+		eutil.set(self, 'can_pass', 'pass_wall', 0)
+		local use = self:canMove(self.x, self.y, true)
+		self.can_pass.pass_wall = pass
+
+		if not use and not silent then
+			game.logPlayer(self, 'You cannot use this talent while on a solid tile.')
+		end
+		return use
+	end,
+	activate = function(self, t)
+		local p = {}
+		self:talentTemporaryValue(p, 'can_pass', {pass_wall = 70,})
+		return p
+	end,
+	update_after_move = function(self, t, p)
+		-- See if present location is passable.
+		local pass = eutil.get(self, 'can_pass', 'pass_wall')
+		eutil.set(self, 'can_pass', 'pass_wall', 0)
+		local self_free = self:canMove(self.x, self.y, true)
+		self.can_pass.pass_wall = pass
+
+		-- Manage stats bonuses.
+		if not self_free then
+			p.defense = self:addTemporaryValue('combat_def', util.getval(t.defense, self, t))
+			p.spell = self:addTemporaryValue('combat_spellpower', util.getval(t.spellpower, self, t))
+		else
+			if p.defense then
+				self:removeTemporaryValue('combat_def', p.defense)
+				p.defense = nil
+			end
+			if p.spell then
+				self:removeTemporaryValue('combat_spellpower', p.spell)
+				p.spell = nil
+			end
+		end
+
+		if p.particles then
+			self:removeParticles(p.particles)
+			p.particles = nil
+		end
+
+		local anchor = self.living_mural_anchor
+		if not self_free and anchor and (anchor.x ~= self.x or anchor.y ~= self.y) then
+			local dx, dy = anchor.x - self.x, anchor.y - self.y
+			p.particles = particles.new(
+				'living_mural', math.max(math.abs(dx), math.abs(dy)), {tx = dx, ty = dy,})
+			p.particles.tx = dx
+			p.particles.ty = dy
+			p.particles.x = self.x
+			p.particles.y = self.y
+			self:addParticles(p.particles)
+		end
+	end,
+	deactivate = function(self, t, p)
+		if p.particles then
+			self:removeParticles(p.particles)
+			p.particles = nil
+		end
+		return true
+	end,
+	info = function(self, t)
+		return ([[This allows you to enter walls 1 tile deep. Being submerged in a wall increases your defense by %d and spellpower by %d.
+This ability cannot be used to pass through a thin wall.
+Defense increases with spellpower.]])
+			:format(util.getval(t.defense, self, t),
+							util.getval(t.spellpower, self, t))
 	end,}

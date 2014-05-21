@@ -130,9 +130,9 @@ function _M:onTemporaryValueChange(prop, v, base)
 	end
 end
 
--- Leash
 local move = _M.move
 function _M:move(x, y, force)
+	-- Leash
 	if not force and self.hard_leash then
 		for src, distance in pairs(self.hard_leash) do
 			if not src.dead then
@@ -145,7 +145,89 @@ function _M:move(x, y, force)
 			end
 		end
 	end
-	return move(self, x, y, force)
+
+	local sx, sy = self.x, self.y
+
+	local cancel_move = false
+
+	-- Living Mural
+	if self:isTalentActive('T_LIVING_MURAL') then
+		local deactivate = false
+
+		-- See if present location and target location are passable.
+		local pass = eutil.get(self, 'can_pass', 'pass_wall')
+		eutil.set(self, 'can_pass', 'pass_wall', 0)
+		local self_free = self:canMove(sx, sy, true)
+		local target_free = self:canMove(x, y, true)
+		self.can_pass.pass_wall = pass
+
+		-- If we're currently free, but target is not, just set the anchor
+		-- to present location.
+		if self_free and not target_free then
+			self.living_mural_anchor = {x = sx, y = sy,}
+
+	  -- If we're moving to a free location from a free location then discard anchor.
+		elseif self_free and target_free then
+			self.living_mural_anchor = nil
+
+		-- We're moving from wall to wall. Cancel out if we're trying to move more than one space.
+		elseif core.fov.distance(x, y, sx, sy) > 1 then
+			deactivate = true
+
+		-- Try to move the anchor.
+		else
+			local old_anchor = self.living_mural_anchor
+			local new_anchor = {
+				x = old_anchor.x + x - sx,
+				y = old_anchor.y + y - sy,}
+
+			-- Test if the new anchor is a wall.
+			local pass = eutil.get(self, 'can_pass', 'pass_wall')
+			eutil.set(self, 'can_pass', 'pass_wall', 0)
+			local new_anchor_free = self:canMove(new_anchor.x, new_anchor.y, true)
+			self.can_pass.pass_wall = pass
+
+			-- If the new anchor is valid, use it.
+			if new_anchor_free then
+				self.living_mural_anchor = new_anchor
+			end
+
+			-- Test if the new location is close enough to the current anchor
+			if core.fov.distance(self.living_mural_anchor.x, self.living_mural_anchor.y, x, y) > 1 then
+				-- We can't move here. If this is a forced move, deactivate living mural.
+				if force then
+					deactivate = true
+				else
+					cancel_move = true
+				end
+			end
+		end
+
+		if deactivate then self.living_mural_anchor = nil end
+
+		-- Deactivate if necessary.
+		if deactivate then
+			if self:isTalentActive('T_LIVING_MURAL') then
+				self:forceUseTalent('T_LIVING_MURAL', {ignore_energy = true,})
+			end
+		end
+	end
+
+	local result
+	if cancel_move then
+		result = false
+	else
+		result = move(self, x, y, force)
+	end
+
+	-- Update the lock beam.
+	if self:isTalentActive('T_LIVING_MURAL') then
+		local lm = self:getTalentFromId('T_LIVING_MURAL')
+		local p = self.sustain_talents['T_LIVING_MURAL']
+		lm.update_after_move(self, lm, p)
+	end
+
+	return result
 end
 
 -- Allow overrideable archery weapon.
