@@ -158,6 +158,23 @@ function _M:hasArcheryWeapon(type)
 	return hasArcheryWeapon(self, type)
 end
 
+-- Mistarget on source.
+local project = _M.project
+function _M:project(t, x, y, damtype, dam, particles)
+	if self.mistarget_chance and rng.percent(self.mistarget_chance) then
+		local distance = core.fov.distance(self.x, self.y, x, y)
+		if distance > 1 then
+			local angle = math.rad(rng.range(0, 360))
+			distance = distance * rng.float(0, self.mistarget_percent)
+			x = math.floor(x + 0.5 + math.cos(angle) * distance)
+			y = math.floor(y + 0.5 + math.sin(angle) * distance)
+			game.logSeen(self, '%s mistargets by %.1f!', self.name:capitalize(), distance)
+		end
+	end
+
+	return project(self, t, x, y, damtype, dam, particles)
+end
+
 -- Let projectiles modify their movement.
 local projectDoMove = _M.projectDoMove
 function _M:projectDoMove(typ, tgtx, tgty, x, y, srcx, srcy)

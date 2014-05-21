@@ -96,9 +96,11 @@ newTalent {
 		local x, y = self:getTarget(tg)
 		if not x or not y then return end
 
-		local dam = self:physicalCrit(t.damage(self, t))
-		self:project(tg, x, y, DamageType.PHYSICAL, dam, {type = 'archery'})
+		local dam = t.damage(self, t)
 		local terrain_projector = function(x, y, tg, self)
+			DamageType:get(DamageType.PHYSICAL).projector(
+				self, x, y, DamageType.PHYSICAL, dam)
+
 			local oe = game.level.map(x, y, Map.TERRAIN)
 			if oe and oe.special then return end
 			if oe and oe:attr('temporary') then return end
@@ -151,7 +153,7 @@ newTalent {
 This also passively increases your accuracy by %d.
 Cannot be used while in water or floating.
 Damage, range, accuracy, and duration scale with Strength.]])
-			:format(Talents.damDesc(self, DamageType.PHYSICAL, t.damage(self, t)),
+			:format( Talents.damDesc(self, DamageType.PHYSICAL, t.damage(self, t)),
 							t.duration(self, t),
 							t.accuracy(self, t))
 	end,}

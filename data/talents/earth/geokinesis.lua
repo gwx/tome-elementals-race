@@ -124,12 +124,13 @@ newTalent {
 	require = make_require(2),
 	points = 5,
 	essence = 10,
-	cooldown = 15,
+	--cooldown = 15,
 	range = 4,
 	no_energy = 'fake',
 	tactical = {ATTACK = 2, DISABLE = {SILENCE = 2,},},
 	target = function(self, t)
-		return {type = 'hit', range = util.getval(t.range, self, t),}
+		return {type = 'hit', range = util.getval(t.range, self, t),
+						talent = t,}
 	end,
 	damage = function(self, t) return self:combatTalentSpellDamage(t, 30, 80) end,
 	air = function(self, t) return 10 + self:combatTalentSpellDamage(t, 10, 20) end,
@@ -140,7 +141,7 @@ newTalent {
 		return 10 + self:combatTalentSpellDamage(t, 0, 50)
 	end,
 	mistarget_percent = function(self, t)
-		return 0.2 + self:combatTalentSpellDamage(t, 0, 0.2)
+		return 0.4 + self:combatTalentSpellDamage(t, 0, 0.4)
 	end,
 	duration = function(self, t)
 		return math.floor(2.5 + self:getTalentLevel(t) * 0.4)
@@ -149,6 +150,31 @@ newTalent {
 		return math.floor(self:getTalentLevel(t) * 0.35)
 	end,
 	action = function(self, t)
+		local tg = util.getval(t.target, self, t)
+		local x, y = self:getTarget(tg)
+		if not x or not y then return end
+
+		local target = game.level.map(x, y, Map.ACTOR)
+		if not target then return end
+
+		local spellpower = self:combatSpellpower()
+		target:setEffect(
+			'EFF_CHOKING_DUST', util.getval(t.duration, self, t), {
+				src = self,
+				damage = util.getval(t.damage, self, t),
+				air = util.getval(t.air, self, t),
+				ranged_penalty = util.getval(t.ranged_penalty, self, t),
+				mistarget_chance = util.getval(t.mistarget_chance, self, t),
+				mistarget_percent = util.getval(t.mistarget_percent, self, t),
+				apply_power = spellpower})
+
+		local silence = util.getval(t.silence, self, t)
+		if silence > 0 then
+			target:setEffect('EFF_SILENCED', silence, {apply_power = spellpower,})
+		end
+
+		game.level.map:particleEmitter(x, y, 1, 'choking_dust', {})
+		game:playSoundNear(target, 'talents/earth')
 		return true
 	end,
 	info = function(self, t)
@@ -157,7 +183,7 @@ You will also silence the target for %d turns.
 Damage and penalty strengths scale with spellpower.]])
 			:format(
 				t.duration(self, t),
-				t.damage(self, t),
+				Talents.damDesc(self, DamageType.PHYSICAL, t.damage(self, t)),
 				t.air(self, t),
 				t.ranged_penalty(self, t),
 				t.mistarget_chance(self, t),

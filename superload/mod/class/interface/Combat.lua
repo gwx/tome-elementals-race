@@ -55,4 +55,15 @@ _M.combatCheckTraining = function(self, weapon)
 	return (t.getWeaponPower or self.getTalentLevel)(self, t, weapon)
 end
 
+-- Reduce ranged accuracy.
+local combatAttackRanged = _M.combatAttackRanged
+function _M:combatAttackRanged(weapon, ammo)
+	local base = self.combat_atk or 0
+	local ranged = self.combat_ranged_atk or 0
+	self.combat_atk = base + ranged
+	local atk = combatAttackRanged(self, weapon, ammo)
+	self.combat_atk = base
+	return atk
+end
+
 return _M

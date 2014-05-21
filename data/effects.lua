@@ -226,3 +226,27 @@ newEffect {
 			self:addParticles(eff.particles)
 		end
 	end,}
+
+newEffect {
+	name = 'CHOKING_DUST', image = 'talents/choking_dust.png',
+	desc = 'Choking Dust',
+	long_desc = function(self, eff)
+		return ('Engulfed in a cloud of dust. Each turn takes %d physical damage and loses %d air. Also reduces ranged accuracy by %d, and gives a %d%% chance to misaim ranged attacks by up to %d%% of the original distance.')
+			:format(eff.damage, eff.air, eff.ranged_penalty,
+							eff.mistarget_chance, eff.mistarget_percent * 100)
+	end,
+	type = 'physical',
+	subtype = {nature = true, earth = true,},
+	status = 'detrimental',
+	parameters = {damage = 10, air = 5, ranged_penalty = 10,
+								mistarget_chance = 10, mistarget_percent = 0.2,},
+	activate = function(self, eff)
+		self:effectTemporaryValue(eff, 'combat_ranged_atk', -eff.ranged_penalty)
+		self:effectTemporaryValue(eff, 'mistarget_chance', eff.mistarget_chance)
+		self:effectTemporaryValue(eff, 'mistarget_percent', eff.mistarget_percent)
+	end,
+	on_timeout = function(self, eff)
+		DamageType:get(DamageType.PHYSICAL).projector(
+			eff.src, self.x, self.y, DamageType.PHYSICAL, eff.damage)
+		self:suffocate(eff.air, eff.src)
+	end,}
