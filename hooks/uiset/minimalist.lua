@@ -89,21 +89,25 @@ local shader = require "engine.Shader"
 		shat[1]:toScreenPrecise(x+49, y+10, shat[6] * p, shat[7], 0, p * 1/shat[4], 0, 1/shat[5], essence_c[1], essence_c[2], essence_c[3], a)
 		if essence_sha.shad then essence_sha.shad:use(false) end
 
-		local regen = player.essence_regen
+		local regen = player.essence_regen * 100 / player:realMaxEssence()
 		local max = player.max_essence
 		if not self.res.essence or self.res.essence.vc ~= player.essence or self.res.essence.vm ~= max or self.res.essence.vr ~= regen then
 			self.res.essence = {
 				vc = player.essence, vm = max, vr = regen,
-				cur = {core.display.drawStringBlendedNewSurface(font_sha, (player.essence < 0) and "???" or ("%d/%d"):format(player.essence, player.max_essence), 255, 255, 255):glTexture()},
-				regen={core.display.drawStringBlendedNewSurface(sfont_sha, ("%+0.2f"):format(regen), 255, 255, 255):glTexture()},
+				cur = {core.display.drawStringBlendedNewSurface(font_sha, (player.essence < 0) and '???' or ('%d%%'):format(player.essence / player:realMaxEssence() * 100), 255, 255, 255):glTexture()},
+				actual = {core.display.drawStringBlendedNewSurface(sfont_sha, ('/%d'):format(player:realMaxEssence()), 255, 255, 255):glTexture()},
+				regen={core.display.drawStringBlendedNewSurface(sfont_sha, ("%+0.1f%%"):format(regen), 255, 255, 255):glTexture()},
 			}
 		end
 		local dt = self.res.essence.cur
 		dt[1]:toScreenFull(2+x+64, 2+y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 0, 0, 0, 0.7 * a)
 		dt[1]:toScreenFull(x+64, y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 1, 1, 1, a)
+		dt = self.res.essence.actual
+		dt[1]:toScreenFull(2+x+104, 2+y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 0, 0, 0, 0.7 * a)
+		dt[1]:toScreenFull(x+104, y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 1, 1, 1, a)
 		dt = self.res.essence.regen
-		dt[1]:toScreenFull(2+x+144, 2+y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 0, 0, 0, 0.7 * a)
-		dt[1]:toScreenFull(x+144, y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 1, 1, 1, a)
+		dt[1]:toScreenFull(2+x+139, 2+y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 0, 0, 0, 0.7 * a)
+		dt[1]:toScreenFull(x+139, y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 1, 1, 1, a)
 
 		local front = fshat_equi_dark
 		if player.essence >= max then front = fshat_equi end
