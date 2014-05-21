@@ -270,7 +270,7 @@ newTalent {
 	end,
 	info = function(self, t)
 		return ([[This allows you to enter walls 1 tile deep. Being submerged in a wall increases your defense by %d and spellpower by %d.
-This ability cannot be used to pass through a thin wall.
+This ability cannot be used to pass through a thin wall. (A beam will appear to indicate which side of the wal you are currently on.)
 Defense increases with spellpower.]])
 			:format(util.getval(t.defense, self, t),
 							util.getval(t.spellpower, self, t))
