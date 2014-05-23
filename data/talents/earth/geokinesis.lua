@@ -13,7 +13,9 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 local eutil = require 'elementals-race.util'
+local active_terrain = require 'elementals-race.active-terrain'
 local entity = require 'engine.Entity'
 local object = require 'mod.class.Object'
 local stats = require 'engine.interface.ActorStats'
@@ -405,41 +407,34 @@ newTalent {
 			local tx, ty = x3 + target.x, y3 + target.y
 			local target_floor = game.level.map(tx, ty, Map.TERRAIN)
 
-			local manager = object.new {
-				wall = target.terrain,
-				old_feat = target_floor,
+			target.active = active_terrain.new {
+				terrain = target.terrain,
+				old_source = target.terrain,
+				old_target = target_floor,
 				temporary = duration,
+				nicer_tiles = true,
 				x = tx, y = ty, sx = sx, sy = sy,
 				canAct = false,
-				define_as = false,
-				nice_tiler = false,
-				act = function(self)
-					self:useEnergy()
-					self.temporary = self.temporary - 1
-					if self.temporary <= 0 then
-						local Map = require 'engine.Map'
-						game.level:removeEntity(self)
-						game.level.map(self.sx, self.sy, Map.TERRAIN, self.wall)
-						game.level.map(self.x, self.y, Map.TERRAIN, self.old_feat)
-						game.nicer_tiles:updateAround(game.level, self.sx, self.sy)
-						game.nicer_tiles:updateAround(game.level, self.x, self.y)
-						if self.wall.temporary then
-							self.wall.x, self.wall.y = self.sx, self.sy
-						end
+				dig = false,
+				timeout = function(self)
+					local map = require 'engine.Map'
+					self:removeLevel()
+					local present = game.level.map(self.sx, self.sy, map.TERRAIN)
+					if present and present.active_terrain then
+						present:removeLevel()
 					end
+					game.level.map(self.sx, self.sy, map.TERRAIN, self.old_source)
+					game.nicer_tiles:updateAround(game.level, self.sx, self.sy)
 				end,}
-
-			game.level:addEntity(manager)
-			game.logPlayer(game.player, 'XXX: %d', manager.uid)
-			game.level.map(tx, ty, Map.TERRAIN, target.terrain)
-			if target.terrain.temporary then
-				target.terrain.x, target.terrain.y = tx, ty
-			end
-			game.nicer_tiles:updateAround(game.level, tx, ty)
 
 			-- Damage.
 			DamageType:get(DamageType.PHYSICAL).projector(
 				self, tx, ty, DamageType.PHYSICAL, damage)
+		end
+
+		-- Nicer tile the walls.
+		for _, target in pairs(targets) do
+			game.nicer_tiles:updateAround(game.level, target.active.x, target.active.y)
 		end
 
 		return --true

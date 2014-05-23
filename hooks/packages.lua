@@ -21,7 +21,7 @@ for _, p in pairs {'Actor', 'interface.Combat',} do
 end
 
 -- Add our own packages.
-for _, p in pairs {'util'} do
+for _, p in pairs {'util', 'active-terrain',} do
 	package.preload['elementals-race.'..p] =
 		loadfile('/data-elementals-race/packages/'..p..'.lua')
 end
