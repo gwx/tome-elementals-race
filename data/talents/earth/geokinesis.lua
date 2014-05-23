@@ -15,6 +15,7 @@
 
 local eutil = require 'elementals-race.util'
 local entity = require 'engine.Entity'
+local object = require 'mod.class.Object'
 local stats = require 'engine.interface.ActorStats'
 local particles = require 'engine.Particles'
 
@@ -296,7 +297,7 @@ newTalent {
 	cooldown = 21,
 	essence = 25,
 	range = function(self, t)
-		return 2 + math.floor(self:getTalentLevel(t) * 0.35)
+		return 3 + math.floor(self:getTalentLevel(t) * 0.35)
 	end,
 	move = function(self, t)
 		return 1 + math.floor(self:getTalentLevel(t) * 0.7)
@@ -309,11 +310,143 @@ newTalent {
 	end,
 	duration = 3,
 	action = function(self, t)
-		return true
+		local _
+		local is_wall = function(x, y)
+			local terrain = game.level.map(x, y, Map.TERRAIN)
+			return terrain.dig and eutil.get(terrain, 'can_pass', 'pass_wall')
+		end
+
+		-- Get first corner of wall section.
+		local range = util.getval(t.range, self, t)
+		local tg = {type = 'hit', range = range,}
+		local x1, y1 = self:getTarget(tg)
+		if not x1 or not y1 then return end
+		_, x1, y1 = self:canProject(tg, x1, y1)
+		if not is_wall(x1, y1) then return end
+
+		-- Get rest of wall section (if necessary).
+		local size = util.getval(t.size, self, t)
+		local x2, y2
+		if size > 1 then
+			tg = {type = 'rect', x = x1, y = y1, w = size, h = size,
+						pass_terrain = true, stop_block = false, filter = is_wall,}
+			x2, y2 = self:getTarget(tg)
+		else
+			x2, y2 = x1, y1
+		end
+		if not x2 or not y2 then return end
+
+		-- Grab all of the walls.
+		local targets = {}
+		local by_coord = {}
+		core.fov.calc_rect(
+			x1, y1, x2, y2, size, size, is_wall,
+			function(_, x, y)
+				table.insert(targets, {x = x - x1,y = y - y1,})
+				by_coord[x] = by_coord[x] or {}
+				by_coord[x][y] = true
+		end)
+
+		-- Use custom block_path
+		local block_path = function(typ, x, y, for_highlights)
+			if not game.level.map:isBound(x, y) then
+				return true, true, false
+			elseif typ.range and typ.start_x then
+				local dist = core.fov.distance(typ.start_x, typ.start_y, x, y)
+				if dist > typ.range then return true, false, false end
+			end
+
+			local is_known = game.level.map.remembers(x, y) or game.level.map.seens(x, y)
+			if (not by_coord[x] or not by_coord[x][y]) and
+				(game.level.map:checkEntity(x, y, Map.TERRAIN, 'block_move') or
+					 game.level.map:checkEntity(x, y, Map.TERRAIN, 'temporary') or
+					 game.level.map:checkEntity(x, y, Map.TERRAIN, 'change_level') or
+					 game.level.map:checkEntity(x, y, Map.TERRAIN, 'change_zone'))
+			then
+				if for_highlights and not is_known then
+					return false, 'unknown', true
+				else
+					return true, true, false
+				end
+			end
+
+			if for_highlights and not is_known then
+				return false, 'unknown', true
+			end
+
+			return false, true, true
+		end
+
+		-- Grab the target destination.
+		local move = util.getval(t.move, self, t)
+		tg = {type = 'hit', final_green = 'radius', block_path = block_path,
+					start_x = x1, start_y = y1, range = move, blob = targets,}
+		local x3, y3 = self:getTarget(tg)
+		if not x3 or not y3 then return end
+		_, _, _, x3, y3 = self:canProject(tg, x3, y3)
+
+
+		-- Dig original walls.
+		for _, target in pairs(targets) do
+			local sx, sy = x1 + target.x, y1 + target.y
+			target.terrain = game.level.map(sx, sy, Map.TERRAIN)
+			if not target.terrain.temporary then
+				DamageType:get(DamageType.DIG).projector(self, sx, sy, DamageType.DIG)
+			elseif target.terrain.old_feat then
+				game.level.map(sx, sy, Map.TERRAIN, target.terrain.old_feat)
+			end
+		end
+
+		-- Place walls.
+		local damage = util.getval(t.damage, self, t)
+		for _, target in pairs(targets) do
+			local duration = util.getval(t.duration, self, t) + rng.range(0, 2)
+			local sx, sy = x1 + target.x, y1 + target.y
+			local tx, ty = x3 + target.x, y3 + target.y
+			local target_floor = game.level.map(tx, ty, Map.TERRAIN)
+
+			local manager = object.new {
+				wall = target.terrain,
+				old_feat = target_floor,
+				temporary = duration,
+				x = tx, y = ty, sx = sx, sy = sy,
+				canAct = false,
+				define_as = false,
+				nice_tiler = false,
+				act = function(self)
+					self:useEnergy()
+					self.temporary = self.temporary - 1
+					if self.temporary <= 0 then
+						local Map = require 'engine.Map'
+						game.level:removeEntity(self)
+						game.level.map(self.sx, self.sy, Map.TERRAIN, self.wall)
+						game.level.map(self.x, self.y, Map.TERRAIN, self.old_feat)
+						game.nicer_tiles:updateAround(game.level, self.sx, self.sy)
+						game.nicer_tiles:updateAround(game.level, self.x, self.y)
+						if self.wall.temporary then
+							self.wall.x, self.wall.y = self.sx, self.sy
+						end
+					end
+				end,}
+
+			game.level:addEntity(manager)
+			game.logPlayer(game.player, 'XXX: %d', manager.uid)
+			game.level.map(tx, ty, Map.TERRAIN, target.terrain)
+			if target.terrain.temporary then
+				target.terrain.x, target.terrain.y = tx, ty
+			end
+			game.nicer_tiles:updateAround(game.level, tx, ty)
+
+			-- Damage.
+			DamageType:get(DamageType.PHYSICAL).projector(
+				self, tx, ty, DamageType.PHYSICAL, damage)
+		end
+
+		return --true
 	end,
 	info = function(self, t)
 		local size = util.getval(t.size, self, t)
-		return ([[Move a chunk of walls up to %dx%d big in a line up to %d tiles. The rushing wall deals %d physical damage to any enemy hit, and the same amount again and a 3 turn stun if there is a wall directly behind them to slam them into. After 3 turns the walls will return to their original position.
+		return ([[Move a chunk of walls up to %dx%d big in a line up to %d tiles. The rushing wall deals %d physical damage to any enemy hit #SLATE#(UNIMPLEMENTED:, and the same amount again and a 3 turn stun if there is a wall directly behind them to slam them into)#LAST#. After 3 - 5 turns the walls will return to their original position.
 Damage increases with spellpower.]])
 			:format(size, size,
 							util.getval(t.move, self, t),

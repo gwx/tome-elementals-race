@@ -16,6 +16,7 @@
 
 local _M = loadPrevious(...)
 local eutil = require 'elementals-race.util'
+local target = require 'engine.Target'
 
 -- Learn Essence Pool
 local learnPool = _M.learnPool
@@ -324,5 +325,74 @@ function _M:canWearObject(o, try_slot)
 
 	return canWearObject(self, o, try_slot)
 end
+
+-- Add in blob targeting.
+function _M:canProject(t, x, y)
+	local typ = target:getType(t)
+	typ.source_actor = self
+	typ.start_x = typ.start_x or typ.x or typ.source_actor and typ.source_actor.x or self.x
+	typ.start_y = typ.start_y or typ.y or typ.source_actor and typ.source_actor.y or self.y
+
+	local blob = typ.blob or {}
+	local blob_typ = {range = false, __index = typ}
+	setmetatable(blob_typ, blob_typ)
+
+	-- Stop at range or on block
+	local stop_x, stop_y = typ.start_x, typ.start_y
+	local stop_radius_x, stop_radius_y = typ.start_x, typ.start_y
+	local l, is_corner_blocked
+	if typ.source_actor.lineFOV then
+		l = typ.source_actor:lineFOV(x, y, nil, nil, typ.start_x, typ.start_y)
+	else
+		l = core.fov.line(typ.start_x, typ.start_y, x, y)
+	end
+	local block_corner = typ.block_path and function(_, bx, by) local b, h, hr = typ:block_path(bx, by, true) ; return b and h and not hr end
+		or function(_, bx, by) return false end
+
+	l:set_corner_block(block_corner)
+	local lx, ly, blocked_corner_x, blocked_corner_y = l:step()
+
+	-- Being completely blocked by the corner of an adjacent tile is annoying, so let's make it a special case and hit it instead
+	if blocked_corner_x then
+		stop_x = blocked_corner_x
+		stop_y = blocked_corner_y
+	else
+		while lx and ly do
+			local block, hit, hit_radius = false, true, true
+			if is_corner_blocked then
+				stop_x = stop_radius_x
+				stop_y = stop_radius_y
+				break
+			elseif typ.block_path then
+				block, hit, hit_radius = typ:block_path(lx, ly)
+				for _, offsets in pairs(blob) do
+					local block2, hit2, hit_radius2 =
+						blob_typ:block_path(lx + offsets.x, ly + offsets.y, true)
+					block = block or block2
+					hit = hit and hit2
+					hit_radius = hit_radius and hit_radius2
+				end
+			end
+			if hit then
+				stop_x, stop_y = lx, ly
+			end
+			if hit_radius then
+				stop_radius_x, stop_radius_y = lx, ly
+			end
+
+			if block then break end
+			lx, ly, is_corner_blocked = l:step()
+		end
+	end
+
+	-- Check for minimum range
+	if typ.min_range and core.fov.distance(typ.start_x, typ.start_y, stop_x, stop_y) < typ.min_range then
+		return
+	end
+
+	local is_hit = stop_x == x and stop_y == y
+	return is_hit, stop_x, stop_y, stop_radius_x, stop_radius_y
+end
+
 
 return _M
