@@ -17,6 +17,7 @@
 require 'engine.class'
 local object = require 'engine.Object'
 local map = require 'engine.Map'
+local grid = require 'mod.class.Grid'
 module('elementals-race.active-terrain', package.seeall, class.inherit(object))
 
 function _M:init(t, no_default)
@@ -32,6 +33,8 @@ function _M:init(t, no_default)
 	self.in_level = false
 	self.in_map = false
 	self.active_terrain = true
+
+	self.tooltip = grid.tooltip
 
 	t = t or {}
 	object.init(self, t, no_default)
@@ -87,11 +90,15 @@ function _M:removeMap()
 		-- Replace the terrain we were covering.
 		if self.covering then
 			if self.covering.active_terrain then
+				self.covering.x = self.x
+				self.covering.y = self.y
 				self.covering:addMap()
 			else
 				game.level.map(self.x, self.y, map.TERRAIN, self.covering)
 			end
 			self.covering = nil
+		else
+			game.level.map:remove(self.x, self.y, map.TERRAIN)
 		end
 
 		if self.nicer_tiles then
@@ -111,6 +118,11 @@ function _M:move(x, y, force)
 	self.x = x
 	self.y = y
 
+	if self.terrain.active_terrain then
+		self.terrain.x = x
+		self.terrain.y = y
+	end
+
 	-- Then add self to the map.
 	self:addMap()
 end
@@ -125,7 +137,7 @@ function _M:act()
 	if self.temporary then
 		self.temporary = self.temporary - 1
 		if self.temporary <= 0 then
-			if self.timeout then return self:timeout() end
+			if self.temporary_timeout then return self:temporary_timeout() end
 			return self:removeLevel()
 		end
 	end

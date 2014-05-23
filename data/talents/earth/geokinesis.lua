@@ -394,8 +394,8 @@ newTalent {
 			target.terrain = game.level.map(sx, sy, Map.TERRAIN)
 			if not target.terrain.temporary then
 				DamageType:get(DamageType.DIG).projector(self, sx, sy, DamageType.DIG)
-			elseif target.terrain.old_feat then
-				game.level.map(sx, sy, Map.TERRAIN, target.terrain.old_feat)
+			elseif target.terrain.active_terrain then
+				target.terrain:removeLevel()
 			end
 		end
 
@@ -416,14 +416,18 @@ newTalent {
 				x = tx, y = ty, sx = sx, sy = sy,
 				canAct = false,
 				dig = false,
-				timeout = function(self)
+				temporary_timeout = function(self)
 					local map = require 'engine.Map'
 					self:removeLevel()
 					local present = game.level.map(self.sx, self.sy, map.TERRAIN)
 					if present and present.active_terrain then
 						present:removeLevel()
 					end
-					game.level.map(self.sx, self.sy, map.TERRAIN, self.old_source)
+					if self.old_source.active_terrain then
+						self.old_source:move(self.sx, self.sy)
+					else
+						game.level.map(self.sx, self.sy, map.TERRAIN, self.old_source)
+					end
 					game.nicer_tiles:updateAround(game.level, self.sx, self.sy)
 				end,}
 
@@ -437,7 +441,8 @@ newTalent {
 			game.nicer_tiles:updateAround(game.level, target.active.x, target.active.y)
 		end
 
-		return --true
+		game:playSoundNear(self, 'talents/earth')
+		return true
 	end,
 	info = function(self, t)
 		local size = util.getval(t.size, self, t)
