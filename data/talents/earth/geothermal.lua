@@ -62,7 +62,7 @@ newTalent {
 		if not x or not y then return end
 		_, _, _, x, y = self:canProject(tg, x, y)
 
-		local dam = util.getval(t.damage, self, t)
+		local dam = self:spellCrit(util.getval(t.damage, self, t))
 		local projector = function(x, y, tg, self)
 			DamageType:get(DamageType.PHYSICAL).projector(
 				self, x, y, DamageType.PHYSICAL, dam)
@@ -176,7 +176,7 @@ newTalent {
 		local restore = util.getval(t.restore, self, t)
 		self:incJaggedbody(restore * (self:getMaxJaggedbody() - self:getJaggedbody()))
 		local tg = util.getval(t.target, self, t)
-		local damage = util.getval(t.damage, self, t)
+		local damage = self:spellCrit(util.getval(t.damage, self, t))
 		local duration = util.getval(t.duration, self, t)
 		local projector = function(x, y, tg, self)
 			local target = game.level.map(x, y, Map.ACTOR)

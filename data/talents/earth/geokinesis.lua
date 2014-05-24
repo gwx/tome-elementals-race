@@ -166,7 +166,7 @@ newTalent {
 		target:setEffect(
 			'EFF_CHOKING_DUST', util.getval(t.duration, self, t), {
 				src = self,
-				damage = util.getval(t.damage, self, t),
+				damage = self:spellCrit(util.getval(t.damage, self, t)),
 				air = util.getval(t.air, self, t),
 				ranged_penalty = util.getval(t.ranged_penalty, self, t),
 				mistarget_chance = util.getval(t.mistarget_chance, self, t),
@@ -400,7 +400,7 @@ newTalent {
 		end
 
 		-- Place walls.
-		local damage = util.getval(t.damage, self, t)
+		local damage = self:spellCrit(util.getval(t.damage, self, t))
 		for _, target in pairs(targets) do
 			local duration = util.getval(t.duration, self, t) + rng.range(0, 2)
 			local sx, sy = x1 + target.x, y1 + target.y
