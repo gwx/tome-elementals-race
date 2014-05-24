@@ -44,7 +44,8 @@ newTalent {
 	end,
 	power = function(self, t)
 		return math.floor(
-			(5 + self:getCon(5, true)) * self:combatTalentLimit(t, 25, 10, 20))
+			(1 + (self.max_jaggedbody_mult or 0)) *
+				(5 + self:getCon(5, true)) * self:combatTalentLimit(t, 25, 10, 20))
 	end,
 	reflect = function(self, t) return self:combatTalentScale(t, 0.15, 0.3) end,
 	on_learn = function(self, t)

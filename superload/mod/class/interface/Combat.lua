@@ -14,6 +14,8 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+local eutil = require 'elementals-race.util'
+
 local _M = loadPrevious(...)
 
 -- Add T_HEAVY_ARMS to weapon masteries.
@@ -64,6 +66,25 @@ function _M:combatAttackRanged(weapon, ammo)
 	local atk = combatAttackRanged(self, weapon, ammo)
 	self.combat_atk = base
 	return atk
+end
+
+-- Add in the conversion resists
+local combatGetResist = _M.combatGetResist
+function _M:combatGetResist(type)
+	local add = 0
+	local conversions = eutil.get(self, 'conversion_resists', type)
+	if conversions and not conversions.__disabled then
+		-- Disable to get rid of potential infinite loop.
+		conversions.__disabled = true
+		for conv_type, conv_pct in pairs(conversions) do
+			-- Filter out the __disabled we just put in.
+			if conv_type ~= '__disabled' then
+				add = add + self:combatGetResist(conv_type) * 0.01 * conv_pct
+			end
+		end
+		conversions.__disabled = nil
+	end
+	return add + combatGetResist(self, type)
 end
 
 return _M

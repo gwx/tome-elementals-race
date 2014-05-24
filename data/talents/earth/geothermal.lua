@@ -86,3 +86,44 @@ Damage increases with spellpower.]])
 				util.getval(t.radius, self, t),
 				util.getval(t.reflect, self, t) * 100)
 	end,}
+
+newTalent {
+	name = 'Insulation',
+	type = {'elemental/geothermal', 2,},
+	require = make_require(2),
+	points = 5,
+	mode = 'passive',
+	resist = function(self, t)
+		return self:combatTalentScale(t, 3, 10)
+	end,
+	conversion = function(self, t)
+		return self:combatTalentScale(t, 25, 60) * (0.5 + self:getMag(0.5, true))
+	end,
+	jagged = function(self, t)
+		return self:combatTalentScale(t, 0.1, 0.35)
+	end,
+	passives = function(self, t, p)
+		self:talentTemporaryValue(p, 'max_jaggedbody_mult', util.getval(t.jagged, self, t))
+		self:recomputePassives('T_JAGGED_BODY')
+		local resists = {
+			[DamageType.PHYSICAL] = util.getval(t.resist, self, t),
+			-- XXX Add these in so that conversion resists are properly displayed even if they're 0.
+			[DamageType.FIRE] = 0.000001,
+			[DamageType.COLD] = 0.000001,}
+		self:talentTemporaryValue(p, 'resists', resists)
+		local conversion = util.getval(t.conversion, self, t)
+		resists = {
+			[DamageType.FIRE] = {[DamageType.PHYSICAL] = conversion,},
+			[DamageType.COLD] = {[DamageType.PHYSICAL] = conversion,},}
+		self:talentTemporaryValue(p, 'conversion_resists', resists)
+	end,
+	recompute_passives = {stats = {stats.STAT_MAG,},},
+	info = function(self, t)
+		return ([[Your hard outer shell does good to keep the gooey candy center warm.
+Increases physical resistance by %d%% and increases the maximum capacity of Jagged Body by %d%%.
+Also, %d%% (scaling with magic) of your physical resistance is added to your to fire and cold resistance.]])
+			:format(
+				util.getval(t.resist, self, t),
+				util.getval(t.jagged, self, t) * 100,
+				util.getval(t.conversion, self, t))
+	end,}
