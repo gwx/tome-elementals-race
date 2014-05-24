@@ -17,7 +17,7 @@
 local _M = loadPrevious(...)
 
 -- Add T_HEAVY_ARMS to weapon masteries.
-for _, x in pairs {'axe', 'mace', 'sword',} do
+for _, x in pairs {'axe', 'mace', 'sword', 'unarmed',} do
 	_M:addCombatTraining(x, 'T_HEAVY_ARMS')
 end
 
