@@ -38,7 +38,7 @@ newTalent {
 	points = 5,
 	essence = 5,
 	cooldown = 3,
-	tactical = {ATTACK = 3,},
+	tactical = {ATTACKAREA = 2,},
 	range = 4, radius = 1,
 	damage = function(self, t)
 		return self:combatTalentSpellDamage(t, 15, 180)
@@ -102,6 +102,12 @@ newTalent {
 	jagged = function(self, t)
 		return self:combatTalentScale(t, 0.1, 0.35)
 	end,
+	-- If we unlearn the last level, passives never gets called.
+	on_unlearn = function(self, t, p)
+		if self:getTalentLevelRaw(t) == 0 then
+			game:onTickEnd(function() self:recomputePassives('T_JAGGED_BODY') end)
+		end
+	end,
 	passives = function(self, t, p)
 		self:talentTemporaryValue(p, 'max_jaggedbody_mult', util.getval(t.jagged, self, t))
 		self:recomputePassives('T_JAGGED_BODY')
@@ -126,4 +132,77 @@ Also, %d%% (scaling with magic) of your physical resistance is added to your to 
 				util.getval(t.resist, self, t),
 				util.getval(t.jagged, self, t) * 100,
 				util.getval(t.conversion, self, t))
+	end,}
+
+newTalent {
+	name = 'Pyroclastic Burst',
+	type = {'elemental/geothermal', 3,},
+	require = make_require(3),
+	points = 5,
+	essence = 20,
+	cooldown = 17,
+	tactical = {ATTACKAREA = 2, DISABLE = {PIN = 1},},
+	range = 0, radius = 1,
+	damage = function(self, t)
+		return self:combatTalentSpellDamage(t, 10, 70)
+	end,
+	restore = function(self, t)
+		return self:combatTalentScale(t, 0.25, 0.6)
+	end,
+	regen = function(self, t)
+		return self:combatTalentScale(t, 3, 8) * (0.5 + self:getMag(0.5, true))
+	end,
+	duration = function(self, t)
+		return math.ceil(self:getTalentLevel(t) * 0.5)
+	end,
+	passives = function(self, t, p)
+		self:talentTemporaryValue(p, 'jaggedbody_regen_flat', util.getval(t.regen, self, t))
+		self:recomputePassives('T_JAGGED_BODY')
+	end,
+	recompute_passives = {stats = {stats.STAT_MAG,},},
+	-- If we unlearn the last level, passives never gets called.
+	on_unlearn = function(self, t, p)
+		if self:getTalentLevelRaw(t) == 0 then
+			game:onTickEnd(function() self:recomputePassives('T_JAGGED_BODY') end)
+		end
+	end,
+	target = function(self, t)
+		return {
+			type = 'ball', talent = t, selffire = false,
+			range = util.getval(t.range, self, t),
+			radius = util.getval(t.radius, self, t),}
+	end,
+	action = function(self, t)
+		local restore = util.getval(t.restore, self, t)
+		self:incJaggedbody(restore * (self:getMaxJaggedbody() - self:getJaggedbody()))
+		local tg = util.getval(t.target, self, t)
+		local damage = util.getval(t.damage, self, t)
+		local duration = util.getval(t.duration, self, t)
+		local projector = function(x, y, tg, self)
+			local target = game.level.map(x, y, Map.ACTOR)
+			if not target then return end
+			target:setEffect('EFF_PYROCLASTIC_PIN', duration, {
+												 src = self,
+												 apply_power = self:combatSpellpower(),
+												 damage = damage,})
+		end
+		self:project(tg, self.x, self.y, projector)
+
+		game.level.map:particleEmitter(x, y, tg.radius, "ball_fire", {radius = tg.radius,})
+		game:playSoundNear(self, 'talents/fire')
+		return true
+	end,
+	info = function(self, t)
+		local restore = util.getval(t.restore, self, t)
+		return ([[Bouts of molten rage explode from within, solidifying on both you and the immediate surroundings.
+Instantly regenerates %d%% of your missing Jagged Body shield and pins all adjacent for %d turns. Each turn, those pinned take %d fire damage (scaling with spellpower).
+Passively increases jagged body regeneration by %.1f points per turn (scaling with magic).
+Total jagged body restoration, including that from spent essence, will be %d.]])
+			:format(
+				restore * 100,
+				util.getval(t.duration, self, t),
+				Talents.damDesc(self, DamageType.FIRE, util.getval(t.damage, self, t)),
+				util.getval(t.regen, self, t),
+				restore * (self:getMaxJaggedbody() - self:getJaggedbody()) +
+					self:essenceCost(util.getval(t.essence, self, t)))
 	end,}

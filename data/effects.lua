@@ -250,3 +250,22 @@ newEffect {
 			eff.src, self.x, self.y, DamageType.PHYSICAL, eff.damage)
 		self:suffocate(eff.air, eff.src)
 	end,}
+
+newEffect {
+	name = 'PYROCLASTIC_PIN', image = 'talents/pyroclastic_burst.png',
+	desc = 'Pyroclastic Pin',
+	long_desc = function(self, eff)
+		return ('Molten rock has formed around your legs, pinning you in place and dealing %d fire damage each turn.')
+			:format(damDesc(eff.src or {}, DamageType.FIRE, eff.damage))
+	end,
+	type = 'physical',
+	subtype = {earth = true, fire = true, pin = true,},
+	status = 'detrimental',
+	parameters = {damage = 10,},
+	activate = function(self, eff)
+		self:effectTemporaryValue(eff, 'never_move', 1)
+	end,
+	on_timeout = function(self, eff)
+		DamageType:get(DamageType.FIRE).projector(
+			eff.src or {}, self.x, self.y, DamageType.FIRE, eff.damage)
+	end,}

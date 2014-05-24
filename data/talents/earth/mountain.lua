@@ -27,11 +27,6 @@ local make_require = function(tier)
 		level = function(level) return -5 + tier * 4 + level end,}
 end
 
-local set_jaggedbody_regen = function(self)
-	self.jaggedbody_regen =
-		self.jaggedbody_regen_percent * 0.01 * self.max_jaggedbody
-end
-
 newTalent {
 	name = 'Jagged Body',
 	type = {'elemental/mountain', 1,},
@@ -57,7 +52,9 @@ newTalent {
 		self:talentTemporaryValue(p, 'max_jaggedbody', t.power(self, t))
 		self:talentTemporaryValue(p, 'jaggedbody_reflect', t.reflect(self, t))
 		self:talentTemporaryValue(p, 'jaggedbody_regen_percent', 2)
-		set_jaggedbody_regen(self)
+		self.jaggedbody_regen =
+			(self.jaggedbody_regen_flat or 0) +
+			self.jaggedbody_regen_percent * 0.01 * self.max_jaggedbody
 	end,
 	recompute_passives = {stats = {stats.STAT_CON,},},
 	info = function(self, t)
@@ -172,6 +169,12 @@ newTalent {
 	life = function(self, t)
 		return self:combatTalentScale(t, 30, 80) * (0.5 + self:getCon(0.5, true))
 	end,
+	-- If we unlearn the last level, passives never gets called.
+	on_unlearn = function(self, t, p)
+		if self:getTalentLevelRaw(t) == 0 then
+			game:onTickEnd(function() self:recomputePassives('T_JAGGED_BODY') end)
+		end
+	end,
 	passives = function(self, t, p)
 		local level = self:getTalentLevelRaw(t)
 		if level >= 1 then self:talentTemporaryValue(p, 'combat_armor_hardiness', 25) end
@@ -185,7 +188,7 @@ newTalent {
 			self:talentTemporaryValue(p, 'resists', {[DamageType.PHYSICAL] = 10,})
 		end
 		self:talentTemporaryValue(p, 'max_life', t.life(self, t))
-		set_jaggedbody_regen(self)
+		self:recomputePassives('T_JAGGED_BODY')
 	end,
 	recompute_passives = {stats = {stats.STAT_CON,},},
 	info = function(self, t)
