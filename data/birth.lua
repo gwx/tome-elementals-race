@@ -102,6 +102,7 @@ newBirthDescriptor {
 		max_life = 130,
 		life_rating = 13,
 		no_breath = 1,
+		show_gloves_combat = 1,
 		resolvers.equip {
 			id = true,
 			{type = 'weapon', subtype = 'greatmaul', name = 'iron greatmaul',
