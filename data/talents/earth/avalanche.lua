@@ -34,7 +34,7 @@ end
 local grounded_pre_use = function(self, t, silent)
 	if self:hasEffect('EFF_ZERO_GRAVITY') or
 		self:attr('levitation') or self:attr('fly') or
-		game.level.map:checkEntity(self.x, self.y, Map.TERRAIN, 'air_condition') == 'water'
+		(game.level and game.level.map:checkEntity(self.x, self.y, Map.TERRAIN, 'air_condition') == 'water')
 	then
 		if not silent then
 			game.logPlayer(self, 'You must be grounded to use this talent.')
