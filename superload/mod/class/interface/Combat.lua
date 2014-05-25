@@ -87,4 +87,35 @@ function _M:combatGetResist(type)
 	return add + combatGetResist(self, type)
 end
 
+-- Brutish Stride
+local attackTargetWith = _M.attackTargetWith
+function _M:attackTargetWith(target, weapon, damtype, mult, force_dam)
+	mult = mult or 1
+	local stride = self:hasEffect('EFF_BRUTISH_STRIDE')
+	local radius_id, angle_id
+	if stride then
+		local emult = stride.move / stride.max
+		game.logPlayer(self, 'MULT IS %.2f', emult)
+		local radius = math.floor(stride.radius * emult)
+		game.logPlayer(self, 'RADIUS IS %s', radius)
+		if radius >= 1 then
+			radius_id = self:addTemporaryValue('physical_echo_radius', radius)
+			angle_id = self:addTemporaryValue('physical_echo_angle', stride.angle * emult)
+		end
+		mult = mult + stride.damage * emult
+	end
+
+	local results = {attackTargetWith(self, target, weapon, damtype, mult, force_dam)}
+
+	if stride then
+		if radius_id then
+			self:removeTemporaryValue('physical_echo_radius', radius_id)
+			self:removeTemporaryValue('physical_echo_angle', angle_id)
+		end
+		self:removeEffect('EFF_BRUTISH_STRIDE', nil, true)
+	end
+
+	return unpack(results)
+end
+
 return _M

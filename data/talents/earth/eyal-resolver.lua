@@ -55,3 +55,28 @@ Scales with strength.]])
 			:format(util.getval(t.inc_damage, self, t),
 							util.getval(t.echo, self, t) * 100)
 	end,}
+
+newTalent {
+	name = 'Brutish Stride',
+	type = {'elemental/eyal-resolver', 2,},
+	require = make_require(2),
+	points = 5,
+	mode = 'passive',
+	move = function(self, t)
+		return self:combatTalentScale(t, 1.5, 3)
+	end,
+	damage = function(self, t)
+		return self:combatTalentScale(t, 0.5, 1.5)
+	end,
+	radius = 2,
+	angle = 30,
+	info = function(self, t)
+		local move = util.getval(t.move, self, t)
+		return ([[Your joints do not tire, your arms do not rest. Every time you move a tile, you gain speed for a charge - your movement speed increases by %d%% #SLATE#(UNIMPLEMENTED: 5x this if no enemy is in sight)#LAST#, to a maximum of %d%%.
+Your first weapon strike will consume the charge. At full charge, this will make it deal %d%% extra weapon damage (scaling with strength) and expand the afterecho's range to a radius %d cone with %d extra degrees of coverage. These effects will be lesser for lesser amounts of charge.
+Any action but movement cuts the current charge in half. Standing still removes it completely.]])
+			:format(move, move * 10,
+							util.getval(t.damage, self, t) * 100,
+							util.getval(t.radius, self, t) + 1,
+							util.getval(t.angle, self, t))
+	end,}

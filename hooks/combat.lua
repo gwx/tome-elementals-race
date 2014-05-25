@@ -59,9 +59,28 @@ hook = function(self, data)
 
 	-- Afterecho
 	if self:attr('physical_echo') and hitted and target then
-		local _, dx, dy = util.getDir(self.x, self.y, target.x, target.y)
-		damage_type:get(damage_type.PHYSICAL).projector(
-			self, target.x - dx, target.y - dy, damage_type.PHYSICAL, dam * self.physical_echo)
+		game.logPlayer(self, 'ECHO %s', self.physical_echo_radius)
+		if self:attr('physical_echo_radius') then
+			game.logPlayer(self, 'RADIUS')
+			local tg = {
+				type = 'cone',
+				radius = self.physical_echo_radius + 1,
+				cone_angle = 55 + (self.physical_echo_angle or 0),
+				start_x = target.x, start_y = target.x,}
+			local dx, dy = target.x - self.x, target.y - self.y
+			local x, y = dx + target.x, dy + target.y
+			self:project(
+				tg, x, y,
+				damage_type.PHYSICAL, dam * self.physical_echo)
+			game.level.map:particleEmitter(
+				target.x, target.y, tg.radius, 'temporal_breath',
+				{radius = tg.radius, tx = dx, ty = dy,})
+			game:playSoundNear(target, 'talents/lightning')
+		else
+			local _, dx, dy = util.getDir(self.x, self.y, target.x, target.y)
+			damage_type:get(damage_type.PHYSICAL).projector(
+				self, target.x - dx, target.y - dy, damage_type.PHYSICAL, dam * self.physical_echo)
+		end
 	end
 
 	return true

@@ -143,6 +143,7 @@ end
 
 local move = _M.move
 function _M:move(x, y, force)
+	self.moving = true
 	-- Leash
 	if not force and self.hard_leash then
 		for src, distance in pairs(self.hard_leash) do
@@ -238,6 +239,19 @@ function _M:move(x, y, force)
 		lm.update_after_move(self, lm, p)
 	end
 
+
+	-- Brutish Stride
+	if self:knowTalent('T_BRUTISH_STRIDE') and (self.x ~= sx or self.y ~= sy) then
+		local t = self:getTalentFromId('T_BRUTISH_STRIDE')
+		local move = util.getval(t.move, self, t)
+		self:setEffect('EFF_BRUTISH_STRIDE', 1, {
+										 move = move, max = move * 10,
+										 damage = util.getval(t.damage, self, t),
+										 radius = util.getval(t.radius, self, t),
+										 angle = util.getval(t.angle, self, t),})
+	end
+
+	self.moving = nil
 	return result
 end
 
@@ -420,6 +434,49 @@ function _M:onTakeoff(o, bypass_set)
 	then
 		self:recomputePassives('T_AFTERECHO')
 	end
+end
+
+-- Brutish Stride
+local breakStepUp = _M.breakStepUp
+function _M:breakStepUp()
+	breakStepUp(self)
+	if self:hasEffect('EFF_BRUTISH_STRIDE') then
+		game:onTickEnd(
+			function()
+				local stride = self:hasEffect('EFF_BRUTISH_STRIDE')
+				if stride and not self.turn_procs.stride_broken then
+					self.turn_procs.stride_broken = true
+					local move = stride.move * 0.5
+					if move < 1 then
+						self:removeEffect('EFF_BRUTISH_STRIDE')
+					else
+						stride.move = move
+					end
+				end
+		end)
+	end
+end
+
+-- So we can check wait action.
+local postUseTalent = _M.postUseTalent
+function _M:postUseTalent(ab, ret, silent)
+  self.__talent_running_post = ab
+  local ret = {postUseTalent(self, ab, ret, silent)}
+  self.__talent_running_post = nil
+  return unpack(ret)
+end
+
+-- On Wait.
+local useEnergy = _M.useEnergy
+function _M:useEnergy(val)
+  useEnergy(self, val)
+  if not self.__talent_running and
+    not self.__talent_running_post
+  then
+		if self:hasEffect('EFF_BRUTISH_STRIDE') and not self.moving then
+			self:removeEffect('EFF_BRUTISH_STRIDE', nil, true)
+		end
+  end
 end
 
 

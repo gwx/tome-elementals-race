@@ -269,3 +269,38 @@ newEffect {
 		DamageType:get(DamageType.FIRE).projector(
 			eff.src or {}, self.x, self.y, DamageType.FIRE, eff.damage)
 	end,}
+
+newEffect {
+	name = 'BRUTISH_STRIDE', image = 'talents/brutish_stride.png',
+	desc = 'Brutish Stride',
+	long_desc =  function(self, eff)
+		local radius = math.floor(eff.radius * eff.move / eff.max)
+		local afterecho = ''
+		if radius >= 1 then
+			local angle = math.floor(eff.angle * eff.move / eff.max)
+			afterecho = (' This will have a larger afterecho, dealing damage in a radius %d cone, with %d extra degrees of coverage.'):format(radius + 1, angle)
+		end
+		local damage = eff.damage * 100 * eff.move / eff.max
+		return ([[Your movements have built up inertia, increasing your movement speed by %d%%. Your next weapon strike will consume this effect to deal %d%% extra weapon damage.%s
+Any action but an attack will halve this bonus. Standing still will remove it completely.]])
+			:format(eff.move, damage, afterecho)
+	end,
+	type = 'physical',
+	subtype = {earth = true, speed = true, tactic = true,},
+	status = 'beneficial',
+	parameters = {move = 1, max = 10, damage = 10, radius = 1, angle = 10,},
+	charges = function(self, eff) return math.floor(10.1 * eff.move / eff.max) end,
+	decrease = 0, no_remove = true,
+	activate = function(self, eff)
+		eff.move_id = self:addTemporaryValue('movement_speed', eff.move * 0.01)
+	end,
+	deactivate = function(self, eff)
+		self:removeTemporaryValue('movement_speed', eff.move_id)
+	end,
+	on_merge = function(self, old, new)
+		self:removeTemporaryValue('movement_speed', old.move_id)
+		new.max = math.max(old.max, new.max)
+		new.move = math.min(new.max, old.move + new.move)
+		new.move_id = self:addTemporaryValue('movement_speed', new.move * 0.01)
+		return new
+	end,}
