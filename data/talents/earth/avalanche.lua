@@ -235,7 +235,7 @@ newTalent {
 	action = function(self, t)
 		local tg = {type = 'hit', range = util.getval(t.grab_range, self, t),}
 		local x1, y1, target1 = self:getTarget(tg)
-		if not x1 or not y1 or not target1 then return end
+		if not x1 or not y1 or not target1 or target1 == self then return end
 		if core.fov.distance(self.x, self.y, x1, y1) > tg.range then return end
 
 		-- Let player retarget same enemy without worrying about knockback resistance.
