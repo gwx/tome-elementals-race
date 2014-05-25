@@ -207,6 +207,7 @@ Total jagged body restoration, including that from spent essence, will be %d.]])
 					self:essenceCost(util.getval(t.essence, self, t)))
 	end,}
 
+-- TODO set midpoint to 50%.
 newTalent {
 	name = 'Smoldering Core',
 	type = {'elemental/geothermal', 4,},

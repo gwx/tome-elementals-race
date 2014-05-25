@@ -207,6 +207,7 @@ local lm_preuse = function(self, t, silent)
 	return use
 end
 
+-- TODO fix stacking.
 newTalent {
 	name = 'Living Mural',
 	type = {'elemental/geokinesis', 3,},
