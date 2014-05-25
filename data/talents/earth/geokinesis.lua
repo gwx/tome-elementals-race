@@ -207,7 +207,6 @@ local lm_preuse = function(self, t, silent)
 	return use
 end
 
--- TODO fix stacking.
 newTalent {
 	name = 'Living Mural',
 	type = {'elemental/geokinesis', 3,},
@@ -238,8 +237,12 @@ newTalent {
 
 		-- Manage stats bonuses.
 		if not self_free then
-			p.defense = self:addTemporaryValue('combat_def', util.getval(t.defense, self, t))
-			p.spell = self:addTemporaryValue('combat_spellpower', util.getval(t.spellpower, self, t))
+			if not p.defense then
+				p.defense = self:addTemporaryValue('combat_def', util.getval(t.defense, self, t))
+			end
+			if not p.spell then
+				p.spell = self:addTemporaryValue('combat_spellpower', util.getval(t.spellpower, self, t))
+			end
 		else
 			if p.defense then
 				self:removeTemporaryValue('combat_def', p.defense)
