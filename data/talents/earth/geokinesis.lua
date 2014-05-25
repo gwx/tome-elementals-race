@@ -97,7 +97,7 @@ newTalent {
 			return
 		end
 
-		local combat = table.clone(ammo.combat)
+		local combat = table.clone(ammo.combat, true)
 		combat.dammod.mag = (ammo.combat.dammod.mag or 0) + (combat.dammod.dex or 0)
 		combat.dammod.str = (ammo.combat.dammod.str or 0) + (combat.dammod.cun or 0)
 		combat.dammod.dex = nil
