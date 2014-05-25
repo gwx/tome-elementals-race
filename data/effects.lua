@@ -38,7 +38,7 @@ This effect also contributes spell save to its source.]])
 	end,
 	activate = function(self, eff)
 		if eff.src then
-			eff.src:setEffect('EFF_IVY_MESH', 1, {targets = {[self.uid] = true,},})
+			eff.src:setEffect('EFF_IVY_MESH', 1, {targets = {[self] = true,},})
 		end
 	end,
 	on_timeout = function(self, eff)
@@ -72,6 +72,7 @@ newEffect {
 		eff.save_id = self:addTemporaryValue('combat_spellresist', eff.save)
 	end,
 	on_merge = function(self, old, new)
+		self:removeTemporaryValue('combat_spellresist', old.save_id)
 		local t = self:getTalentFromId('T_IVY_MESH')
 		table.merge(new.targets, old.targets)
 		new.save = math.min(#table.keys(new.targets) * t.save_per(self, t),
@@ -84,12 +85,11 @@ newEffect {
 	end,
 	on_timeout = function(self, eff)
 		local count = 0
-		for uid, _ in pairs(eff.targets) do
-			local target = __uids[uid]
+		for target, _ in pairs(eff.targets) do
 			if target and not target.dead and target:hasEffect('EFF_IVY_MESH_POISON') then
 				count = count + 1
 			else
-				eff.targets[uid] = nil
+				eff.targets[target] = nil
 			end
 		end
 
