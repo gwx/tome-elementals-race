@@ -143,6 +143,14 @@ end
 
 local move = _M.move
 function _M:move(x, y, force)
+	-- Unleashed always allows movement.
+	local unleashed_activated = false
+	if self:attr('never_move') and self:hasEffect('EFF_UNLEASHED') then
+		unleashed_activated = self.never_move
+		self.never_move = nil
+		self:reduceUnleashed(unleashed_activated)
+	end
+
 	self.moving = true
 	-- Leash
 	if not force and self.hard_leash then
@@ -252,12 +260,33 @@ function _M:move(x, y, force)
 	end
 
 	self.moving = nil
+	if unleashed_activated then
+		self.never_move = unleashed_activated
+	end
 	return result
 end
 
--- Turn off living mural for knockback.
+-- Reduce unleashed duration.
+function _M:reduceUnleashed(count)
+	count = count or 1
+	local unleashed = self:hasEffect('EFF_UNLEASHED')
+	if unleashed then
+		unleashed.dur = unleashed.dur - count
+		if unleashed.dur <= 0 then
+			self:removeEffect('EFF_UNLEASHED')
+		end
+	end
+end
+
 local knockback = _M.knockback
 function _M:knockback(srcx, srcy, dist, recursive, on_terrain)
+	-- If unleashed is on, ignore the knockback and reduce it.
+	if self:hasEffect('EFF_UNLEASHED') then
+		self:reduceUnleashed()
+		return
+	end
+
+	-- Turn off living mural so we don't break things horribly.
 	if self:isTalentActive('T_LIVING_MURAL') then
 		local ox, oy = self.x, self.y
 		local pass = eutil.get(self, 'can_pass', 'pass_wall')
@@ -479,5 +508,6 @@ function _M:useEnergy(val)
   end
 end
 
+-- Unleashed
 
 return _M
