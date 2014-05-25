@@ -14,18 +14,24 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-local util = require 'elementals-race.util'
+local eutil = require 'elementals-race.util'
+local damage_type = require 'engine.DamageType'
 local hook
 
 hook = function(self, data)
 	local target = data.target
 	local hitted = data.hitted
+	local crt = data.crit
+	local weapon = data.weapon
+	local damtype = data.damtype
+	local mult = data.mult
+	local dam = data.dam
 	local t
 
 	-- Heavy Arms daze
 	t = self:getTalentFromId('T_HEAVY_ARMS')
 	if self:knowTalent('T_HEAVY_ARMS') and hitted and
-		util.hasv({'mace', 'axe', 'sword'}, util.get(data, 'weapon', 'talented')) and
+		eutil.hasv({'mace', 'axe', 'sword'}, eutil.get(data, 'weapon', 'talented')) and
 		rng.percent(t.daze(self, t))
 	then
 		if target:canBe('stun') then
@@ -50,6 +56,14 @@ hook = function(self, data)
 											 no_ct_effect = true,})
 		end
 	end
+
+	-- Afterecho
+	if self:attr('physical_echo') and hitted and target then
+		local _, dx, dy = util.getDir(self.x, self.y, target.x, target.y)
+		damage_type:get(damage_type.PHYSICAL).projector(
+			self, target.x - dx, target.y - dy, damage_type.PHYSICAL, dam * self.physical_echo)
+	end
+
 	return true
 end
 class:bindHook('Combat:attackTargetWith', hook)

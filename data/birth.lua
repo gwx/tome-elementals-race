@@ -106,8 +106,10 @@ newBirthDescriptor {
 		resolvers.equip {
 			id = true,
 			{type = 'weapon', subtype = 'greatmaul', name = 'iron greatmaul',
-			 autoreq = true, ego_chance = -1000, ego_chance = -1000},
+			 autoreq = true, ego_chance = -1000},
  			{type = 'armor', subtype = 'heavy', name = 'iron mail armour',
-			 autoreq = true, ego_chance = -1000, ego_chance = -1000},
+			 autoreq = true, ego_chance = -1000},
+			{type = 'armor', subtype = 'hands', name = 'iron gauntlets',
+			 autoreq = true, ego_chance = -1000},
 			{type = 'ammo', subtype = 'shot', name = 'pouch of iron shots',
 			 autoreq = false, ego_chance = -1000},},},}

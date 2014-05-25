@@ -401,5 +401,26 @@ function _M:incJaggedbody(v)
 	self:recomputePassives('T_SMOLDERING_CORE')
 end
 
+-- Afterecho
+local onWear = _M.onWear
+function _M:onWear(o, bypass_set)
+	onWear(self, o, bypass_set)
+	if o.slot == 'MAINHAND' or o.slot == 'OFFHAND' or
+		o.offslot == 'MAINHAND' or o.offslot == 'OFFHAND'
+	then
+		self:recomputePassives('T_AFTERECHO')
+	end
+end
+
+local onTakeoff = _M.onTakeoff
+function _M:onTakeoff(o, bypass_set)
+	onTakeoff(self, o, bypass_set)
+	if o.slot == 'MAINHAND' or o.slot == 'OFFHAND' or
+		o.offslot == 'MAINHAND' or o.offslot == 'OFFHAND'
+	then
+		self:recomputePassives('T_AFTERECHO')
+	end
+end
+
 
 return _M
