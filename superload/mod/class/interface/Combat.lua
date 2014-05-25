@@ -95,9 +95,7 @@ function _M:attackTargetWith(target, weapon, damtype, mult, force_dam)
 	local radius_id, angle_id
 	if stride then
 		local emult = stride.move / stride.max
-		game.logPlayer(self, 'MULT IS %.2f', emult)
 		local radius = math.floor(stride.radius * emult)
-		game.logPlayer(self, 'RADIUS IS %s', radius)
 		if radius >= 1 then
 			radius_id = self:addTemporaryValue('physical_echo_radius', radius)
 			angle_id = self:addTemporaryValue('physical_echo_angle', stride.angle * emult)

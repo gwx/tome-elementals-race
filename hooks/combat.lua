@@ -59,9 +59,7 @@ hook = function(self, data)
 
 	-- Afterecho
 	if self:attr('physical_echo') and hitted and target then
-		game.logPlayer(self, 'ECHO %s', self.physical_echo_radius)
 		if self:attr('physical_echo_radius') then
-			game.logPlayer(self, 'RADIUS')
 			local tg = {
 				type = 'cone',
 				radius = self.physical_echo_radius + 1,
