@@ -57,7 +57,7 @@ end
 -- Recompute the passives on a given talent.
 function _M:recomputePassives(talent)
 	local t = self:getTalentFromId(talent)
-	if t.passives then
+	if self:knowTalent(talent) and t.passives then
 		self.talents_learn_vals[t.id] = self.talents_learn_vals[t.id] or {}
 		local p = self.talents_learn_vals[t.id]
 
@@ -392,6 +392,13 @@ function _M:canProject(t, x, y)
 
 	local is_hit = stop_x == x and stop_y == y
 	return is_hit, stop_x, stop_y, stop_radius_x, stop_radius_y
+end
+
+-- Jaggedbody
+local incJaggedbody = _M.incJaggedbody
+function _M:incJaggedbody(v)
+	incJaggedbody(self, v)
+	self:recomputePassives('T_SMOLDERING_CORE')
 end
 
 

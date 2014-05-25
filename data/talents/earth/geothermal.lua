@@ -206,3 +206,40 @@ Total jagged body restoration, including that from spent essence, will be %d.]])
 				restore * (self:getMaxJaggedbody() - self:getJaggedbody()) +
 					self:essenceCost(util.getval(t.essence, self, t)))
 	end,}
+
+newTalent {
+	name = 'Smoldering Core',
+	type = {'elemental/geothermal', 4,},
+	require = make_require(4),
+	points = 5,
+	mode = 'passive',
+	conversion = function(self, t)
+		return self:combatTalentScale(t, 5, 15) * (0.5 + self:getMag(0.5, true))
+	end,
+	penetration = function(self, t)
+		return self:combatTalentScale(t, 8, 20) * (0.5 + self:getMag(0.5, true))
+	end,
+	-- Recomputed on every incJaggedbody call.
+	passives = function(self, t, p)
+		local cur, max = self:getJaggedbody(), self:getMaxJaggedbody()
+		local conversion = util.getval(t.conversion, self, t) * (1 + cur / max)
+		local penetration = util.getval(t.penetration, self, t) * (2 - cur / max)
+		self:talentTemporaryValue(p, 'resists_pen', {[DamageType.FIRE] = penetration,})
+		local converts = {
+			[DamageType.COLD] = {[DamageType.FIRE] = conversion,},
+			[DamageType.ACID] = {[DamageType.FIRE] = conversion,},
+			[DamageType.LIGHTNING] = {[DamageType.FIRE] = conversion,},}
+		self:talentTemporaryValue(p, 'convert_received', converts)
+	end,
+	recompute_passives = {stats = {stats.STAT_MAG,},},
+	info = function(self, t)
+		local conversion = util.getval(t.conversion, self, t)
+		local penetration = util.getval(t.penetration, self, t)
+		return ([[A smoldering core houses within your chest and woe betides those who chip away to expose it.
+These effects vary with your present level of jagged body shield:
+Converts from %d%% at 0%% shield to %d%% at 100%% shield of all cold, acid, or lightning damage received into fire damage.
+Increases fire resist penetration by %d%% at 100%% shield to %d%% at 0%% shield.
+Both effects scale with magic.]])
+			:format(conversion, conversion * 2,
+							penetration, penetration * 2)
+	end,}

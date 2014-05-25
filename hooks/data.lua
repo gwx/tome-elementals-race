@@ -14,6 +14,8 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 local hook = function(self, data)
+	dofile('/data-elementals-race/resources.lua')
+
   local load_data = function(loader, name)
     require(loader):loadDefinition('/data-elementals-race/'..name..'.lua')
   end
@@ -21,7 +23,5 @@ local hook = function(self, data)
   load_data('engine.interface.ActorTemporaryEffects', 'effects')
 	load_data('engine.Birther', 'birth')
   load_data('engine.DamageType', 'damage-types')
-
-	dofile('/data-elementals-race/resources.lua')
 end
 class:bindHook('ToME:load', hook)
