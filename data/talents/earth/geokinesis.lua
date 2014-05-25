@@ -131,7 +131,6 @@ newTalent {
 	essence = 10,
 	cooldown = 15,
 	range = 4,
-	no_energy = 'fake',
 	tactical = {ATTACK = 2, DISABLE = {SILENCE = 2,},},
 	target = function(self, t)
 		return {type = 'hit', range = util.getval(t.range, self, t),
