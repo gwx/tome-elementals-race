@@ -174,7 +174,7 @@ function _M:move(x, y, force)
 		end
 	end
 
-	local sx, sy = self.x, self.y
+	local sx, sy = self.x or self.swap_old_x, self.y or self.swap_old_y
 
 	local cancel_move = false
 
@@ -241,12 +241,15 @@ function _M:move(x, y, force)
 		end
 	end
 
+	-- Actual move
 	local result
 	if cancel_move then
 		result = false
 	else
 		if free_move then self.did_energy = true end
+		self.swap_old_x, self.swap_old_y = self.x, self.y
 		result = move(self, x, y, force)
+		self.swap_old_x, self.swap_old_y = nil, nil
 		if free_move then self.did_energy = false end
 	end
 
