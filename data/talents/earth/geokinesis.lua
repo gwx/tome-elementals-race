@@ -68,9 +68,9 @@ newTalent {
 	end,
 	-- See Actor:projectDoMove.
 	on_move = function(self, typ, tgtx, tgty, x, y, srcx, srcy, lx, ly, act, stop)
-		if not stop then
+		if not stop and (x ~= srcx or y ~= srcy) then
 			local actor = game.level.map(x, y, Map.ACTOR)
-			if actor and not rng.percent(typ.pierce) then
+			if actor and not actor.dead and not rng.percent(typ.pierce) then
 				stop = true
 			end
 		end
