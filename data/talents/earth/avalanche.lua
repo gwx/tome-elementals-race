@@ -179,9 +179,9 @@ newTalent {
 			if target and target ~= self then
 				local damage = base_damage
 				if target:attr('stoned') then damage = damage + 0.5 end
-				-- TODO: figure out how to tell if we're in a wall
-				local in_wall = false
-				if in_wall then damage = damage + 0.5 end
+				if eutil.get(game.level.map(x, y, Map.TERRAIN), 'can_pass', 'pass_wall') then
+					damage = damage + 0.5
+				end
 				local hit = self:attackTarget(target, DamageType.PHYSICAL, damage, true)
 				if hit and
 					(target:attr('stunned') or target:attr('dazed') or target:attr('confused')) and
@@ -197,7 +197,7 @@ newTalent {
 		return true
 	end,
 	info = function(self, t)
-		return ([[Deal %d%% weapon damage in radius %d, pinning down any stunned, confused or dazed target for %d turns. Any petrified targets will take an additional 50%% weapon damage, #SLATE#(UNIMPLEMENTED: and any targets standing in a wall will take an additional 50%% weapon damage)#LAST#.
+		return ([[Deal %d%% weapon damage in radius %d, pinning down any stunned, confused or dazed target for %d turns. Any petrified targets will take an additional 50%% weapon damage, and any targets standing in a wall will take an additional 50%% weapon damage.
 Cannot be used while in water or floating.
 Damage and pinning duration scale with strength.]])
 			:format(t.damage(self, t) * 100, t.radius(self, t), t.duration(self, t))
