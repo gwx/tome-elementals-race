@@ -21,7 +21,7 @@ local hook
 hook = function(self, data)
 	local target = data.target
 	local hitted = data.hitted
-	local crt = data.crit
+	local crit = data.crit
 	local weapon = data.weapon
 	local damtype = data.damtype
 	local mult = data.mult
@@ -79,6 +79,22 @@ hook = function(self, data)
 			damage_type:get(damage_type.PHYSICAL).projector(
 				self, target.x - dx, target.y - dy, damage_type.PHYSICAL, dam * self.physical_echo)
 		end
+	end
+
+	-- Sharkskin add effect.
+	if target and target:knowTalent('T_SHARKSKIN') and hitted then
+		target:callTalent('T_SHARKSKIN', 'on_hit')
+	end
+
+	-- Sharkskin disarm self.
+	local sharkskin = target and target:hasEffect('EFF_SHARKSKIN')
+	if sharkskin and not sharkskin.disarm_counter and hitted and crit then
+		if not self:checkHit(self:combatPhysicalpower(1, weapon), target:combatPhysicalResist(), 0, 95) then
+			self:setEffect('EFF_DISARMED', sharkskin.disarm, {})
+		else
+			game.logSeen(self, '%s\'s sharkskin fails to disarm %s!', target.name:capitalize(), self.name)
+		end
+		sharkskin.disarm_counter = sharkskin.disarm_cooldown
 	end
 
 	return true

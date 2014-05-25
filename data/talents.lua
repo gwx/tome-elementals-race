@@ -15,7 +15,8 @@
 
 
 for folder, files in pairs {
-	earth = {'misc', 'mountain', 'avalanche', 'symbiosis', 'geokinesis', 'geothermal', 'eyal-resolver',},}
+	earth = {'misc', 'mountain', 'avalanche', 'symbiosis', 'geokinesis',
+					 'geothermal', 'eyal-resolver', 'erosion'},}
 do
 	for _, file in pairs(files) do
 		load('/data-elementals-race/talents/'..folder..'/'..file..'.lua')

@@ -309,10 +309,54 @@ Any action but an attack will halve this bonus. Standing still will remove it co
 newEffect {
 	name = 'UNLEASHED', image = 'talents/unleashed.png',
 	desc = 'Unleashed',
-	long_desc =  function(self, eff)
+	long_desc = function(self, eff)
 		return [[Nothing dare stop you dead in your tracks. You are immune to effects that would slow you down, knock you back or immobilize you. This does not negate the application of harmful skills however, only their slowing/knock-backing/immbolizing effect and the duration decreases by 1 for every effect it negates.]]
 	end,
 	type = 'physical',
 	subtype = {earth = true,},
 	status = 'beneficial',
 	parameters = {},}
+
+newEffect {
+	name = 'SHARKSKIN', image = 'talents/sharkskin.png',
+	desc = 'Sharkskin',
+	long_desc = function(self, eff)
+		local counter = ''
+		if eff.disarm_counter then
+			counter = ('\nThe disarm effect is on cooldown for %d more turns.'):format(eff.disarm_counter)
+		end
+		return ([[Your 'skin' has formed a rough mesh of hooked scales. You gain %d ranged defense and %d physical power. Anytime an enemy critically hits you in melee, up to once every %d turns, they must pass a physical power vs. your physical save check or be disarmed for %d turns.%s]])
+			:format(eff.defense * eff.amount, eff.power * eff.amount,
+							eff.disarm_cooldown, eff.disarm, counter)
+	end,
+	type = 'physical',
+	subtype = {earth = true,},
+	status = 'beneficial',
+	parameters = {defense = 2, power = 2, disarm = 1,},
+	charges = function(self, eff) return eff.amount end,
+	activate = function(self, eff)
+		eff.defense_id = self:addTemporaryValue('combat_def_ranged', eff.defense * eff.amount)
+		eff.power_id = self:addTemporaryValue('combat_dam', eff.power * eff.amount)
+	end,
+	deactivate = function(self, eff)
+		self:removeTemporaryValue('combat_def_ranged', eff.defense_id)
+		self:removeTemporaryValue('combat_dam', eff.power_id)
+	end,
+	on_merge = function(self, old, new)
+		self:removeTemporaryValue('combat_def_ranged', old.defense_id)
+		self:removeTemporaryValue('combat_dam', old.power_id)
+		new.max = math.max(old.max, new.max)
+		new.amount = math.min(new.max, old.amount + new.amount)
+		new.disarm_counter = old.disarm_counter
+		new.defense_id = self:addTemporaryValue('combat_def_ranged', new.defense * new.amount)
+		new.power_id = self:addTemporaryValue('combat_dam', new.power * new.amount)
+		return new
+	end,
+	on_timeout = function(self, eff)
+		if eff.disarm_counter then
+			eff.disarm_counter = eff.disarm_counter - 1
+			if eff.disarm_counter == 0 then
+				eff.disarm_counter = nil
+			end
+		end
+	end,}
