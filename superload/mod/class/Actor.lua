@@ -508,6 +508,4 @@ function _M:useEnergy(val)
   end
 end
 
--- Unleashed
-
 return _M

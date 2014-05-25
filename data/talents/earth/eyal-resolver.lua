@@ -103,3 +103,54 @@ This does not negate the application of harmful skills however, only their slowi
 Duration increases with strength.]])
 			:format(util.getval(t.duration, self, t))
 	end,}
+
+newTalent {
+	name = 'Cry of Eyal',
+	type = {'elemental/eyal-resolver', 4,},
+	require = make_require(4),
+	points = 5,
+	mode = 'sustained',
+	sustain_essence = 25,
+	cooldown = 41,
+	speed_penalty = 0.33,
+	scale_point = 0.67,
+	damage = function(self, t)
+		return self:combatTalentPhysicalDamage(t, 100, 500)
+	end,
+	radius = 5,
+	activate = function(self, t)
+		local p = {}
+		self:talentTemporaryValue(p, 'max_life_damage', 1)
+		self:talentTemporaryValue(p, 'global_speed_add', -util.getval(t.speed_penalty, self, t))
+		return p
+	end,
+	deactivate = function(self, t, p)
+		local taken = self.max_life_damage_taken or 0
+		self.max_life_damage_taken = 0
+		local max = self.max_life + taken
+		self.max_life = max
+		local power = math.min(1, (taken / max) / util.getval(t.scale_point, self, t))
+		local damage = util.getval(t.damage, self, t) * power
+		local tg = {type = 'ball', range = 0, radius = util.getval(t.radius, self, t), selffire = false,}
+		local projector = function(x, y, tg, self)
+			local target = game.level.map(x, y, Map.ACTOR)
+			if not target then return end
+			local dam = self:physicalCrit(damage, nil, target, 0, 0)
+			DamageType:get(DamageType.PHYSICAL).projector(
+				self, x, y, DamageType.PHYSICAL, dam)
+		end
+		self:project(tg, self.x, self.y, projector)
+		game.level.map:particleEmitter(self.x, self.y, tg.radius, 'ball_earth', {radius = tg.radius,})
+		game:playSoundNear(self, 'talents/lightning_loud')
+		return true
+	end,
+	info = function(self, t)
+		return ([[You cry out for the defiance of the planet itself to embody you. While active, enemy damage reduces your maximum life instead of your current life and your global speed is reduced by %d%%. (Your current life still decreases if maximum life is lower than it.)
+When deactivated, you release all this power in a cataclysmic display of might, dealing physical damage in a ball of radius %d. The damage scales from 0 at 0%% max life lost to %d at %d%% or greater max life lost.
+Damage scales with physical power.]])
+			:format(
+				util.getval(t.speed_penalty, self, t) * 100,
+				util.getval(t.radius, self, t),
+				Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)),
+				util.getval(t.scale_point, self, t) * 100)
+	end,}

@@ -74,6 +74,14 @@ hook = function(self, data)
 		value = self.life - 1
 	end
 
+	-- Cry of Eyal
+	if self:attr('max_life_damage') then
+		local damage = math.min(self.life - 1, value)
+		value = value - damage
+		self.max_life_damage_taken = (self.max_life_damage_taken or 0) + damage
+		self.max_life = self.max_life - damage
+	end
+
 	data.value = value
 	return true
 end
