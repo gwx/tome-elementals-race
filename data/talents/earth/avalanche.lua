@@ -192,8 +192,8 @@ newTalent {
 			end
 		end
 		self:project(tg, self.x, self.y, projector)
-		--self:addParticles(Particles.new("meleestorm", 1, {radius=4, img="spinningwinds_blue"}))
-		game:playSoundNear(self, "talents/earth")
+		game.level.map:particleEmitter(self.x, self.y, tg.radius, 'ball_earth', {radius = tg.radius,})
+		game:playSoundNear(self, 'talents/earth')
 		return true
 	end,
 	info = function(self, t)
