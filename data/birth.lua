@@ -97,6 +97,7 @@ newBirthDescriptor {
 		[ActorTalents.T_ARMOUR_TRAINING] = 1,
 		[ActorTalents.T_EARTHEN_GUN] = 1,
 		[ActorTalents.T_JAGGED_BODY] = 1,},
+	experience = 1.4,
 	copy = {
 		subtype = 'earth',
 		max_life = 130,
