@@ -129,7 +129,7 @@ newTalent {
 	require = make_require(2),
 	points = 5,
 	essence = 10,
-	--cooldown = 15,
+	cooldown = 15,
 	range = 4,
 	no_energy = 'fake',
 	tactical = {ATTACK = 2, DISABLE = {SILENCE = 2,},},
