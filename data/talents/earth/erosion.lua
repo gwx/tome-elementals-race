@@ -45,7 +45,7 @@ newTalent {
 	disarm = function(self, t)
 		return math.floor(self:combatTalentScale(t, 2, 6) * (0.5 + self:getCon(0.5, true)))
 	end,
-	disarm_cooldown = 3,
+	disarm_cooldown = 5,
 	on_hit = function(self, t)
 		self:setEffect('EFF_SHARKSKIN', util.getval(t.duration, self, t), {
 										 amount = 1,

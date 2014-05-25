@@ -91,10 +91,10 @@ hook = function(self, data)
 	if sharkskin and not sharkskin.disarm_counter and hitted and crit then
 		if not self:checkHit(self:combatPhysicalpower(1, weapon), target:combatPhysicalResist(), 0, 95) then
 			self:setEffect('EFF_DISARMED', sharkskin.disarm, {})
+			sharkskin.disarm_counter = sharkskin.disarm_cooldown
 		else
 			game.logSeen(self, '%s\'s sharkskin fails to disarm %s!', target.name:capitalize(), self.name)
 		end
-		sharkskin.disarm_counter = sharkskin.disarm_cooldown
 	end
 
 	return true
