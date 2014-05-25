@@ -196,6 +196,8 @@ Damage and penalty strengths scale with spellpower.]])
 	end,}
 
 local lm_preuse = function(self, t, silent)
+	if not game.level then return true end
+
 	local pass = eutil.get(self, 'can_pass', 'pass_wall')
 	eutil.set(self, 'can_pass', 'pass_wall', 0)
 	local use = self:canMove(self.x, self.y, true)
