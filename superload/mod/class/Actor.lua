@@ -38,7 +38,7 @@ function _M:regenResources()
 			self.essence_regen = 0
 		else
 			self.essence_regen =
-				(self.max_essence * 0.02 + self.life_regen) *
+				(self.max_essence * 0.01 + self.life_regen) *
 				util.bound((self.healing_factor or 1), 0, 2.5)
 		end
 	end

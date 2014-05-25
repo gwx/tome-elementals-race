@@ -76,7 +76,8 @@ newBirthDescriptor {
 	type = 'subclass',
 	name = 'Jadir',
 	desc = {
-		'Earth Elemental.',
+		'The Earth Elemental.',
+		'Jadir have Jagged Body, a passive shield that reflects physical damage. Their main resource is Essence, which has its max value and regen rate tied to that of your Life.',
 		'#GOLD#Stat modifiers:',
 		'#LIGHT_BLUE# * +4 Strength, -2 Dexterity, +5 Constitution',
 		'#LIGHT_BLUE# * +4 Magic, +0 Willpower, -2 Cunning',

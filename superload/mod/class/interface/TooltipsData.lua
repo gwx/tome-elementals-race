@@ -19,6 +19,6 @@ _M.TOOLTIP_JAGGEDBODY = [[#GOLD#Jagged Body#LAST#
 Your earthen body sprouts many sharp, rock-hard protrusions, blocking damage of any kind.]]
 
 _M.TOOLTIP_ESSENCE = [[#GOLD#Essence#LAST#
-This is your ability to manipulate earth. It regenerates by 2% times your healing factor per turn, plus any life regeneration you have. Your Jagged Body shield is increased by 33% of all essence spent.]]
+This is your ability to manipulate earth. It regenerates by 1% times your healing factor per turn, plus any life regeneration you have. Your Jagged Body shield is increased by 33% of all essence spent.]]
 
 return _M
