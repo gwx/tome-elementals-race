@@ -260,11 +260,14 @@ newTalent {
 
 		target1:move(x2, y2, true)
 
-		local damage = self:physicalCrit(t.damage(self, t))
+		local damage = util.getval(t.damage, self, t)
 		local duration = t.duration(self, t)
 		local projector = function(x, y)
 			local target = game.level.map(x, y, Map.ACTOR)
 			if target and target ~= self then
+				local damage = self:physicalCrit(
+					t.damage(self, t), nil, target,
+					self:combatAttackRanged(), target:combatDefenseRanged())
 				DamageType:get(DamageType.PHYSICAL).projector(
 					self, x, y, DamageType.PHYSICAL, damage)
 				if target.size_category < target1.size_category then
