@@ -14,21 +14,22 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
--- 1.1.5 require bug workaround. Mark all packages we're going to
--- superload as unloaded.
-for _, p in pairs {
-	'engine.Target',
-	'engine.Map',
-	'mod.class.Actor',
-	'mod.class.Object',
-	'mod.class.interface.Combat',
-	'mod.class.interface.TooltipsData',}
-do
-	package.loaded[p] = nil
+local eutil = require 'elementals-race.util'
+
+local _M = loadPrevious(...)
+
+-- Get all effects at target location. If type is truthy, it will
+-- filter them based on effect.dam.effect_type == type.
+function _M:getEffects(x, y, type)
+	local effects = {}
+	for _, effect in pairs(self.effects or {}) do
+		if not type or eutil.get(effect.dam, 'effect_type') == type then
+			if eutil.get(effect.grids, x, y) then
+				table.insert(effects, effect)
+			end
+		end
+	end
+	return effects
 end
 
--- Add our own packages.
-for _, p in pairs {'util', 'active-terrain',} do
-	package.preload['elementals-race.'..p] =
-		loadfile('/data-elementals-race/packages/'..p..'.lua')
-end
+return _M

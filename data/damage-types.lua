@@ -61,3 +61,5 @@ newDamageType {
 		end
 		return 0
 	end,}
+
+newDamageType{name = 'null', type = 'NULL', projector = function() end,}

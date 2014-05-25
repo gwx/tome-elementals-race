@@ -67,3 +67,60 @@ Defense, physical power, disarm duration and maximum stacks scale with constitut
 							util.getval(t.disarm_cooldown, self, t),
 							util.getval(t.disarm, self, t))
 	end,}
+
+newTalent {
+	name = 'Amorphous',
+	type = {'elemental/erosion', 2,},
+	require = make_require(2),
+	points = 5,
+	essence = 15,
+	cooldown = 19,
+	range = 0,
+	radius = function(self, t)
+		return math.floor(util.bound(self:getTalentLevel(t), 2, 2.8))
+	end,
+	damage = function(self, t)
+		return self:combatTalentScale(t, 30, 180) * (0.5 + self:getCon(0.5, true))
+	end,
+	duration = function(self, t)
+		return math.floor(2 + self:combatTalentScale(t, 0, 3) * (0.5 + self:getCon(0.5, true)))
+	end,
+	tactical = {ATTACKAREA = 2, ESCAPE = 1,},
+	target = function(self, t)
+		return {type = 'ball', selffire = false, talent = t,
+						range = util.getval(t.range, self, t),
+						radius = util.getval(t.radius, self, t),}
+	end,
+	action = function(self, t)
+		local tg = util.getval(t.target, self, t)
+		-- Damage
+		local base_damage = util.getval(t.damage, self, t)
+		local projector = function(x, y, tg, self)
+			local target = game.level.map(x, y, Map.ACTOR)
+			if not target then return end
+			local damage = self:physicalCrit(
+				base_damage, nil, target, self:combatAttackRanged(), target:combatDefenseRanged())
+			DamageType:get(DamageType.PHYSICAL).projector(
+				self, x, y, DamageType.PHYSICAL, damage)
+		end
+		self:project(tg, self.x, self.y, projector)
+		-- Map Effect
+		local duration = util.getval(t.duration, self, t)
+		local effect = game.level.map:addEffect(
+			self, self.x, self.y, duration,
+			DamageType.NULL,
+			-- We're coopting the damage amount to hold various info.
+			{effect_type = 'dust_storm',},
+			tg.radius, 5, nil, {type = 'dust_storm'})
+		-- Pretties
+		game.level.map:particleEmitter(self.x, self.y, tg.radius, 'ball_earth', {radius = tg.radius + 1,})
+		game:playSoundNear(self, 'talents/earth')
+		return true
+	end,
+	info = function(self, t)
+		return ([[Explodes in a radius %d burst of sand, dealing %d physical damage. For the next %d turns, you can freely move to any square inside the affected area in a single turn, as long as you are inside it.
+Damage and duration increase with constitution.]])
+			:format(util.getval(t.radius, self, t),
+							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)),
+							util.getval(t.duration, self, t))
+	end,}

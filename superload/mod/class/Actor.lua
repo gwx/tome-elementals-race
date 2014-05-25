@@ -17,6 +17,7 @@
 local _M = loadPrevious(...)
 local eutil = require 'elementals-race.util'
 local target = require 'engine.Target'
+local map = require 'engine.Map'
 
 -- Learn Essence Pool
 local learnPool = _M.learnPool
@@ -143,6 +144,13 @@ end
 
 local move = _M.move
 function _M:move(x, y, force)
+	-- Amorphous Cloud gives you free movement.
+	local free_move = false
+	if self:knowTalent('T_AMORPHOUS') then
+		local effects = game.level.map:getEffects(x, y, 'dust_storm')
+		free_move = #effects > 0
+	end
+
 	-- Unleashed always allows movement.
 	local unleashed_activated = false
 	if self:attr('never_move') and self:hasEffect('EFF_UNLEASHED') then
@@ -237,7 +245,9 @@ function _M:move(x, y, force)
 	if cancel_move then
 		result = false
 	else
+		if free_move then self.did_energy = true end
 		result = move(self, x, y, force)
+		if free_move then self.did_energy = false end
 	end
 
 	-- Update the lock beam.
