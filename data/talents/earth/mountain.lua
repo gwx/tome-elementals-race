@@ -20,7 +20,8 @@ newTalentType {
 	type = 'elemental/mountain',
 	name = 'Mountain',
 	generic = true,
-	description = 'Tanking',}
+	description = 'Tanking',
+	allow_random = true,}
 
 local make_require = function(tier)
 	return {

@@ -24,7 +24,8 @@ local particles = require 'engine.Particles'
 newTalentType {
 	type = 'elemental/geokinesis',
 	name = 'Geokinesis',
-	description = 'Magic Rocks.',}
+	description = 'Magic Rocks.',
+	allow_random = true,}
 
 local make_require = function(tier)
 	return {

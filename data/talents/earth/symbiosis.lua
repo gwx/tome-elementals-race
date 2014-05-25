@@ -20,7 +20,8 @@ newTalentType {
 	type = 'elemental/symbiosis',
 	name = 'Symbiosis',
 	generic = true,
-	description = 'Covering Vines',}
+	description = 'Covering Vines',
+	allow_random = true,}
 
 local make_require = function(tier)
 	return {

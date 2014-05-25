@@ -23,7 +23,8 @@ local object = require 'mod.class.Object'
 newTalentType {
 	type = 'elemental/geothermal',
 	name = 'Geothermal',
-	description = 'Burning Earth',}
+	description = 'Burning Earth',
+	allow_random = true,}
 
 local make_require = function(tier)
 	return {

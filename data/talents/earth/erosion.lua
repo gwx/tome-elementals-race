@@ -20,7 +20,8 @@ newTalentType {
 	type = 'elemental/erosion',
 	name = 'Erosion',
 	generic = true,
-	description = 'Sand is more dangerous than you think',}
+	description = 'Sand is more dangerous than you think',
+	allow_random = true,}
 
 local make_require = function(tier)
 	return {

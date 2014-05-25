@@ -23,7 +23,8 @@ local object = require 'mod.class.Object'
 newTalentType {
 	type = 'elemental/avalanche',
 	name = 'Avalanche',
-	description = 'Physical Caster',}
+	description = 'Physical Caster',
+	allow_random = true,}
 
 local make_require = function(tier)
 	return {

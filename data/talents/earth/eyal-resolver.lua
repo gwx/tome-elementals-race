@@ -19,7 +19,8 @@ local eutil = require 'elementals-race.util'
 newTalentType {
 	type = 'elemental/eyal-resolver',
 	name = 'Eyal Resolver',
-	description = 'Unstoppable Boulder',}
+	description = 'Unstoppable Boulder',
+	allow_random = true,}
 
 local make_require = function(tier)
 	return {
