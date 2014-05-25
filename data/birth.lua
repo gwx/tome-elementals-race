@@ -76,6 +76,13 @@ newBirthDescriptor {
 	type = 'subclass',
 	name = 'Jadir',
 	desc = {
+		'Earth Elemental.',
+		'#GOLD#Stat modifiers:',
+		'#LIGHT_BLUE# * +4 Strength, -2 Dexterity, +5 Constitution',
+		'#LIGHT_BLUE# * +4 Magic, +0 Willpower, -2 Cunning',
+		'#GOLD#Life per level:#LIGHT_BLUE# 13',
+		'#GOLD#Experience penalty:#LIGHT_BLUE# 40%',
+		'#WHITE#',
 		'Jadir is, if the element doesn\'t betray it already, the beefier of the four classes. If it hits, it hits hard, if it tanks, it tanks even harder. I wanted this class to have the most "inert" of skillsets, that is skills that don\'t require complex targeting, as it would be more fitting for a class that\'s supposed to rely less on mobility and more on the raw stat bulk - hence the majority of the skills having a focus on point-blank AoE skills, sustains or enhancements.',
 		'',
 		'This does of course not mean that it\'s a class entirely grounded in it\'s ability to manipulate the game elements beyond just punching them. To compensate for the lack of speed it has a variety of skills that affect the environment, in particular walls. It felt very fitting, both for the lore and the general playstyle, an earth elemental controlling natural solid physical obstacles.'},
