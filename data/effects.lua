@@ -310,7 +310,8 @@ newEffect {
 	name = 'UNLEASHED', image = 'talents/unleashed.png',
 	desc = 'Unleashed',
 	long_desc = function(self, eff)
-		return [[Nothing dare stop you dead in your tracks. You are immune to effects that would slow you down, knock you back or immobilize you. This does not negate the application of harmful skills however, only their slowing/knock-backing/immbolizing effect and the duration decreases by 1 for every effect it negates.]]
+		return ([[Nothing dare stop you dead in your tracks. You are immune to effects that would slow you down, knock you back or immobilize you. This does not negate the application of harmful skills however, only their slowing/knock-backing/immbolizing effect and the duration decreases by 1 for every effect it negates. Negating an effect will give you %d stacks of Brutish Stride.]])
+			:format(eff.stride)
 	end,
 	type = 'physical',
 	subtype = {earth = true,},

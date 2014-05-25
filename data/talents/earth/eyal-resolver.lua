@@ -94,15 +94,19 @@ newTalent{
 	duration = function(self, t)
 		return self:combatTalentScale(t, 6, 10) * (0.5 + self:getStr(0.5, true))
 	end,
+	stride = function(self, t)
+		return math.floor(self:combatTalentScale(t, 1, 3.5))
+	end,
 	action = function(self, t)
-		self:setEffect('EFF_UNLEASHED', util.getval(t.duration, self, t), {})
+		self:setEffect('EFF_UNLEASHED', util.getval(t.duration, self, t), {
+										 stride = util.getval(t.stride, self, t),})
 		return true
 	end,
 	info = function(self, t)
 		return ([[Nothing dare stop you dead in your tracks. When activated, you become unleashed for %d turns. While unleashed, you are immune to effects that would slow you down, knock you back or immobilize you.
-This does not negate the application of harmful skills however, only their slowing/knock-backing/immbolizing effect and the duration of Unleashed decreases by 1 for every effect it negates.
+This does not negate the application of harmful skills however, only their slowing/knock-backing/immbolizing effect and the duration of Unleashed decreases by 1 for every effect it negates. Every time an effect is negated in this way, you gain %d stacks of Brutish Stride.
 Duration increases with strength.]])
-			:format(util.getval(t.duration, self, t))
+			:format(util.getval(t.duration, self, t), util.getval(t.stride(self, t)))
 	end,}
 
 newTalent {

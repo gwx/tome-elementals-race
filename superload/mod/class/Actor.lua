@@ -275,6 +275,17 @@ function _M:reduceUnleashed(count)
 		if unleashed.dur <= 0 then
 			self:removeEffect('EFF_UNLEASHED')
 		end
+		-- Brutish Stride stacks
+		if unleashed.stride and self:knowTalent('T_BRUTISH_STRIDE') then
+			local stride = self:getTalentFromId('T_BRUTISH_STRIDE')
+			local move = util.getval(stride.move, self, stride)
+			local stacks = count * unleashed.stride
+			self:setEffect('EFF_BRUTISH_STRIDE', 1, {
+											 move = move * stacks, max = move * 10,
+											 damage = util.getval(stride.damage, self, stride),
+											 radius = util.getval(stride.radius, self, stride),
+											 angle = util.getval(stride.angle, self, stride),})
+		end
 	end
 end
 
