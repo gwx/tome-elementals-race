@@ -112,6 +112,7 @@ newTalent {
 			-- We're coopting the damage amount to hold various info.
 			{effect_type = 'dust_storm',},
 			tg.radius, 5, nil, {type = 'dust_storm'})
+		effect.name = 'dust storm'
 		-- Pretties
 		game.level.map:particleEmitter(self.x, self.y, tg.radius, 'ball_earth', {radius = tg.radius + 1,})
 		game:playSoundNear(self, 'talents/earth')
@@ -124,3 +125,63 @@ Damage and duration increase with constitution.]])
 							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)),
 							util.getval(t.duration, self, t))
 	end,}
+
+newTalent{
+	name = 'Sandstorm',
+	type = {'elemental/erosion', 3,},
+	require = make_require(3),
+	points = 5,
+	essence = 15,
+	cooldown = 23,
+	range = 0,
+	radius = 2,
+	duration = function(self, t)
+		return math.floor(5 + 5 * (0.5 + self:getCon(0.5, true)))
+	end,
+	accuracy = function(self, t)
+		return self:combatTalentScale(t, 6, 11) * (0.5 + self:getCon(0.5, true))
+	end,
+	accuracy_duration = 2,
+	stacks = 3,
+	tactical = {ATTACKAREA = {PHYSICAL = 2}, DISABLE = {BLIND = 1,},},
+	target = function(self, t)
+		return {type = 'ball',
+						range = util.getval(t.range, self, t),
+						radius = util.getval(t.radius, self, t),}
+	end,
+	action = function(self, t)
+		local radius = util.getval(t.radius, self, t)
+		local duration = self:spellCrit(util.getval(t.duration, self, t))
+		local accuracy = util.getval(t.accuracy, self, t)
+		local accuracy_duration = util.getval(t.accuracy_duration, self, t)
+		local stacks = util.getval(t.stacks, self, t)
+		-- Add a lasting map effect
+		local effect =
+			game.level.map:addEffect(
+				self, self.x, self.y, duration,
+				DamageType.SANDSTORM, {
+					accuracy = accuracy,
+					max = accuracy * stacks,
+					effect_duration = accuracy_duration,},
+				radius, 5, nil,
+				{type = 'sandstorm', args = {radius = radius,}, only_one = true,},
+				function(e)
+					e.x = e.src.x
+					e.y = e.src.y
+					return true
+				end,
+				false)
+		effect.name = 'sandstorm'
+		game:playSoundNear(self, 'talents/breath')
+		return true
+	end,
+	info = function(self, t)
+		local accuracy = util.getval(t.accuracy, self, t)
+		return ([[A fierce sandstorm rages in radius %d around you for %d turns. #SLATE#(UNIMPLEMENTED: Enemy projectiles move 50%% slower through it,)#LAST# while anything inside loses %d accuracy every turn, stacking to a max of %d, at which point they become blinded as well.
+Durration and accuracy reduction scale with constitution.]])
+			:format(util.getval(t.radius, self, t),
+							util.getval(t.duration, self, t),
+							accuracy,
+							accuracy * util.getval(t.stacks, self, t))
+	end,
+}

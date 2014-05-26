@@ -63,3 +63,19 @@ newDamageType {
 	end,}
 
 newDamageType{name = 'null', type = 'NULL', projector = function() end,}
+
+newDamageType {
+	name = 'blinding sand', type = 'SANDSTORM',
+	projector = function(src, x, y, t, dam)
+		if type(dam) ~= 'table' then dam = {accuracy = dam} end
+		local accuracy = dam.accuracy or 3
+		local max = dam.max or accuracy * 3
+		local effect_duration = dam.effect_duration or 2
+
+		local target = game.level.map(x, y, Map.ACTOR)
+		if not target or src == target then return 0 end
+		target:setEffect('EFF_BLINDING_SAND', effect_duration, {
+											 accuracy = accuracy,
+											 max = max,})
+		return 0
+	end,}

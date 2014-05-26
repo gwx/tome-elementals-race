@@ -361,3 +361,44 @@ newEffect {
 			end
 		end
 	end,}
+
+newEffect {
+	name = 'BLINDING_SAND', image = 'talents/sandstorm.png',
+	desc = 'Blinding Sand',
+	long_desc = function(self, eff)
+		local blind = ''
+		if eff.blind_id then
+			blind = ' and blinded you'
+		end
+		return ([[Whirling sand has reduced your accuracy by %d%s.]])
+			:format(eff.accuracy, blind)
+	end,
+	type = 'physical',
+	subtype = {earth = true, blind = true,},
+	status = 'detrimental',
+	parameters = {accuracy = 3, max = 9,},
+	activate = function(self, eff)
+		eff.accuracy_id = self:addTemporaryValue('combat_atk', -eff.accuracy)
+		if eff.accuracy >= eff.max then
+			eff.blind_id = self:addTemporaryValue('blind', 1)
+		end
+	end,
+	deactivate = function(self, eff)
+		self:removeTemporaryValue('combat_atk', eff.accuracy_id)
+		if eff.blind_id then
+			self:removeTemporaryValue('blind', eff.blind_id)
+		end
+	end,
+	on_merge = function(self, old, new)
+		self:removeTemporaryValue('combat_atk', old.accuracy_id)
+		if old.blind_id then
+			self:removeTemporaryValue('blind', old.blind_id)
+		end
+		new.max = math.max(old.max, new.max)
+		new.accuracy = math.min(new.max, old.accuracy + new.accuracy)
+		new.accuracy_id = self:addTemporaryValue('combat_atk', -new.accuracy)
+		if new.accuracy >= new.max then
+			new.blind_id = self:addTemporaryValue('blind', 1)
+		end
+		return new
+	end,}
