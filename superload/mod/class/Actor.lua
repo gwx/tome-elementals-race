@@ -174,7 +174,8 @@ function _M:move(x, y, force)
 		end
 	end
 
-	local sx, sy = self.x or self.swap_old_x, self.y or self.swap_old_y
+	local sx, sy = self.x, self.y
+	local nowhere = not sx or not sy
 
 	local cancel_move = false
 
@@ -185,13 +186,19 @@ function _M:move(x, y, force)
 		-- See if present location and target location are passable.
 		local pass = eutil.get(self, 'can_pass', 'pass_wall')
 		eutil.set(self, 'can_pass', 'pass_wall', 0)
-		local self_free = self:canMove(sx, sy, true)
+		local self_free = nowhere or self:canMove(sx, sy, true)
 		local target_free = self:canMove(x, y, true)
 		self.can_pass.pass_wall = pass
 
+		-- If we presently don't have a location, then discard the anchor
+		-- and prevent moving to target space if its solid.
+		if nowhere and not target_free then
+			self.living_mural_anchor = nil
+			cancel_move = true
+
 		-- If we're currently free, but target is not, just set the anchor
 		-- to present location.
-		if self_free and not target_free then
+		elseif self_free and not target_free then
 			self.living_mural_anchor = {x = sx, y = sy,}
 
 	  -- If we're moving to a free location from a free location then discard anchor.
@@ -199,15 +206,23 @@ function _M:move(x, y, force)
 			self.living_mural_anchor = nil
 
 		-- We're moving from wall to wall. Cancel out if we're trying to move more than one space.
-		elseif core.fov.distance(x, y, sx, sy) > 1 then
+		elseif not nowhere and core.fov.distance(x, y, sx, sy) > 1 then
 			deactivate = true
 
 		-- Try to move the anchor.
 		else
+			local dx, dy
 			local old_anchor = self.living_mural_anchor
+			if nowhere then
+				dx = util.bound(x - old_anchor.x, -1, 1)
+				dy = util.bound(y - old_anchor.y, -1, 1)
+			else
+				dx = util.bound(x - sx, -1, 1)
+				dy = util.bound(y - sy, -1, 1)
+			end
 			local new_anchor = {
-				x = old_anchor.x + x - sx,
-				y = old_anchor.y + y - sy,}
+				x = old_anchor.x + dx,
+				y = old_anchor.y + dy,}
 
 			-- Test if the new anchor is a wall.
 			local pass = eutil.get(self, 'can_pass', 'pass_wall')
@@ -247,9 +262,7 @@ function _M:move(x, y, force)
 		result = false
 	else
 		if free_move then self.did_energy = true end
-		self.swap_old_x, self.swap_old_y = self.x, self.y
 		result = move(self, x, y, force)
-		self.swap_old_x, self.swap_old_y = nil, nil
 		if free_move then self.did_energy = false end
 	end
 
@@ -262,7 +275,10 @@ function _M:move(x, y, force)
 
 
 	-- Brutish Stride
-	if self:knowTalent('T_BRUTISH_STRIDE') and (self.x ~= sx or self.y ~= sy) then
+	if self:knowTalent('T_BRUTISH_STRIDE') and
+		not nowhere and
+		(self.x ~= sx or self.y ~= sy)
+	then
 		local t = self:getTalentFromId('T_BRUTISH_STRIDE')
 		local move = util.getval(t.move, self, t)
 		self:setEffect('EFF_BRUTISH_STRIDE', 1, {
