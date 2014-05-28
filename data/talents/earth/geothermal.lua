@@ -52,7 +52,7 @@ newTalent {
 	end,
 	target = function(self, t)
 		return {
-			type = 'ball', talent = t,
+			type = 'ball', talent = t, selffire = false,
 			range = util.getval(t.range, self, t),
 			radius = util.getval(t.radius, self, t),}
 	end,
