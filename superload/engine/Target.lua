@@ -53,7 +53,7 @@ function _M:getType(t)
 	t = getType(self, t)
 
 	-- Add in second range.
-	local block_path = t.block_path
+	t.block_path_old = t.block_path
 	t.block_path = function(typ, lx, ly, for_highlights)
 		if not game.level.map:isBound(lx, ly) then
 			return true, false, false
@@ -64,7 +64,7 @@ function _M:getType(t)
 			end
 		end
 
-		return block_path(typ, lx, ly, for_highlights)
+		return typ.block_path_old(typ, lx, ly, for_highlights)
 	end
 
 	local update = {}
