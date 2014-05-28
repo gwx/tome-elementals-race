@@ -229,6 +229,9 @@ newTalent {
 	duration = function(self, t)
 		return math.floor(3 + self:getStr(3, true))
 	end,
+	power = function(self, t)
+		return self:combatTalentPhysicalDamage(t, 0, 60)
+	end,
 	-- Don't allow repeated throw attempts.
 	on_pre_use = function(self, t, silent)
 		return not self.turn_procs.catapult_failed
@@ -262,7 +265,8 @@ newTalent {
 		target1:move(x2, y2, true)
 
 		local damage = util.getval(t.damage, self, t)
-		local duration = t.duration(self, t)
+		local duration = util.getval(t.duration, self, t)
+		local power = util.getval(t.power, self, t)
 		local projector = function(x, y)
 			local target = game.level.map(x, y, Map.ACTOR)
 			if target and target ~= self then
@@ -272,7 +276,7 @@ newTalent {
 				DamageType:get(DamageType.PHYSICAL).projector(
 					self, x, y, DamageType.PHYSICAL, damage)
 				if target.size_category < target1.size_category then
-					target:setEffect('EFF_MAIMED', duration, {})
+					target:setEffect('EFF_MAIMED', duration, {power = power, dam = power,})
 				end
 			end
 		end
