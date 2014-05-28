@@ -189,6 +189,7 @@ function _M:move(x, y, force)
 		local self_free = nowhere or self:canMove(sx, sy, true)
 		local target_free = self:canMove(x, y, true)
 		local target_actor = game.level.map(x, y, map.ACTOR)
+		local target_no_dig = not eutil.get(game.level.map(x, y, map.TERRAIN), 'dig')
 		local bump_attack = target_actor and self:reactionToward(target_actor) < 0
 		self.can_pass.pass_wall = pass
 
@@ -201,6 +202,10 @@ function _M:move(x, y, force)
 		-- If we're doing a bump attack, ok the move anyway.
 		elseif bump_attack then
 			-- nop
+
+	  -- If the target is not diggable, don't move into it.
+		elseif not target_free and target_no_dig then
+			cancel_move = true
 
 		-- If we're currently free, but target is not, just set the anchor
 		-- to present location.
