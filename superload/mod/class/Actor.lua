@@ -353,10 +353,13 @@ end
 -- Allow overrideable archery weapon.
 local hasArcheryWeapon = _M.hasArcheryWeapon
 function _M:hasArcheryWeapon(type)
-	if self:attr('disarmed') then return nil, 'disarmed' end
 	if self.archery_weapon_override then
+		if not self.archery_weapon_override.ignore_disarm and
+			self:attr('disarmed')
+		then return nil, 'disarmed' end
 		return unpack(self.archery_weapon_override)
 	end
+	if self:attr('disarmed') then return nil, 'disarmed' end
 	return hasArcheryWeapon(self, type)
 end
 

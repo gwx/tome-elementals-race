@@ -88,7 +88,7 @@ newTalent {
 		end
 
 		local archery_weapon_override = self.archery_weapon_override
-		self.archery_weapon_override = {t.shooter, ammo,}
+		self.archery_weapon_override = {t.shooter, ammo, ignore_disarm = true,}
 
 		local tg = util.getval(t.target, self, t)
 		tg.speed = default_ammo and 10 or 20
@@ -107,12 +107,15 @@ newTalent {
 			eutil.adder(self:spellCrit(t.damage(self, t))),
 			combat, 'ranged_project', DamageType.PHYSICAL)
 
-		self.archery_weapon_override = {t.shooter, ammo,}
+		self.archery_weapon_override = {t.shooter, ammo, ignore_disarm = true,}
 		for _, target in pairs(targets) do
 			target.ammo = combat
 		end
 
+		local disarmed = self:attr('disarmed')
+		self.disarmed = nil
 		self:archeryShoot(targets, t, tg, {atk = self:getMag() - self:getDex()})
+		self.disarmed = disarmed
 
 		self.archery_weapon_override = archery_weapon_override
 		return true
