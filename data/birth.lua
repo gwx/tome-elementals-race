@@ -36,7 +36,7 @@ newBirthDescriptor {
 	type = 'subrace',
 	name = 'Elemental',
 	desc = {'Sentient beings created as part of nature\'s reaction to its gradual corruption by the spellblaze.',
-	},
+					'Elementals are immune to disease and poison but cannot use runes.',},
 	random_escort_possibilities = {
 		{'tier1.1', 1, 2}, {'tier1.2', 1, 2}, {'daikara', 1, 2},
 		{'old-forest', 1, 4}, {'dreadfell', 1, 8}, {'reknor', 1, 2},},
@@ -57,6 +57,8 @@ newBirthDescriptor {
 		starting_zone = 'trollmire',
 		starting_quest = 'start-allied',
 		starting_intro = 'cornac',
+		inscription_restrictions = {
+			['inscriptions/infusions'] = true,},
 		disease_immune = 1,
 		poison_immune = 1,},}
 
@@ -109,6 +111,10 @@ newBirthDescriptor {
 		[ActorTalents.T_JAGGED_BODY] = 1,},
 	experience = 1.4,
 	copy = {
+		moddable_tile = 'runic_golem',
+		moddable_tile_nude = true,
+		moddable_tile_base = 'base_04.png',
+		equipdoll = 'alchemist_golem',
 		subtype = 'earth',
 		max_life = 130,
 		life_rating = 13,

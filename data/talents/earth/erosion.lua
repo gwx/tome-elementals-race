@@ -68,6 +68,9 @@ Defense, physical power, disarm duration and maximum stacks scale with constitut
 							util.getval(t.disarm, self, t))
 	end,}
 
+-- Make movement normal, make a secondary talent that teleports you to
+-- target square instead of moving, maybe look into a mouse-click
+-- teleport as well.
 newTalent {
 	name = 'Amorphous',
 	type = {'elemental/erosion', 2,},
