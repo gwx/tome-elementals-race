@@ -114,4 +114,11 @@ function _M.adder(amt)
 	return function(x) return amt + (x or 0) end
 end
 
+-- Clone table by reference
+function _M.ref_clone(table)
+	local result = {}
+	setmetatable(result, {__index = table,})
+	return result
+end
+
 return _M

@@ -18,6 +18,7 @@ local _M = loadPrevious(...)
 local eutil = require 'elementals-race.util'
 local target = require 'engine.Target'
 local map = require 'engine.Map'
+local damage_type = require 'engine.DamageType'
 
 -- Learn Essence Pool
 local learnPool = _M.learnPool
@@ -368,23 +369,6 @@ function _M:hasArcheryWeapon(type)
 	return hasArcheryWeapon(self, type)
 end
 
--- Mistarget on source.
-local project = _M.project
-function _M:project(t, x, y, damtype, dam, particles)
-	if self.mistarget_chance and rng.percent(self.mistarget_chance) then
-		local distance = core.fov.distance(self.x, self.y, x, y)
-		if distance > 1 then
-			local angle = math.rad(rng.range(0, 360))
-			distance = distance * rng.float(0, self.mistarget_percent)
-			x = math.floor(x + 0.5 + math.cos(angle) * distance)
-			y = math.floor(y + 0.5 + math.sin(angle) * distance)
-			game.logSeen(self, '%s mistargets by %.1f!', self.name:capitalize(), distance)
-		end
-	end
-
-	return project(self, t, x, y, damtype, dam, particles)
-end
-
 -- Let projectiles modify their movement.
 local projectDoMove = _M.projectDoMove
 function _M:projectDoMove(typ, tgtx, tgty, x, y, srcx, srcy)
@@ -561,5 +545,206 @@ function _M:useEnergy(val)
 		end
   end
 end
+
+-- Completely override project.
+function _M:project(t, x, y, damtype, dam, particles)
+	-- Mistargeting
+	if self.mistarget_chance and rng.percent(self.mistarget_chance) then
+		local distance = core.fov.distance(self.x, self.y, x, y)
+		if distance > 1 then
+			local angle = math.rad(rng.range(0, 360))
+			distance = distance * rng.float(0, self.mistarget_percent)
+			x = math.floor(x + 0.5 + math.cos(angle) * distance)
+			y = math.floor(y + 0.5 + math.sin(angle) * distance)
+			game.logSeen(self, '%s mistargets by %.1f!', self.name:capitalize(), distance)
+		end
+	end
+
+	if type(particles) ~= "table" then particles = nil end
+
+	self:check("on_project_init", t, x, y, damtype, dam, particles)
+
+	local mods = {}
+	if game.level.map:checkAllEntities(x, y, "on_project_acquire", self, t, x, y, damtype, dam, particles, false, mods) then
+		if mods.x then x = mods.x end
+		if mods.y then y = mods.y end
+	end
+
+--	if type(dam) == "number" and dam < 0 then return end
+	local typ = target:getType(t)
+	typ.source_actor = self
+	typ.start_x = typ.start_x or typ.x or typ.source_actor and typ.source_actor.x or self.x
+	typ.start_y = typ.start_y or typ.y or typ.source_actor and typ.source_actor.y or self.x
+
+	local grids = {}
+	local function addGrid(x, y)
+		if not t.filter or t.filter(x, y) then
+			if not grids[x] then grids[x] = {} end
+			grids[x][y] = true
+		end
+	end
+
+	if t.include_start then addGrid(t.start_x, t.start_y) end
+
+	local blob = t.blob or {}
+	local blob_t = {range = false, range2 = false, __index = t,}
+	setmetatable(blob_t, blob_t)
+
+	-- Stop at range or on block
+	local stop_x, stop_y = typ.start_x, typ.start_y
+	local stop_radius_x, stop_radius_y = typ.start_x, typ.start_y
+	local l, is_corner_blocked
+	if typ.source_actor.lineFOV then
+		l = typ.source_actor:lineFOV(x, y, nil, nil, typ.start_x, typ.start_y)
+	else
+		l = core.fov.line(typ.start_x, typ.start_y, x, y)
+	end
+	local block_corner = typ.block_path and function(_, bx, by) local b, h, hr = typ:block_path(bx, by, true) ; return b and h and not hr end
+		or function(_, bx, by) return false end
+
+	l:set_corner_block(block_corner)
+	local lx, ly, blocked_corner_x, blocked_corner_y = l:step()
+
+	-- Being completely blocked by the corner of an adjacent tile is annoying, so let's make it a special case and hit it instead
+	if blocked_corner_x and game.level.map:isBound(blocked_corner_x, blocked_corner_y) then
+		stop_x = blocked_corner_x
+		stop_y = blocked_corner_y
+		if typ.line then addGrid(blocked_corner_x, blocked_corner_y) end
+		if not t.bypass and game.level.map:checkAllEntities(blocked_corner_x, blocked_corner_y, "on_project", self, t, blocked_corner_x, blocked_corner_y, damtype, dam, particles) then
+			return
+		end
+	else
+		while lx and ly do
+			local block, hit, hit_radius = false, true, true
+			if is_corner_blocked then
+				block, hit, hit_radius = true, true, false
+				lx = stop_radius_x
+				ly = stop_radius_y
+			elseif typ.block_path then
+				block, hit, hit_radius = typ:block_path(lx, ly)
+				for _, offsets in pairs(blob) do
+					local block2, hit2, hit_radius2 =
+						blob_t:block_path(lx + offsets.x, ly + offsets.y)
+					block = block or block2
+					hit = hit and hit2
+					hit_radius = hit_radius and hit_radius2
+				end
+			end
+			if hit then
+				stop_x, stop_y = lx, ly
+				-- Deal damage: beam
+				if typ.line then addGrid(lx, ly) end
+				-- WHAT DOES THIS DO AGAIN?
+				-- Call the on project of the target grid if possible
+				if not t.bypass and game.level.map:checkAllEntities(lx, ly, "on_project", self, t, lx, ly, damtype, dam, particles) then
+					return
+				end
+			end
+			if hit_radius then
+				stop_radius_x, stop_radius_y = lx, ly
+			end
+
+			if block then break end
+			lx, ly, is_corner_blocked = l:step()
+		end
+	end
+
+	if typ.ball and typ.ball > 0 then
+		core.fov.calc_circle(
+			stop_radius_x,
+			stop_radius_y,
+			game.level.map.w,
+			game.level.map.h,
+			typ.ball,
+			function(_, px, py)
+				if typ.block_radius and typ:block_radius(px, py) then return true end
+			end,
+			function(_, px, py)
+				-- Deal damage: ball
+				addGrid(px, py)
+			end,
+		nil)
+		addGrid(stop_x, stop_y)
+	elseif typ.cone and typ.cone > 0 then
+		--local dir_angle = math.deg(math.atan2(y - self.y, x - self.x))
+		core.fov.calc_beam_any_angle(
+			stop_radius_x,
+			stop_radius_y,
+			game.level.map.w,
+			game.level.map.h,
+			typ.cone,
+			typ.cone_angle,
+			typ.start_x,
+			typ.start_y,
+			x - typ.start_x,
+			y - typ.start_y,
+			function(_, px, py)
+				if typ.block_radius and typ:block_radius(px, py) then return true end
+			end,
+			function(_, px, py)
+				addGrid(px, py)
+			end,
+		nil)
+		addGrid(stop_x, stop_y)
+	elseif typ.wall and typ.wall > 0 then
+		core.fov.calc_wall(
+			stop_radius_x,
+			stop_radius_y,
+			game.level.map.w,
+			game.level.map.h,
+			typ.wall,
+			typ.halfmax_spots,
+			typ.start_x,
+			typ.start_y,
+			x - typ.start_x,
+			y - typ.start_y,
+			function(_, px, py)
+				if typ.block_radius and typ:block_radius(px, py) then return true end
+			end,
+			function(_, px, py)
+				addGrid(px, py)
+			end,
+		nil)
+	else
+		-- Deal damage: single
+		addGrid(stop_x, stop_y)
+	end
+
+	-- Check for minimum range
+	if typ.min_range and core.fov.distance(typ.start_x, typ.start_y, stop_x, stop_y) < typ.min_range then
+		return
+	end
+
+	self:check("on_project_grids", grids)
+
+	-- Now project on each grid, one type
+	local tmp = {}
+	local stop = false
+	damage_type:projectingFor(self, {project_type=typ})
+	for px, ys in pairs(grids) do
+		for py, _ in pairs(ys) do
+			-- Call the projected method of the target grid if possible
+			if not game.level.map:checkAllEntities(px, py, "projected", self, t, px, py, damtype, dam, particles) then
+				-- Check self- and friendly-fire, and if the projection "misses"
+				local act = game.level.map(px, py, engine.Map.ACTOR)
+				if act and act == self and not ((type(typ.selffire) == "number" and rng.percent(typ.selffire)) or (type(typ.selffire) ~= "number" and typ.selffire)) then
+				elseif act and self.reactionToward and (self:reactionToward(act) >= 0) and not ((type(typ.friendlyfire) == "number" and rng.percent(typ.friendlyfire)) or (type(typ.friendlyfire) ~= "number" and typ.friendlyfire)) then
+				-- Otherwise hit
+				else
+					if type(damtype) == "function" then if damtype(px, py, t, self) then stop=true break end
+					else damage_type:get(damtype).projector(self, px, py, damtype, dam, tmp, nil) end
+					if particles then
+						game.level.map:particleEmitter(px, py, 1, particles.type, particles.args)
+					end
+				end
+			end
+		end
+		if stop then break end
+	end
+	damage_type:projectingFor(self, nil)
+	return grids, stop_x, stop_y
+end
+
+
 
 return _M

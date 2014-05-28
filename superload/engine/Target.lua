@@ -51,6 +51,22 @@ end
 local getType = _M.getType
 function _M:getType(t)
 	t = getType(self, t)
+
+	-- Add in second range.
+	local block_path = t.block_path
+	t.block_path = function(typ, lx, ly, for_highlights)
+		if not game.level.map:isBound(lx, ly) then
+			return true, false, false
+		elseif not typ.no_restrict then
+			if typ.range2 and typ.start_x2 and typ.start_y2 then
+				local dist = core.fov.distance(typ.start_x2, typ.start_y2, lx, ly)
+				if dist > typ.range2 then return true, false, false end
+			end
+		end
+
+		return block_path(typ, lx, ly, for_highlights)
+	end
+
 	local update = {}
 
 	if t.type then
@@ -91,6 +107,10 @@ function _M:realDisplay(dispx, dispy)
 
 	local pending_highlights = {}
 	local display_highlight = function(texture, tx, ty)
+		if self.target_type.filter and not self.target_type.filter(tx, ty) then
+			texture = self.sr
+		end
+
 		if not pending_highlights[tx] then
 			pending_highlights[tx] = {}
 		end
@@ -116,8 +136,12 @@ function _M:realDisplay(dispx, dispy)
 			end
 	end
 
+	if self.target_type.include_start then
+		display_highlight(self.sb, self.target_type.start_x, self.target_type.start_y)
+	end
+
 	local blob = self.target_type.blob or {}
-	local blob_target_type = {range = false, __index = self.target_type}
+	local blob_target_type = {range = false, range2 = false, __index = self.target_type,}
 	setmetatable(blob_target_type, blob_target_type)
 
 	local s = self.sb
@@ -178,6 +202,8 @@ function _M:realDisplay(dispx, dispy)
 			end
 			if hit_radius then
 				stop_radius_x, stop_radius_y = lx, ly
+			elseif self.target_type.line_red_past_radius then
+				s = self.sr
 			end
 			if self.target_type.min_range then
 				-- Check if we should be "red"
@@ -305,10 +331,8 @@ function _M:realDisplay(dispx, dispy)
 			function(_, px, py)
 				if not self.target_type.no_restrict and not game.level.map.remembers(px, py) and not game.level.map.seens(px, py) then
 					display_highlight(self.syg, px, py)
-				elseif not filter or filter(px, py) then
-					display_highlight(self.sg, px, py)
 				else
-					display_highlight(self.sr, px, py)
+					display_highlight(self.sg, px, py)
 				end
 			end
 		)

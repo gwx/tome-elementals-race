@@ -149,7 +149,7 @@ newEffect {
 		local damage = eff.damage
 		local leash = ''
 		if eff.src then
-			damage = damDesc(self, DamageType.NATURE, damage)
+			damage = damDesc(eff.src, DamageType.NATURE, damage)
 			leash = (' and preventing you from moving more than %d tiles away from %s.')
 				:format(eff.leash, eff.src.name)
 		end
@@ -401,4 +401,26 @@ newEffect {
 			new.blind_id = self:addTemporaryValue('blind', 1)
 		end
 		return new
+	end,}
+
+newEffect{
+	name = 'SILICINE_WOUND', image = 'talents/silicine_slicers.png',
+	desc = 'Silicine Wound',
+	long_desc = function(self, eff)
+		return ('Crystals have cut you and caused you to bleed, dealing %d physical damage each turn and slowing your global speed by %d%%.'):format(
+			damDesc(eff.src, DamageType.PHYSICAL, eff.damage),
+			eff.speed * 100)
+	end,
+	type = 'physical',
+	subtype = {wound = true, cut = true, earth = true,},
+	status = 'detrimental',
+	parameters = {damage = 10, speed = 0.1,},
+	on_gain = function(self, err) return '#Target# is cut by crystals.', '+Silicine Wound' end,
+	on_lose = function(self, err) return '#Target# stops bleeding from the crystal cuts.', '-Silicine Wound' end,
+	activate = function(self, eff)
+		self:effectTemporaryValue(eff, 'global_speed_add', -eff.speed)
+	end,
+	on_timeout = function(self, eff)
+		DamageType:get(DamageType.PHYSICAL).projector(
+			eff.src or self, self.x, self.y, DamageType.PHYSICAL, eff.damage)
 	end,}

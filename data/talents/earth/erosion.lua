@@ -14,7 +14,7 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-local stats = require 'engine.interface.ActorStats'
+local eutil = require 'elementals-race.util'
 
 newTalentType {
 	type = 'elemental/erosion',
@@ -183,5 +183,160 @@ Durration and accuracy reduction scale with constitution.]])
 							util.getval(t.duration, self, t),
 							accuracy,
 							accuracy * util.getval(t.stacks, self, t))
+	end,}
+
+newTalent {
+	name = 'Silicine Slicers',
+	type = {'elemental/erosion', 4,},
+	require = make_require(4),
+	points = 5,
+	mode = 'sustained',
+	essence = 20,
+	cooldown = 21,
+	no_npc_use = true,
+	length = function(self, t)
+		return math.ceil(self:combatTalentScale(t, 5, 8)) * (0.5 + self:getCon(0.5, true))
 	end,
-}
+	range = 5,
+	duration = function(self, t)
+		return math.ceil(self:combatTalentScale(t, 5, 8)) * (0.5 + self:getCon(0.5, true))
+	end,
+	damage = function(self, t)
+		return self:combatTalentScale(t, 30, 200) * (0.5 + self:getCon(0.5, true))
+	end,
+	speed = function(self, t) return self:combatTalentScale(t, 0.2, 0.275) end,
+	effect_duration = 2,
+	radius = 1,
+	target_filter = function(self, t)
+		return function(x, y)
+			return not game.level.map.seens(x, y) or not game.level.map(x, y, Map.TRAP)
+		end
+	end,
+	target = function(self, t)
+		return {type = 'hit', range = util.getval(t.range, self, t), talent = t,
+						line_red_past_radius = true,}
+	end,
+	target2 = function(self, t, start_x, start_y)
+		return {type = 'beam', radius = 0, talent = t,
+						include_start = true, line_red_past_radius = true,
+						start_x = start_x, start_y = start_y, range = util.getval(t.length, self, t),
+						start_x2 = self.x, start_y2 = self.y, range2 = util.getval(t.range, self, t),
+						filter = util.getval(t.target_filter, self, t),}
+	end,
+	activate = function(self, t)
+		local _
+		local p = {}
+		local tg = util.getval(t.target, self, t)
+		local x, y = self:getTarget(tg)
+		if not x or not y then return end
+		_, _, _, x, y = self:canProject(tg, x, y)
+
+		tg = util.getval(t.target2, self, t, x, y)
+		local x2, y2 = self:getTarget(tg)
+		if not x2 or not y2 then return end
+		_, _, _, x2, y2 = self:canProject(tg, x2, y2)
+
+		local duration = util.getval(t.duration, self, t)
+		local effect_duration = util.getval(t.effect_duration, self, t)
+		local damage = util.getval(t.damage, self, t) / effect_duration
+		local speed = util.getval(t.speed, self, t)
+
+		-- Enforce no deep copy
+		p.__CLASSNAME = 'tracker'
+		p.crystals = {}
+		p.count = 0
+		-- TODO Crystal image
+		local projector = function(x, y, tg, self)
+			p.count = p.count + 1
+			local trap = require 'mod.class.Trap'
+			local crystal = trap.new {
+				name = 'silicine slicers', type = 'physical',
+				id_by_type = true, unided_name = 'strewn crystals',
+				display = '^', color = colors.WHITE, --image =
+				faction = self.faction,
+				summoner = self, summoner_gain_exp = true,
+				temporary = duration,
+				damage = damage,
+				speed = speed,
+				removed = false,
+				tracker = p,
+				effect_duration = effect_duration,
+				x = x, y = y,
+				canAct = false,
+				energy = {value = 0,},
+				act = function(self)
+					self:useEnergy()
+					self.temporary = self.temporary - 1
+					if self.temporary <= 0 then
+						if game.level.map(self.x, self.y, engine.Map.TRAP) == self then
+							game.level.map:remove(self.x, self.y, engine.Map.TRAP)
+						end
+						game.level:removeEntity(self)
+						self.removed = true
+						-- Auto deactivate base talent.
+						self.tracker.count = self.tracker.count - 1
+						if self.tracker.count <= 0 and self.summoner:isTalentActive('T_SILICINE_SLICERS') then
+							self.tracker.no_explode = true
+							self.summoner:forceUseTalent('T_SILICINE_SLICERS', {ignore_energy = true,})
+						end
+					end
+				end,
+				triggered = function(self, x, y, who)
+					if who and who:canBe('cut') then
+						who:setEffect('EFF_SILICINE_WOUND', self.effect_duration, {
+														src = self.summoner,
+														damage = self.damage,
+														speed = self.speed,})
+					end
+					return true, false
+				end,}
+			table.insert(p.crystals, crystal)
+
+			crystal:identify(true)
+			crystal:resolve() crystal:resolve(nil, true)
+			crystal:setKnown(self, true)
+			game.level:addEntity(crystal)
+			game.zone:addEntity(game.level, crystal, 'trap', x, y)
+			game.level.map:particleEmitter(x, y, 1, 'summon')
+		end
+		self:project(tg, x2, y2, projector)
+
+		return p
+	end,
+	deactivate = function(self, t, p)
+		local radius = util.getval(t.radius, self, t)
+		for _, crystal in pairs(p.crystals) do
+			-- Deal Effect in radius
+			if not p.no_explode then
+				local tg = {type = 'ball', radius = radius, range = 0, friendlyfire = false,}
+				local projector = function(x, y)
+					local target = game.level.map(x, y, engine.Map.ACTOR)
+					crystal.triggered(crystal, x, y, target)
+				end
+				crystal:project(tg, crystal.x, crystal.y, projector)
+				game.level.map:particleEmitter(
+					crystal.x, crystal.y, tg.radius, 'ball_matter', {radius = tg.radius,})
+			end
+
+			-- Remove Crystal
+			if not crystal.removed then
+				if game.level.map(crystal.x, crystal.y, engine.Map.TRAP) == crystal then
+					game.level.map:remove(crystal.x, crystal.y, engine.Map.TRAP)
+				end
+				game.level:removeEntity(crystal)
+			end
+		end
+		return true
+	end,
+	info = function(self, t)
+		return ([[Creates a length %d line of sharp crystals in a target line between two points, neither farther than %d from you. The line persists for %d turns. Any enemy walking into the wickedly sharp crystals bleeds for %d physical damage over %d turns and has their global speed cut by %d%% for the duration.
+Deactivating the ability early shatters the crystals. Every crystal rains shrapnel, applying the above effect in radius %d.
+Damage, maximum line length and duration increase scale with constitution.]])
+			:format(util.getval(t.length, self, t),
+							util.getval(t.range, self, t),
+							util.getval(t.duration, self, t),
+							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)),
+							util.getval(t.effect_duration, self, t),
+							util.getval(t.speed, self, t) * 100,
+							util.getval(t.radius, self, t))
+	end,}
