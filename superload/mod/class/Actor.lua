@@ -188,6 +188,8 @@ function _M:move(x, y, force)
 		eutil.set(self, 'can_pass', 'pass_wall', 0)
 		local self_free = nowhere or self:canMove(sx, sy, true)
 		local target_free = self:canMove(x, y, true)
+		local target_actor = game.level.map(x, y, map.ACTOR)
+		local bump_attack = target_actor and self:reactionToward(target_actor) < 0
 		self.can_pass.pass_wall = pass
 
 		-- If we presently don't have a location, then discard the anchor
@@ -195,6 +197,10 @@ function _M:move(x, y, force)
 		if nowhere and not target_free then
 			self.living_mural_anchor = nil
 			cancel_move = true
+
+		-- If we're doing a bump attack, ok the move anyway.
+		elseif bump_attack then
+			-- nop
 
 		-- If we're currently free, but target is not, just set the anchor
 		-- to present location.
