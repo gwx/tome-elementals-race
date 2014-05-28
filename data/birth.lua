@@ -72,6 +72,8 @@ newBirthDescriptor {
 			Silyhe = 'allow',
 			Naiar = 'allow',},},}
 
+-- TODO: Get rid of armor training, allow them to equip heavy/shields directly.
+-- TODO: Make fatigue effect essence.
 newBirthDescriptor {
 	type = 'subclass',
 	name = 'Jadir',

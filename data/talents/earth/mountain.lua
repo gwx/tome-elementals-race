@@ -162,6 +162,7 @@ Damage increases with Constitution.]])
 			:format(t.damage(self, t) * 100, t.distance(self, t))
 	end,}
 
+-- TODO: Make hardiness be every level, scale according to armor training.
 newTalent {
 	name = 'Composure',
 	type = {'elemental/mountain', 4,},
