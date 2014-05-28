@@ -194,6 +194,15 @@ newTalent {
 	essence = 20,
 	cooldown = 21,
 	no_npc_use = true,
+	-- Enable timer on icon for 1.2:
+	--[[
+	iconOverlay = function(self, t, p)
+		local _, crystal = next(p.crystals)
+		if not crystal then return '' end
+		local fnt = 'buff_font_small'
+		return tostring(math.ceil(crystal.temporary)), fnt
+	end,
+	--]]
 	length = function(self, t)
 		return math.ceil(self:combatTalentScale(t, 5, 8)) * (0.5 + self:getCon(0.5, true))
 	end,
