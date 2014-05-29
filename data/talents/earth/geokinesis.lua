@@ -199,7 +199,7 @@ Damage and penalty strengths scale with spellpower.]])
 				t.silence(self, t))
 	end,}
 
-local lm_preuse = function(self, t, silent)
+local not_on_wall = function(self, t, silent)
 	if not game.level then return true end
 
 	local pass = eutil.get(self, 'can_pass', 'pass_wall')
@@ -208,7 +208,7 @@ local lm_preuse = function(self, t, silent)
 	self.can_pass.pass_wall = pass
 
 	if not use and not silent then
-		game.logPlayer(self, 'You cannot use this talent while on a solid tile.')
+		game.logPlayer(self, 'You cannot deactivate this talent while on a solid tile.')
 	end
 	return use
 end
@@ -227,9 +227,37 @@ newTalent {
 	spellpower = function(self, t)
 		return self:getTalentLevel(t) * 4
 	end,
-	on_pre_use = lm_preuse,
-	on_pre_deactivate = lm_preuse,
-	activate = function(self, t) return {} end,
+	on_pre_deactivate = not_on_wall,
+	activate = function(self, t)
+		-- This flag can get stuck if an error occurs, so force it off
+		-- when the talent starts/stops so players just have to reuse the
+		-- talent to fix it.
+		self.__living_mural_disabled = nil
+
+		local p = {}
+		t.update_after_move(self, t, p)
+		return p
+	end,
+	deactivate = function(self, t, p)
+		-- This flag can get stuck if an error occurs, so force it off
+		-- when the talent starts/stops so players just have to reuse the
+		-- talent to fix it.
+		self.__living_mural_disabled = nil
+
+		if p.defense then
+			self:removeTemporaryValue('combat_def', p.defense)
+			p.defense = nil
+		end
+		if p.spell then
+			self:removeTemporaryValue('combat_spellpower', p.spell)
+				p.spell = nil
+		end
+		if p.particles then
+			self:removeParticles(p.particles)
+			p.particles = nil
+		end
+		return true
+	end,
 	update_after_move = function(self, t, p)
 		-- See if present location is passable.
 		local disabled = self.__living_mural_disabled
@@ -256,12 +284,34 @@ newTalent {
 			end
 		end
 
+		local anchor = self.living_mural_anchor
+
+		-- Add an anchor if needed.
+		if not self_free and not anchor then
+			local disabled = self.__living_mural_disabled
+			self.__living_mural_disabled = true
+
+			local valid_spaces = {}
+			for cx = self.x - 1, self.x + 1 do
+				for cy = self.y -1, self.y + 1 do
+					if (cx ~= self.x or cy ~= self.y) and self:canMove(cx, cy, true) then
+						table.insert(valid_spaces, {x = cx, y = cy})
+					end
+				end
+			end
+			if #valid_spaces > 0 then
+				self.living_mural_anchor = rng.table(valid_spaces)
+				anchor = self.living_mural_anchor
+			end
+
+			self.__living_mural_disabled = disabled
+		end
+
 		if p.particles then
 			self:removeParticles(p.particles)
 			p.particles = nil
 		end
 
-		local anchor = self.living_mural_anchor
 		if not self_free and anchor and (anchor.x ~= self.x or anchor.y ~= self.y) then
 			local dx, dy = anchor.x - self.x, anchor.y - self.y
 			p.particles = particles.new(
@@ -272,21 +322,6 @@ newTalent {
 			p.particles.y = self.y
 			self:addParticles(p.particles)
 		end
-	end,
-	deactivate = function(self, t, p)
-		if p.defense then
-			self:removeTemporaryValue('combat_def', p.defense)
-			p.defense = nil
-		end
-		if p.spell then
-			self:removeTemporaryValue('combat_spellpower', p.spell)
-				p.spell = nil
-		end
-		if p.particles then
-			self:removeParticles(p.particles)
-			p.particles = nil
-		end
-		return true
 	end,
 	info = function(self, t)
 		return ([[This allows you to enter walls 1 tile deep. Being submerged in a wall increases your defense by %d and spellpower by %d.

@@ -197,8 +197,14 @@ function _M:move(x, y, force)
 		local adjacent = not nowhere and math.abs(x - sx) <= 1 and math.abs(y - sy) <= 1
 		local anchor_valid =
 			adjacent and anchor and
-			(math.abs(anchor.x - sx) <= 1 and math.abs(anchor.y - sy) <= 1)
-		self.living_mural_next_anchor = nil
+			(math.abs(anchor.x - sx) <= 1 and math.abs(anchor.y - sy) <= 1) and
+			self:canMove(anchor.x, anchor.y, true)
+
+		-- Get rid of anchor if it's not valid
+		if not anchor_valid then
+			self.living_mural_anchor = nil
+			anchor = nil
+		end
 
 		-- If the target is free, discard current anchor
 		if target_free then
@@ -207,14 +213,14 @@ function _M:move(x, y, force)
 		-- If we don't have a valid anchor, make one.
 		elseif not anchor_valid then
 			-- Preferably at our origin space.
-			if adjacent then
+			if adjacent and origin_free then
 				self.living_mural_anchor = {x = sx, y = sy}
 			-- Otherwise at any adjacent space.
 			else
 				local valid_spaces = {}
-				for cx = x - 1, x + 1 do
-					for cy = y -1, y + 1 do
-						if cx ~= x or cy ~= y and self:canMove(cx, cy, true) then
+				for cx = self.x - 1, self.x + 1 do
+					for cy = self.y -1, self.y + 1 do
+						if (cx ~= self.x or cy ~= self.y) and self:canMove(cx, cy, true) then
 							table.insert(valid_spaces, {x = cx, y = cy})
 						end
 					end
@@ -229,7 +235,6 @@ function _M:move(x, y, force)
 		-- We have a valid anchor and we've moved one space, so just update it.
 		else
 			local dx, dy = x - sx, y - sy
-			game.log('PLAYER MOVE ANCHOR, %s, %s', dx, dy)
 
 			local new_anchor
 			if not new_anchor then
@@ -254,7 +259,6 @@ function _M:move(x, y, force)
 
 			if not new_anchor and dx ~= 0 then
 				local cx, cy = anchor.x + dx, anchor.y
-				game.log('PLAYER MOVE ANCHOR H, %s, %s', cx, cy)
 				if math.abs(cx - x) <= 1 and
 					math.abs(cy - y) <= 1 and
 					self:canMove(cx, cy, true)

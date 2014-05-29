@@ -39,7 +39,7 @@ hook = function(self, data)
 			src, self, 0, ('#SLATE#(%d absorbed)#LAST#'):format(blocked), false)
 
 		if damtype == DamageType.PHYSICAL and
-			src.x and src.y and not src.dead and src ~= self and
+			src.x and src.y and not src.dead and src ~= self and src.takeHit and
 			not self.jaggedbody_reflecting
 		then
 			self.jaggedbody_reflecting = true
