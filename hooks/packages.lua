@@ -21,6 +21,7 @@ for _, p in pairs {
 	'engine.Map',
 	'mod.class.Actor',
 	'mod.class.Object',
+	'mod.class.Grid',
 	'mod.class.interface.Combat',
 	'mod.class.interface.TooltipsData',}
 do

@@ -229,17 +229,13 @@ newTalent {
 	end,
 	on_pre_use = lm_preuse,
 	on_pre_deactivate = lm_preuse,
-	activate = function(self, t)
-		local p = {}
-		self:talentTemporaryValue(p, 'can_pass', {pass_wall = 70,})
-		return p
-	end,
+	activate = function(self, t) return {} end,
 	update_after_move = function(self, t, p)
 		-- See if present location is passable.
-		local pass = eutil.get(self, 'can_pass', 'pass_wall')
-		eutil.set(self, 'can_pass', 'pass_wall', 0)
+		local disabled = self.__living_mural_disabled
+		self.__living_mural_disabled = true
 		local self_free = self:canMove(self.x, self.y, true)
-		self.can_pass.pass_wall = pass
+		self.__living_mural_disabled = disabled
 
 		-- Manage stats bonuses.
 		if not self_free then

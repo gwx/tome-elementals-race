@@ -178,104 +178,109 @@ function _M:move(x, y, force)
 	local sx, sy = self.x, self.y
 	local nowhere = not sx or not sy
 
-	local cancel_move = false
+	if free_move then self.did_energy = true end
+	local result = move(self, x, y, force)
+	if free_move then self.did_energy = false end
+
+	local moved = self.x ~= sx or self.y ~= sy
 
 	-- Living Mural
-	if self:isTalentActive('T_LIVING_MURAL') then
+	if self:isTalentActive('T_LIVING_MURAL') and moved then
 		local deactivate = false
 
-		-- See if present location and target location are passable.
-		local pass = eutil.get(self, 'can_pass', 'pass_wall')
-		eutil.set(self, 'can_pass', 'pass_wall', 0)
-		local self_free = nowhere or self:canMove(sx, sy, true)
+		-- Get info about surroundings.
+		local disabled = self.__living_mural_disabled
+		self.__living_mural_disabled = true
+		local origin_free = nowhere or self:canMove(sx, sy, true)
 		local target_free = self:canMove(x, y, true)
-		local target_actor = game.level.map(x, y, map.ACTOR)
-		local target_no_dig = not eutil.get(game.level.map(x, y, map.TERRAIN), 'dig')
-		local bump_attack = target_actor and self:reactionToward(target_actor) < 0
-		self.can_pass.pass_wall = pass
+		local anchor = self.living_mural_anchor
+		local adjacent = not nowhere and math.abs(x - sx) <= 1 and math.abs(y - sy) <= 1
+		local anchor_valid =
+			adjacent and anchor and
+			(math.abs(anchor.x - sx) <= 1 and math.abs(anchor.y - sy) <= 1)
+		self.living_mural_next_anchor = nil
 
-		-- If we presently don't have a location, then discard the anchor
-		-- and prevent moving to target space if its solid.
-		if nowhere and not target_free then
-			self.living_mural_anchor = nil
-			cancel_move = true
-
-		-- If we're doing a bump attack, ok the move anyway.
-		elseif bump_attack then
-			-- nop
-
-	  -- If the target is not diggable, don't move into it.
-		elseif not target_free and target_no_dig then
-			cancel_move = true
-
-		-- If we're currently free, but target is not, just set the anchor
-		-- to present location.
-		elseif self_free and not target_free then
-			self.living_mural_anchor = {x = sx, y = sy,}
-
-	  -- If we're moving to a free location from a free location then discard anchor.
-		elseif self_free and target_free then
+		-- If the target is free, discard current anchor
+		if target_free then
 			self.living_mural_anchor = nil
 
-		-- We're moving from wall to wall. Cancel out if we're trying to move more than one space.
-		elseif not nowhere and core.fov.distance(x, y, sx, sy) > 1 then
-			deactivate = true
-
-		-- Try to move the anchor.
-		else
-			local dx, dy
-			local old_anchor = self.living_mural_anchor
-			if nowhere then
-				dx = util.bound(x - old_anchor.x, -1, 1)
-				dy = util.bound(y - old_anchor.y, -1, 1)
+		-- If we don't have a valid anchor, make one.
+		elseif not anchor_valid then
+			-- Preferably at our origin space.
+			if adjacent then
+				self.living_mural_anchor = {x = sx, y = sy}
+			-- Otherwise at any adjacent space.
 			else
-				dx = util.bound(x - sx, -1, 1)
-				dy = util.bound(y - sy, -1, 1)
-			end
-			local new_anchor = {
-				x = old_anchor.x + dx,
-				y = old_anchor.y + dy,}
-
-			-- Test if the new anchor is a wall.
-			local pass = eutil.get(self, 'can_pass', 'pass_wall')
-			eutil.set(self, 'can_pass', 'pass_wall', 0)
-			local new_anchor_free = self:canMove(new_anchor.x, new_anchor.y, true)
-			self.can_pass.pass_wall = pass
-
-			-- If the new anchor is valid, use it.
-			if new_anchor_free then
-				self.living_mural_anchor = new_anchor
-			end
-
-			-- Test if the new location is close enough to the current anchor
-			if core.fov.distance(self.living_mural_anchor.x, self.living_mural_anchor.y, x, y) > 1 then
-				-- We can't move here. If this is a forced move, deactivate living mural.
-				if force then
-					deactivate = true
+				local valid_spaces = {}
+				for cx = x - 1, x + 1 do
+					for cy = y -1, y + 1 do
+						if cx ~= x or cy ~= y and self:canMove(cx, cy, true) then
+							table.insert(valid_spaces, {x = cx, y = cy})
+						end
+					end
+				end
+				if #valid_spaces > 0 then
+					self.living_mural_anchor = rng.table(valid_spaces)
 				else
-					cancel_move = true
+					print('ERROR: No Valid Living Mural Anchor')
 				end
 			end
-		end
 
-		if deactivate then self.living_mural_anchor = nil end
+		-- We have a valid anchor and we've moved one space, so just update it.
+		else
+			local dx, dy = x - sx, y - sy
+			game.log('PLAYER MOVE ANCHOR, %s, %s', dx, dy)
 
-		-- Deactivate if necessary.
-		if deactivate then
-			if self:isTalentActive('T_LIVING_MURAL') then
-				self:forceUseTalent('T_LIVING_MURAL', {ignore_energy = true,})
+			local new_anchor
+			if not new_anchor then
+				local cx, cy = anchor.x, anchor.y
+				if math.abs(cx - x) <= 1 and
+					math.abs(cy - y) <= 1 and
+					self:canMove(cx, cy, true)
+				then
+					new_anchor = {x = cx, y = cy}
+				end
+			end
+
+			if not new_anchor and dx ~= 0 and dy ~= 0 then
+				local cx, cy = anchor.x + dx, anchor.y + dy
+				if math.abs(cx - x) <= 1 and
+					math.abs(cy - y) <= 1 and
+					self:canMove(cx, cy, true)
+				then
+					new_anchor = {x = cx, y = cy}
+				end
+			end
+
+			if not new_anchor and dx ~= 0 then
+				local cx, cy = anchor.x + dx, anchor.y
+				game.log('PLAYER MOVE ANCHOR H, %s, %s', cx, cy)
+				if math.abs(cx - x) <= 1 and
+					math.abs(cy - y) <= 1 and
+					self:canMove(cx, cy, true)
+				then
+					new_anchor = {x = cx, y = cy}
+				end
+			end
+
+			if not new_anchor and dy ~= 0 then
+				local cx, cy = anchor.x, anchor.y + dy
+				if math.abs(cx - x) <= 1 and
+					math.abs(cy - y) <= 1 and
+					self:canMove(cx, cy, true)
+				then
+					new_anchor = {x = cx, y = cy}
+				end
+			end
+
+			if new_anchor then
+				self.living_mural_anchor = new_anchor
+			else
+				print('ERROR: No Valid Living Mural Anchor')
 			end
 		end
-	end
 
-	-- Actual move
-	local result
-	if cancel_move then
-		result = false
-	else
-		if free_move then self.did_energy = true end
-		result = move(self, x, y, force)
-		if free_move then self.did_energy = false end
+		self.__living_mural_disabled = disabled
 	end
 
 	-- Update the lock beam.
@@ -285,11 +290,9 @@ function _M:move(x, y, force)
 		lm.update_after_move(self, lm, p)
 	end
 
-
 	-- Brutish Stride
 	if self:knowTalent('T_BRUTISH_STRIDE') and
-		not nowhere and
-		(self.x ~= sx or self.y ~= sy)
+		not nowhere and moved
 	then
 		local t = self:getTalentFromId('T_BRUTISH_STRIDE')
 		local move = util.getval(t.move, self, t)
