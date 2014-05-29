@@ -51,7 +51,6 @@ This effect also contributes spell save to its source.]])
 		eff.power = eff.power * 0.5
 	end,}
 
--- TODO fix stacking.
 newEffect {
 	name = 'IVY_MESH', image = 'talents/ivy_mesh.png',
 	desc = 'Poison Residue',

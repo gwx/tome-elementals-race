@@ -82,13 +82,11 @@ Any action but movement cuts the current charge in half. Standing still removes 
 							util.getval(t.angle, self, t))
 	end,}
 
--- TODO give 1-3 stacks of stride when it negates an effect.
 newTalent{
 	name = 'Unleashed',
 	type = {'elemental/eyal-resolver', 3},
 	require = make_require(3),
 	points = 5,
-	--no_energy = true,
 	cooldown = 22,
 	tactical = { DEFEND = 1,  CURE = 1 },
 	essence = 12,
