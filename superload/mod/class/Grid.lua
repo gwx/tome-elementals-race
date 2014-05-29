@@ -75,7 +75,7 @@ function _M:block_move(x, y, e, act, couldpass)
 
 		local anchor = e.living_mural_anchor
 		local origin_terrain = game.level.map(e.x, e.y, map.TERRAIN)
-		local origin_free = not origin_terrain:block_move(e.x, e.y, e, act, couldpass)
+		local origin_free = e:canMove(e.x, e.y, true)
 
 		-- If we're moving from a wall to open space, make sure we're not moving through the wall.
 		if not blocked and not origin_free and anchor then
