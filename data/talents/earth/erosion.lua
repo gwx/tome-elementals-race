@@ -276,6 +276,7 @@ newTalent {
 				x = x, y = y,
 				canAct = false,
 				energy = {value = 0,},
+				disarm = function() end,
 				act = function(self)
 					self:useEnergy()
 					self.temporary = self.temporary - 1
