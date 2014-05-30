@@ -172,7 +172,7 @@ newTalent {
 				self.turn_procs.reformed = true
 				game.level.map:particleEmitter(sx, sy, 1, 'ball_earth', {radius = 1,})
 				game.level.map:particleEmitter(self.x, self.y, 1, 'ball_earth', {radius = 1,})
-				game:playSoundNear(self, 'talents/earth')
+				game:playSoundNear(self, 'talents/cloud')
 				return true
 			end
 		end
