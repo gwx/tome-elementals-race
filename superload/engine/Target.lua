@@ -76,7 +76,7 @@ function _M:getType(t)
 			end
 		end
 
-		return typ.block_path_old(typ, lx, ly, for_highlights)
+		return t.block_path_old(typ, lx, ly, for_highlights)
 	end
 
 	local update = {}
