@@ -168,10 +168,10 @@ newTalent {
 		if self:canMove(x, y) and #game.level.map:getEffects(x, y, 'dust_storm') > 0 then
 			local sx, sy = self.x, self.y
 			if self:move(x, y) then
-				--self:useEnergy(game.energy_to_act * self:combatMovementSpeed(x, y))
 				self.turn_procs.reformed = true
 				game.level.map:particleEmitter(sx, sy, 1, 'ball_earth', {radius = 1,})
 				game.level.map:particleEmitter(self.x, self.y, 1, 'ball_earth', {radius = 1,})
+				game:playSoundNear({x = sx, y = sy,}, 'talents/cloud')
 				game:playSoundNear(self, 'talents/earth')
 				return true
 			end
