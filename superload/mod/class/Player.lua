@@ -14,23 +14,24 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
--- 1.1.5 require bug workaround. Mark all packages we're going to
--- superload as unloaded.
-for _, p in pairs {
-	'engine.Target',
-	'engine.Map',
-	'mod.class.Actor',
-	'mod.class.Object',
-	'mod.class.Grid',
-	'mod.class.Player',
-	'mod.class.interface.Combat',
-	'mod.class.interface.TooltipsData',}
-do
-	package.loaded[p] = nil
+local eutil = require 'elementals-race.util'
+
+local _M = loadPrevious(...)
+
+-- Amorphous Reform on click.
+local mouseMove = _M.mouseMove
+function _M:mouseMove(x, y, force)
+	if self:knowTalent('T_AMORPHOUS_REFORM') and x and y then
+		local t = self:getTalentFromId('T_AMORPHOUS_REFORM')
+		if t.on_pre_use(self, t, true, x, y) then
+			self.turn_procs.reformed = false
+			self:forceUseTalent(
+				'T_AMORPHOUS_REFORM', {force_target = {x = x, y = y},})
+			if self.turn_procs.reformed then return end
+		end
+	end
+
+	return mouseMove(self, x, y, force)
 end
 
--- Add our own packages.
-for _, p in pairs {'util', 'active-terrain',} do
-	package.preload['elementals-race.'..p] =
-		loadfile('/data-elementals-race/packages/'..p..'.lua')
-end
+return _M

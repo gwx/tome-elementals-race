@@ -145,12 +145,7 @@ end
 
 local move = _M.move
 function _M:move(x, y, force)
-	-- Amorphous Cloud gives you free movement.
 	local free_move = false
-	if self:knowTalent('T_AMORPHOUS') then
-		local effects = game.level.map:getEffects(x, y, 'dust_storm')
-		free_move = #effects > 0
-	end
 
 	-- Unleashed always allows movement.
 	local unleashed_activated = false

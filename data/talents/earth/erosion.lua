@@ -137,7 +137,6 @@ Damage and duration increase with constitution.]])
 	end,}
 
 -- TODO: Correctly disable moving between disjoint dust storms.
--- TODO: Activate on mouse click?
 newTalent {
 	name = 'Reform', short_name = 'AMORPHOUS_REFORM',
 	type = {'elemental/other', 1,},
@@ -145,8 +144,10 @@ newTalent {
 	range = 10,
 	tactical = {ESCAPE = 1,},
 	no_energy = 'fake',
-	on_pre_use = function(self, t, silent)
-		if #game.level.map:getEffects(self.x, self.y, 'dust_storm') == 0 then
+	on_pre_use = function(self, t, silent, x, y)
+		if #game.level.map:getEffects(self.x, self.y, 'dust_storm') == 0 or
+			(x and y and #game.level.map:getEffects(x, y, 'dust_storm') == 0)
+		then
 			if not silent then
 				game.logPlayer(self, 'You must be in a dust cloud to use this talent.')
 			end
@@ -165,14 +166,20 @@ newTalent {
 		local x, y = self:getTarget(tg)
 		if not x or not y then return end
 		if self:canMove(x, y) and #game.level.map:getEffects(x, y, 'dust_storm') > 0 then
+			local sx, sy = self.x, self.y
 			if self:move(x, y) then
-				self:useEnergy(game.energy_to_act * self:combatMovementSpeed(x, y))
+				--self:useEnergy(game.energy_to_act * self:combatMovementSpeed(x, y))
+				self.turn_procs.reformed = true
+				game.level.map:particleEmitter(sx, sy, 1, 'ball_earth', {radius = 1,})
+				game.level.map:particleEmitter(self.x, self.y, 1, 'ball_earth', {radius = 1,})
+				game:playSoundNear(self, 'talents/earth')
 				return true
 			end
 		end
 	end,
 	info = function(self, t)
-		return [[Disperse yourself into a dust cloud and reform at any other location it covers. This is a movement action.]]
+		return [[Disperse yourself into a dust cloud and reform at any other location it covers. This is a movement action.
+This talent will be used automatically if you mouse click on a valid space.]]
 	end,}
 
 newTalent{
