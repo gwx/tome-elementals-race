@@ -21,7 +21,8 @@ newTalentType {
 
 for folder, files in pairs {
 	earth = {'misc', 'mountain', 'avalanche', 'symbiosis', 'geokinesis',
-					 'geothermal', 'eyal-resolver', 'erosion'},}
+					 'geothermal', 'eyal-resolver', 'erosion',
+					 'earth-metamorphosis',},}
 do
 	for _, file in pairs(files) do
 		load('/data-elementals-race/talents/'..folder..'/'..file..'.lua')

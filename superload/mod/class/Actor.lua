@@ -492,6 +492,7 @@ function _M:onWear(o, bypass_set)
 		o.offslot == 'MAINHAND' or o.offslot == 'OFFHAND'
 	then
 		self:recomputePassives('T_AFTERECHO')
+		self:recomputePassives('T_TEMPER_WEAPON')
 	end
 end
 
@@ -502,6 +503,7 @@ function _M:onTakeoff(o, bypass_set)
 		o.offslot == 'MAINHAND' or o.offslot == 'OFFHAND'
 	then
 		self:recomputePassives('T_AFTERECHO')
+		self:recomputePassives('T_TEMPER_WEAPON')
 	end
 end
 
