@@ -52,15 +52,27 @@ local getType = _M.getType
 function _M:getType(t)
 	t = getType(self, t)
 
-	-- Add in second range.
 	t.block_path_old = t.block_path
 	t.block_path = function(typ, lx, ly, for_highlights)
 		if not game.level.map:isBound(lx, ly) then
 			return true, false, false
 		elseif not typ.no_restrict then
+			-- Add in second range.
 			if typ.range2 and typ.start_x2 and typ.start_y2 then
 				local dist = core.fov.distance(typ.start_x2, typ.start_y2, lx, ly)
 				if dist > typ.range2 then return true, false, false end
+			end
+			local is_known = game.level.map.remembers(lx, ly) or game.level.map.seens(lx, ly)
+			-- Let pass_terrain optionally be a function.
+			if type(typ.pass_terrain) == 'function' then
+				local terrain = game.level.map(lx, ly, Map.TERRAIN)
+				if not typ.pass_terrain(terrain, lx, ly) then
+					if for_highlights and not is_known then
+						return false, 'unknown', true
+					else
+						return true, true, false
+					end
+				end
 			end
 		end
 

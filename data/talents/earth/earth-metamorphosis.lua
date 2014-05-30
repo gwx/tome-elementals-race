@@ -16,6 +16,8 @@
 
 local eutil = require 'elementals-race.util'
 local stats = require 'engine.interface.ActorStats'
+local map = require 'engine.Map'
+local active_terrain = require 'elementals-race.active-terrain'
 
 newTalentType {
 	type = 'elemental/earth-metamorphosis',
@@ -93,4 +95,107 @@ Staves: Increase all nature/fire damage done nature/fire penetration by %d%%. (S
 							util.getval(t.mace, self, t),
 							util.getval(t.greatmaul, self, t),
 							util.getval(t.staff, self, t))
+	end,}
+
+newTalent {
+	name = 'Primordial Stone',
+	type = {'elemental/earth-metamorphosis', 2,},
+	require = make_require(2),
+	points = 5,
+	essence = 15,
+	cooldown = 26,
+	tactical = {ESCAPE = 2,},
+	range = function(self, t) return math.ceil(self:combatTalentScale(t, 2, 6)) end,
+	duration = 3,
+	damage = function(self, t)
+		return self:combatTalentSpellDamage(t, 80, 300)
+	end,
+	target = function(self, t)
+		return {
+			type = 'beam', talent = t, selffire = false,
+			requires_knowledge = true,
+			pass_terrain = function(terrain, x, y)
+				return not terrain.does_block_move or terrain.dig
+			end,
+			range = util.getval(t.range, self, t),}
+	end,
+	action = function(self, t)
+		local _
+		local sx, sy = self.x, self.y
+
+		local tg = self:getTalentTarget(t)
+		local x, y = self:getTarget(tg)
+		if not x or not y then return end
+		_, x, y = self:canProject(tg, x, y)
+
+		if not self:canMove(x, y) then
+			game.logPlayer(self, 'You cannot move there.')
+			return
+		end
+
+		game.level.map:particleEmitter(
+			x, y, math.max(math.abs(x - sx), math.abs(y - sy)),
+			'earth_beam', {tx = sx - x, ty = sy - y})
+
+		tg.filter = function(tx, ty)
+			if tx == x and ty == y then return end
+			local terrain = game.level.map(tx, ty, map.TERRAIN)
+			return not terrain.does_block_move and not terrain.active_terrain
+		end
+
+		local targets = {}
+		local projector = function(x, y, tg, self)
+			table.insert(targets, {x = x, y = y,})
+		end
+		self:project(tg, x, y, projector)
+
+		local damage = self:spellCrit(util.getval(t.damage, self, t))
+		local duration = util.getval(t.duration, self, t)
+		for _, target in pairs(targets) do
+			local x, y = target.x, target.y
+
+			local oe = game.level.map(x, y, Map.TERRAIN)
+			if oe and oe.special then return end
+			if oe and oe:attr('temporary') and not oe.active_terrain then return end
+
+			local e = active_terrain.new {
+				terrain = game.zone:makeEntityByName(game.level, 'terrain', 'WALL'),
+				name = self.name:capitalize()..'\'s Primordial Stone',
+				temporary = duration + 1,
+				x = x, y = y,
+				canAct = false,
+				dig = function(src, x, y, self)
+					self:removeLevel()
+				end,
+				nicer_tiles = true,
+				summoner_gain_exp = true,
+				summoner = self,}
+
+			DamageType:get(DamageType.PHYSICAL).projector(
+				self, x, y, DamageType.PHYSICAL, damage)
+
+			local actor = game.level.map(x, y, map.ACTOR)
+			if actor then
+				actor:setEffect('EFF_PRIMORDIAL_PETRIFICATION', 10, {apply_power = self:combatSpellpower(),})
+			end
+		end
+
+		-- Nicer tile the walls.
+		for _, target in pairs(targets) do
+			game.nicer_tiles:updateAround(game.level, target.x, target.y)
+		end
+
+		self:move(x, y, true)
+		game:playSoundNear(self, 'talents/earth')
+		return true
+	end,
+	info = function(self, t)
+		local damage = util.getval(t.damage, self, t)
+		return ([[Briefly becomes the very essence of earth, quickly sliding up to %d tiles away. This can move you through diggable walls, but the exit tile must be free. All tiles passed, except for the exit tile, become encased in stone for %d turns.
+Targets passed over take %d physical damage and become petrified until the walls dissipate. Even then they remain petrified for 1 more turn for every 33%% of hp missing.
+Damage and pertification chance scales with spellpower.]])
+			:format(
+				util.getval(t.range, self, t),
+				util.getval(t.duration, self, t),
+				Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)))
 	end,}

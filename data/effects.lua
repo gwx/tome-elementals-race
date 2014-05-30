@@ -17,6 +17,7 @@
 local talents = require 'engine.interface.ActorTalents'
 local damDesc = talents.damDesc
 local particles = require 'engine.Particles'
+local map = require 'engine.Map'
 
 newEffect {
 	name = 'IVY_MESH_POISON', image = 'effects/poisoned.png',
@@ -422,4 +423,33 @@ newEffect{
 	on_timeout = function(self, eff)
 		DamageType:get(DamageType.PHYSICAL).projector(
 			eff.src or self, self.x, self.y, DamageType.PHYSICAL, eff.damage)
+	end,}
+
+newEffect{
+	name = 'PRIMORDIAL_PETRIFICATION', image = 'talents/stone_touch.png',
+	desc = 'Primordial Petrification',
+	long_desc = function(self, eff)
+		return [[Target has been encased in stone! Target is subject to shattering but improving physical(+20%), fire(+80%) and lightning(+50%) resistances.
+If the tile that the target is standing on is no longer solid, then this will immediately drop to having 1 turn left for every 33% Life the target is missing.]]
+	end,
+	type = 'physical',
+	subtype = {earth = true, stone = true,},
+	status = 'detrimental',
+	parameters = {},
+	on_gain = function(self, err) return '#Target# is encased in stone.', '+Primordial Petrification' end,
+	on_lose = function(self, err) return '#Target# is no longer encased in stone.', '-Primordial Petrification' end,
+	activate = function(self, eff)
+		self:effectTemporaryValue(eff, 'stoned', 1)
+		self:effectTemporaryValue(eff, 'resists', {
+																[DamageType.PHYSICAL] = 20,
+																[DamageType.FIRE] = 80,
+																[DamageType.LIGHTNING] = 50,})
+		game:playSoundNear(self, 'talents/ice')
+	end,
+	on_timeout = function(self, eff)
+		if not eff.reduced and self:canMove(self.x, self.y, true) then
+			eff.reduced = true
+			local target_dur = math.floor(math.max(0, self.max_life - self.life) * 3 / self.max_life) - 1
+			eff.dur = math.min(eff.dur, target_dur)
+		end
 	end,}
