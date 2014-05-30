@@ -114,7 +114,6 @@ newBirthDescriptor {
 		moddable_tile = 'runic_golem',
 		moddable_tile_nude = true,
 		moddable_tile_base = 'base_04.png',
-		equipdoll = 'alchemist_golem',
 		subtype = 'earth',
 		max_life = 130,
 		life_rating = 13,
