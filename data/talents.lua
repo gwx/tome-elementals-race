@@ -14,6 +14,11 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+newTalentType {
+	type = 'elemental/other',
+	name = 'Misc. Elemental Talents',
+	description = 'Burning Earth',}
+
 for folder, files in pairs {
 	earth = {'misc', 'mountain', 'avalanche', 'symbiosis', 'geokinesis',
 					 'geothermal', 'eyal-resolver', 'erosion'},}

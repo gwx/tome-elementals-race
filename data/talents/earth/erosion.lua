@@ -68,9 +68,6 @@ Defense, physical power, disarm duration and maximum stacks scale with constitut
 							util.getval(t.disarm, self, t))
 	end,}
 
--- Make movement normal, make a secondary talent that teleports you to
--- target square instead of moving, maybe look into a mouse-click
--- teleport as well.
 newTalent {
 	name = 'Amorphous',
 	type = {'elemental/erosion', 2,},
@@ -93,6 +90,16 @@ newTalent {
 		return {type = 'ball', selffire = false, talent = t,
 						range = util.getval(t.range, self, t),
 						radius = util.getval(t.radius, self, t),}
+	end,
+	on_learn = function(self, t)
+		if not self:knowTalent('T_AMORPHOUS_REFORM') then
+			self:learnTalent('T_AMORPHOUS_REFORM', true)
+		end
+	end,
+	on_unlearn = function(self, t)
+		if not self:knowTalent(t.id) and self:knowTalent('T_AMORPHOUS_REFORM') then
+			self:unlearnTalentFull('T_AMORPHOUS_REFORM')
+		end
 	end,
 	action = function(self, t)
 		local tg = util.getval(t.target, self, t)
@@ -122,11 +129,50 @@ newTalent {
 		return true
 	end,
 	info = function(self, t)
-		return ([[Explodes in a radius %d burst of sand, dealing %d physical damage. For the next %d turns, you can freely move to any square inside the affected area in a single turn, as long as you are inside it.
+		return ([[Explodes in a radius %d burst of sand, dealing %d physical damage. A dust cloud is left behind for  %d turns. You can disperse yourself into the cloud and reform at another space inside of it as a single movement.
 Damage and duration increase with constitution.]])
 			:format(util.getval(t.radius, self, t),
 							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)),
 							util.getval(t.duration, self, t))
+	end,}
+
+-- TODO: Correctly disable moving between disjoint dust storms.
+-- TODO: Activate on mouse click?
+newTalent {
+	name = 'Reform', short_name = 'AMORPHOUS_REFORM',
+	type = {'elemental/other', 1,},
+	points = 1,
+	range = 10,
+	tactical = {ESCAPE = 1,},
+	no_energy = 'fake',
+	on_pre_use = function(self, t, silent)
+		if #game.level.map:getEffects(self.x, self.y, 'dust_storm') == 0 then
+			if not silent then
+				game.logPlayer(self, 'You must be in a dust cloud to use this talent.')
+			end
+			return false
+		end
+		return true
+	end,
+	target = function(self, t)
+		local filter = function(x, y)
+			return self:canMove(x, y) and #game.level.map:getEffects(x, y, 'dust_storm') > 0
+		end
+		return {type = 'hit', range = util.getval(t.range, self, t), filter = filter,}
+	end,
+	action = function(self, t)
+		local tg = util.getval(t.target, self, t)
+		local x, y = self:getTarget(tg)
+		if not x or not y then return end
+		if self:canMove(x, y) and #game.level.map:getEffects(x, y, 'dust_storm') > 0 then
+			if self:move(x, y) then
+				self:useEnergy(game.energy_to_act * self:combatMovementSpeed(x, y))
+				return true
+			end
+		end
+	end,
+	info = function(self, t)
+		return [[Disperse yourself into a dust cloud and reform at any other location it covers. This is a movement action.]]
 	end,}
 
 newTalent{
