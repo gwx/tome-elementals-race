@@ -382,10 +382,9 @@ function _M:projectDoMove(typ, tgtx, tgty, x, y, srcx, srcy)
 	return lx, ly, act, stop
 end
 
--- Earthen Gun allows you to substitute mag for dex.
--- Remove shield reqs if you know buckler stuff
 local canWearObject = _M.canWearObject
 function _M:canWearObject(o, try_slot)
+	-- Earthen Gun allows you to substitute mag for dex for shots.
   if self:attr('shots_sub_mag') and o.subtype == 'shot' then
 		local dex, mag
 		local req = rawget(o, 'require')
@@ -404,6 +403,34 @@ function _M:canWearObject(o, try_slot)
 		end
 
 		return unpack(result)
+	end
+
+	-- Allow equip_only_armour_training
+	local require = rawget(o, 'require')
+	if self.equip_only_armour_training and require then
+		local talents = require.talent or {}
+		for k, req in pairs(talents) do
+			local armor_req
+			if type(req) == 'table' and req[1] == 'T_ARMOUR_TRAINING' then
+				armor_req = req[2]
+			elseif req == 'T_ARMOUR_TRAINING' then
+				armor_req = 1
+			end
+			if armor_req then
+				local new_o = table.clone(o)
+				new_o.require = table.clone(o.require)
+				new_o.require.talent = table.clone(o.require.talent, true)
+				armor_req = armor_req - self.equip_only_armour_training
+				if armor_req < 1 then
+					new_o.require.talent[k] = nil
+				elseif armor_req == 1 then
+					new_o.require.talent[k] = 'T_ARMOUR_TRAINING'
+				else
+					new_o.require.talent[k] = {'T_ARMOUR_TRAINING', armor_req,}
+				end
+				o = new_o
+			end
+		end
 	end
 
 	return canWearObject(self, o, try_slot)

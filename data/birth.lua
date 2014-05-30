@@ -20,6 +20,7 @@ for _, world in pairs {'Maj\'Eyal', 'Infinite', 'Arena',} do
 	end
 end
 
+-- TODO: Prevent from learning combat training.
 newBirthDescriptor {
 	type = 'race',
 	name = 'Elemental',
@@ -82,6 +83,7 @@ newBirthDescriptor {
 	desc = {
 		'The Earth Elemental.',
 		'Jadir have Jagged Body, a passive shield that reflects physical damage. Their main resource is Essence, which has its max value and regen rate tied to that of your Life.',
+		'Jadir may always equip heavy armour and shields, despite not being able to learn Armour Training.',
 		'#GOLD#Stat modifiers:',
 		'#LIGHT_BLUE# * +4 Strength, -2 Dexterity, +5 Constitution',
 		'#LIGHT_BLUE# * +4 Magic, +0 Willpower, -2 Cunning',
@@ -106,7 +108,6 @@ newBirthDescriptor {
 		['elemental/earth-metamorphosis'] = {false, 0.3,},},
 	talents = {
 		[ActorTalents.T_HEAVY_ARMS] = 1,
-		[ActorTalents.T_ARMOUR_TRAINING] = 1,
 		[ActorTalents.T_EARTHEN_GUN] = 1,
 		[ActorTalents.T_JAGGED_BODY] = 1,},
 	experience = 1.4,
@@ -119,13 +120,14 @@ newBirthDescriptor {
 		life_rating = 13,
 		no_breath = 1,
 		show_gloves_combat = 1,
+		equip_only_armour_training = 2, -- Fake armour training levels for equipping stuff.
 		resolvers.equip {
 			id = true,
 			{type = 'weapon', subtype = 'greatmaul', name = 'iron greatmaul',
 			 autoreq = true, ego_chance = -1000},
  			{type = 'armor', subtype = 'heavy', name = 'iron mail armour',
-			 autoreq = true, ego_chance = -1000},
+			 autoreq = false, ego_chance = -1000},
 			{type = 'armor', subtype = 'hands', name = 'iron gauntlets',
-			 autoreq = true, ego_chance = -1000},
+			 autoreq = false, ego_chance = -1000},
 			{type = 'ammo', subtype = 'shot', name = 'pouch of iron shots',
 			 autoreq = false, ego_chance = -1000},},},}
