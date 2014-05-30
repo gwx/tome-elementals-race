@@ -521,6 +521,10 @@ function _M:onWear(o, bypass_set)
 		self:recomputePassives('T_AFTERECHO')
 		self:recomputePassives('T_TEMPER_WEAPON')
 	end
+
+	if o.slot == 'BODY' then
+		self:recomputePassives('T_IMPREGNABLE_ARMOUR')
+	end
 end
 
 local onTakeoff = _M.onTakeoff
@@ -531,6 +535,10 @@ function _M:onTakeoff(o, bypass_set)
 	then
 		self:recomputePassives('T_AFTERECHO')
 		self:recomputePassives('T_TEMPER_WEAPON')
+	end
+
+	if o.slot == 'BODY' then
+		self:recomputePassives('T_IMPREGNABLE_ARMOUR')
 	end
 end
 

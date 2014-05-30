@@ -199,3 +199,36 @@ Damage and pertification chance scales with spellpower.]])
 				util.getval(t.duration, self, t),
 				Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)))
 	end,}
+
+newTalent {
+	name = 'Impregnable Armour',
+	type = {'elemental/earth-metamorphosis', 3,},
+	require = make_require(3),
+	points = 5,
+	mode = 'passive',
+	resist = function(self, t)
+		return self:combatTalentScale(t, 0.2, 0.6) * (0.5 + self:getStr(0.5, true))
+	end,
+	-- Recomputed in onWear/onTakeoff.
+	passives = function(self, t, p)
+		self:talentTemporaryValue(p, 'equip_only_armour_training', 1)
+
+		local armor = eutil.get(self:getInven('BODY'), 1)
+		if armor and armor.subtype == 'massive' then
+			local mult = util.getval(t.resist, self, t)
+			local resists = {}
+			for type, amount in pairs(eutil.get(armor, 'wielder', 'resists') or {}) do
+				if type ~= DamageType.PHYSICAL and type ~= DamageType.MIND then
+					resists[type] = mult * amount
+				end
+			end
+			self:talentTemporaryValue(p, 'resists', resists)
+		end
+	end,
+	recompute_passives = {stats = {stats.STAT_STR,},},
+	info = function(self, t)
+		return ([[Lets you wear massive armour. Also amplifies any elemental (not physical or mind) resistance bonus on a massive armor by %d%% (scaling with strength).
+
+(Bonus will not show up on the armour itself.)]])
+			:format(util.getval(t.resist, self, t) * 100)
+	end,}
