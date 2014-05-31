@@ -17,12 +17,12 @@
 newTalentType {
 	type = 'elemental/other',
 	name = 'Misc. Elemental Talents',
-	description = 'Burning Earth',}
+	description = 'More Talents.',}
 
 for folder, files in pairs {
 	earth = {'misc', 'mountain', 'avalanche', 'symbiosis', 'geokinesis',
 					 'geothermal', 'eyal-resolver', 'erosion',
-					 'earth-metamorphosis',},}
+					 'earth-metamorphosis', 'tectonic',},}
 do
 	for _, file in pairs(files) do
 		load('/data-elementals-race/talents/'..folder..'/'..file..'.lua')
