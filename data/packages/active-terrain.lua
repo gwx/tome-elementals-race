@@ -26,7 +26,10 @@ function _M:init(t, no_default)
 	local class = meta.__index
 	meta.__index = function(self, key)
 		local result = class[key]
-		if result == nil then result = self.terrain[key] end
+		if result == nil then
+			local terrain = rawget(self, 'terrain')
+			result = terrain and terrain[key]
+		end
 		return result
 	end
 
