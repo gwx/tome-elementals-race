@@ -18,6 +18,7 @@ local eutil = require 'elementals-race.util'
 local stats = require 'engine.interface.ActorStats'
 local map = require 'engine.Map'
 local active_terrain = require 'elementals-race.active-terrain'
+local object = require 'mod.class.Object'
 
 newTalentType {
 	type = 'elemental/earth-metamorphosis',
@@ -231,4 +232,128 @@ newTalent {
 
 (Bonus will not show up on the armour itself.)]])
 			:format(util.getval(t.resist, self, t) * 100)
+	end,}
+
+newTalent {
+	name = 'Plate of Genesis',
+	type = {'elemental/earth-metamorphosis', 4,},
+	require = make_require(4),
+	points = 5,
+	mode = 'passive',
+	str_req = 25,
+	armor = function(self, t) return self:combatTalentScale(t, 23, 31) end,
+	defense = function(self, t) return self:combatTalentScale(t, 4, 12) end,
+	fatigue = 20,
+	str = function(self, t) return self:combatTalentScale(t, 6, 14) end,
+	con = function(self, t) return self:combatTalentScale(t, 3, 7) end,
+	mag = function(self, t) return self:combatTalentScale(t, 4, 12) end,
+	resist_physical = function(self, t) return self:combatTalentScale(t, 6, 14) end,
+	resist_fire = function(self, t) return self:combatTalentScale(t, 19, 27) end,
+	resist_nature = function(self, t) return self:combatTalentScale(t, 14, 22) end,
+	resist_blight = function(self, t) return self:combatTalentScale(t, 14, 22) end,
+	resist_lightning = function(self, t) return self:combatTalentScale(t, 14, 22) end,
+	phys_save = function(self, t) return self:combatTalentScale(t, 18, 30) end,
+	spell_save = function(self, t) return self:combatTalentScale(t, 12, 20) end,
+	stun = function(self, t) return self:combatTalentScale(t, 0.17, 0.25) end,
+	knockback = function(self, t) return self:combatTalentScale(t, 0.30, 0.50) end,
+	regen = function(self, t) return self:combatTalentScale(t, 0.5, 1.5) end,
+	healmod = function(self, t) return self:combatTalentScale(t, 0.1, 0.2) end,
+	lite = function(self, t) return self:combatTalentScale(t, 1, 3) end,
+	create_armor = function(self, t)
+		local armor = object.new {
+			define_as = 'GENESIS_PLATE',
+			name = 'Genesis Plate',
+			slot = 'BODY',
+			type = 'armor', subtype = 'massive',
+			display = '[', colors = colors.BLACK, image = 'object/artifact/plate_armor_of_the_king.png',
+			moddable_tile = resolvers.moddable_tile('massive'),
+			encumber = 20,
+			require = {'T_PLATE_OF_GENESIS'},
+			metallic = true,
+			desc = ('The pinnacle of Earthen might, this heavy plate armor deflects even the mightiest of blows. It has been bestowed upon you, as the Champion of nature.'),
+			material_level = 5,
+			plot = true,
+			quest = true,
+			unique = true,
+			identified = true,
+			wielder = {},}
+		armor:resolve()
+		self:addObject('INVEN', armor)
+		return armor
+	end,
+	update_armor = function(self, t, armor, wearing)
+		if wearing then self:onTakeoff(armor, true) end
+
+		armor.require = {stat = {str = util.getval(t.str_req, self, t),},}
+		armor.wielder = {
+			combat_armor = util.getval(t.armor, self, t),
+			combat_def = util.getval(t.defense, self, t),
+			fatigue = util.getval(t.fatigue, self, t),
+			inc_stats = {
+				[stats.STAT_STR] = util.getval(t.str, self, t),
+				[stats.STAT_CON] = util.getval(t.con, self, t),
+				[stats.STAT_MAG] = util.getval(t.mag, self, t),},
+			resists = {
+				[DamageType.PHYSICAL] = util.getval(t.resist_physical, self, t),
+				[DamageType.FIRE] = util.getval(t.resist_fire, self, t),
+				[DamageType.NATURE] = util.getval(t.resist_nature, self, t),
+				[DamageType.BLIGHT] = util.getval(t.resist_blight, self, t),
+				[DamageType.LIGHTNING] = util.getval(t.resist_lightning, self, t),},
+			combat_physresist = util.getval(t.phys_save, self, t),
+			combat_spellresist = util.getval(t.spell_save, self, t),
+			stun_immune = util.getval(t.stun, self, t),
+			knockback_immune = util.getval(t.knockback, self, t),
+			life_regen = util.getval(t.regen, self, t),
+			healing_factor = util.getval(t.healmod, self, t),
+			lite = util.getval(t.lite, self, t),}
+
+		if wearing then self:onWear(armor, true) end
+	end,
+	no_unlearn_last = true,
+	on_learn = function(self, t)
+		local armor, _, slot = self:findInAllInventoriesBy('define_as', 'GENESIS_PLATE')
+		if not armor then armor = t.create_armor(self, t) end
+		t.update_armor(self, t, armor, slot == self.INVEN_BODY)
+	end,
+	on_unlearn = function(self, t)
+		local armor, index, slot = self:findInAllInventoriesBy('define_as', 'GENESIS_PLATE')
+		if not armor then return end
+
+		if self:getTalentLevelRaw(t) == 0 then
+			self:removeObject(slot, index)
+		else
+			t.update_armor(self, t, armor, slot == self.INVEN_BODY)
+		end
+	end,
+	info = function(self, t)
+		return ([[Having proven your excellence, you are bestowed with the Genesis Plate, a unique artifact of incredible power. The Genesis Plate cannot leave your possession, be sold or transmogrified. It has the following stats, which will increase with talent level:
+
+Requires: %d Strength
+
+Armour: +%d, Defense: +%d, Fatigue: +%d%%
+Stats:  +%d Strength, +%d Constitution, +%d Magic
+Resistances:  +%d%% physical, +%d%% fire, +%d%% nature, +%d%% blight, +%d%% lightning
+Saves: +%d physical, +%d spell
+Immunities: +%d%% stun, +%d%% knockback
+Life Regen: +%d, Healing Modifier: +%d%%
+Light Radius: +%d]])
+			:format(util.getval(t.str_req, self, t),
+							util.getval(t.armor, self, t),
+							util.getval(t.defense, self, t),
+							util.getval(t.fatigue, self, t),
+							util.getval(t.str, self, t),
+							util.getval(t.con, self, t),
+							util.getval(t.mag, self, t),
+							util.getval(t.resist_physical, self, t),
+							util.getval(t.resist_fire, self, t),
+							util.getval(t.resist_nature, self, t),
+							util.getval(t.resist_blight, self, t),
+							util.getval(t.resist_lightning, self, t),
+							util.getval(t.phys_save, self, t),
+							util.getval(t.spell_save, self, t),
+							util.getval(t.stun, self, t) * 100,
+							util.getval(t.knockback, self, t) * 100,
+							util.getval(t.regen, self, t),
+							util.getval(t.healmod, self, t) * 100,
+							util.getval(t.lite, self, t))
 	end,}
