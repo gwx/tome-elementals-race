@@ -334,7 +334,6 @@ Defense increases with spellpower.]])
 	end,}
 
 -- TODO: Make it hit targets along path.
--- TODO: Implement special hit.
 newTalent {
 	name = 'Architect\'s Wrath', short_name = 'ARCHITECTS_WRATH',
 	type = {'elemental/geokinesis', 4,},
@@ -443,8 +442,30 @@ newTalent {
 			end
 		end
 
-		-- Place walls.
+		-- Do damage.
 		local damage = self:spellCrit(util.getval(t.damage, self, t))
+		local direction = util.getDir(x3, y3, x1, y1)
+		for _, target in pairs(targets) do
+			local tx, ty = x3 + target.x, y3 + target.y
+			local actor = game.level.map(tx, ty, Map.ACTOR)
+			if actor then
+				-- Check the wall behind them.
+				local cx, cy = util.coordAddDir(tx, ty, direction)
+				local dam = damage
+				if not actor:canMove(cx, cy, true) then
+					game.logSeen(actor, '%s is slammed against another wall!', actor.name:capitalize())
+					dam = dam * 2
+					if actor:canBe('stun') then
+						actor:setEffect('EFF_STUNNED', 3, {apply_power = self:combatSpellpower()})
+					end
+				end
+				-- Damage.
+				DamageType:get(DamageType.PHYSICAL).projector(
+					self, tx, ty, DamageType.PHYSICAL, dam)
+			end
+		end
+
+		-- Place walls.
 		for _, target in pairs(targets) do
 			local duration = util.getval(t.duration, self, t) + rng.range(0, 2)
 			local sx, sy = x1 + target.x, y1 + target.y
@@ -476,10 +497,6 @@ newTalent {
 					end
 					game.nicer_tiles:updateAround(game.level, self.sx, self.sy)
 				end,}
-
-			-- Damage.
-			DamageType:get(DamageType.PHYSICAL).projector(
-				self, tx, ty, DamageType.PHYSICAL, damage)
 		end
 
 		-- Nicer tile the walls.
@@ -492,7 +509,7 @@ newTalent {
 	end,
 	info = function(self, t)
 		local size = util.getval(t.size, self, t)
-		return ([[Move a chunk of walls up to %dx%d big in a line up to %d tiles. The rushing wall deals %d physical damage to any enemy hit #SLATE#(UNIMPLEMENTED:, and the same amount again and a 3 turn stun if there is a wall directly behind them to slam them into)#LAST#. After 3 - 5 turns the walls will return to their original position.
+		return ([[Move a chunk of walls up to %dx%d big in a line up to %d tiles. The rushing wall deals %d physical damage to any enemy hit:, and the same amount again and a 3 turn stun if there is a wall directly behind them to slam them into. After 3 - 5 turns the walls will return to their original position.
 Damage increases with spellpower.]])
 			:format(size, size,
 							util.getval(t.move, self, t),
