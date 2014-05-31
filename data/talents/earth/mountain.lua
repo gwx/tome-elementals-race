@@ -162,7 +162,6 @@ Damage increases with Constitution.]])
 			:format(t.damage(self, t) * 100, t.distance(self, t))
 	end,}
 
--- TODO: Make hardiness be every level, scale according to armor training.
 newTalent {
 	name = 'Composure',
 	type = {'elemental/mountain', 4,},
@@ -172,6 +171,9 @@ newTalent {
 	life = function(self, t)
 		return self:combatTalentScale(t, 30, 80) * (0.5 + self:getCon(0.5, true))
 	end,
+	hardiness = function(self, t)
+		return self:combatTalentScale(t, 20, 40) * (0.5 + self:getCon(0.5, true))
+	end,
 	-- If we unlearn the last level, passives never gets called.
 	on_unlearn = function(self, t, p)
 		if self:getTalentLevelRaw(t) == 0 then
@@ -180,7 +182,7 @@ newTalent {
 	end,
 	passives = function(self, t, p)
 		local level = self:getTalentLevelRaw(t)
-		if level >= 1 then self:talentTemporaryValue(p, 'combat_armor_hardiness', 25) end
+		if level >= 1 then self:talentTemporaryValue(p, 'combat_physresist', 15) end
 		if level >= 2 then
 			self:talentTemporaryValue(p, 'stun_immune', 0.25)
 			self:talentTemporaryValue(p, 'knockback_immune', 0.25)
@@ -191,15 +193,17 @@ newTalent {
 			self:talentTemporaryValue(p, 'resists', {[DamageType.PHYSICAL] = 10,})
 		end
 		self:talentTemporaryValue(p, 'max_life', t.life(self, t))
+		self:talentTemporaryValue(p, 'combat_armor_hardiness', t.hardiness(self, t))
 		self:recomputePassives('T_JAGGED_BODY')
 	end,
 	recompute_passives = {stats = {stats.STAT_CON,},},
 	info = function(self, t)
-		return ([[Change the material composition of your body, increasing max life by %d and conferring an additional benefit for each talent point:
-1 Point:  Increases armor hardiness by 25%%.
+		return ([[Change the material composition of your body, increasing max life by %d, armour hardiness by %d%%, and conferring an additional benefit for each talent point:
+1 Point:  Increases physical save by 15.
 2 Points: Increases Stun and Knockback resistance by 25%%.
 3 Points: Increases Jagged Body shield regeneration by an extra 2%%.
 4 Points: Teluric Fist's breakthrough chance is now 100%% and will ignore target's knockback resistance 25%% of the time.
 5 Points: Physical resistance raised by 10%%.]])
-			:format(t.life(self, t))
+			:format(util.getval(t.life, self, t),
+							util.getval(t.hardiness, self, t))
 	end,}
