@@ -13,20 +13,9 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-newTalentType {
-	type = 'elemental/other',
-	name = 'Misc. Elemental Talents',
-	description = 'More Talents.',}
-
-for folder, files in pairs {
-	earth = {'misc', 'mountain', 'avalanche', 'symbiosis', 'geokinesis',
-					 'geothermal', 'eyal-resolver', 'erosion',
-					 'earth-metamorphosis', 'tectonic',},}
-do
-	for _, file in pairs(files) do
-		load('/data-elementals-race/talents/'..folder..'/'..file..'.lua')
-	end
+-- I can carry the world learnable from fake armour training.
+Talents:getTalentFromId('T_NO_FATIGUE').require.special.fct = function(self)
+	return ((self.equip_only_armour_training or 0) +
+						self:getTalentLevelRaw('T_ARMOUR_TRAINING'))
+		>= 3
 end
-
-load('/data-elementals-race/talents/misc.lua')
