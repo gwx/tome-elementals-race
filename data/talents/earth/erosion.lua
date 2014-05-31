@@ -145,6 +145,7 @@ newTalent {
 	tactical = {ESCAPE = 1,},
 	no_energy = 'fake',
 	on_pre_use = function(self, t, silent, x, y)
+		if not game.level then return end
 		if #game.level.map:getEffects(self.x, self.y, 'dust_storm') == 0 or
 			(x and y and #game.level.map:getEffects(x, y, 'dust_storm') == 0)
 		then
