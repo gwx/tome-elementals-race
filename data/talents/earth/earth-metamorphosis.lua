@@ -156,28 +156,32 @@ newTalent {
 			local x, y = target.x, target.y
 
 			local oe = game.level.map(x, y, Map.TERRAIN)
-			if oe and oe.special then return end
-			if oe and oe:attr('temporary') and not oe.active_terrain then return end
+			if not oe or (
+					not oe.special and
+					not oe:attr('temporary') and
+					not oe.active_terrain and
+					not oe.change_level and not oe.change_zone)
+			then
+				local e = active_terrain.new {
+					terrain = game.zone:makeEntityByName(game.level, 'terrain', 'WALL'),
+					name = self.name:capitalize()..'\'s Primordial Stone',
+					temporary = duration + 1,
+					x = x, y = y,
+					canAct = false,
+					dig = function(src, x, y, self)
+						self:removeLevel()
+					end,
+					nicer_tiles = true,
+					summoner_gain_exp = true,
+					summoner = self,}
 
-			local e = active_terrain.new {
-				terrain = game.zone:makeEntityByName(game.level, 'terrain', 'WALL'),
-				name = self.name:capitalize()..'\'s Primordial Stone',
-				temporary = duration + 1,
-				x = x, y = y,
-				canAct = false,
-				dig = function(src, x, y, self)
-					self:removeLevel()
-				end,
-				nicer_tiles = true,
-				summoner_gain_exp = true,
-				summoner = self,}
+				DamageType:get(DamageType.PHYSICAL).projector(
+					self, x, y, DamageType.PHYSICAL, damage)
 
-			DamageType:get(DamageType.PHYSICAL).projector(
-				self, x, y, DamageType.PHYSICAL, damage)
-
-			local actor = game.level.map(x, y, map.ACTOR)
-			if actor then
-				actor:setEffect('EFF_PRIMORDIAL_PETRIFICATION', 10, {apply_power = self:combatSpellpower(),})
+				local actor = game.level.map(x, y, map.ACTOR)
+				if actor then
+					actor:setEffect('EFF_PRIMORDIAL_PETRIFICATION', 10, {apply_power = self:combatSpellpower(),})
+				end
 			end
 		end
 
