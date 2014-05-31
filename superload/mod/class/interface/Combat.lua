@@ -79,12 +79,15 @@ function _M:combatGetResist(type)
 		for conv_type, conv_pct in pairs(conversions) do
 			-- Filter out the __disabled we just put in.
 			if conv_type ~= '__disabled' then
-				add = add + self:combatGetResist(conv_type) * 0.01 * conv_pct
+				add = add + self:combatGetResist(conv_type) * conv_pct * 0.01
 			end
 		end
 		conversions.__disabled = nil
 	end
-	return add + combatGetResist(self, type)
+	local temp = self:addTemporaryValue('resists', {[type]= add,})
+	local total = combatGetResist(self, type)
+	self:removeTemporaryValue('resists', temp)
+	return total
 end
 
 -- Brutish Stride
