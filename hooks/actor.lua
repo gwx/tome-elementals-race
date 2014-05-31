@@ -175,15 +175,15 @@ class:bindHook('Actor:postUseTalent', hook)
 hook = function(self, data)
 	local t, d = data.t, data.str
 	if t.essence then
-		local percent = util.getval(t.essence, self, t)
-		local amount = self:essenceCost(percent)
-		local str = ('%d%% (%d)'):format(percent, amount)
+		local percent = util.getval(t.essence, self, t) * (100 + self:combatFatigue()) * 0.01
+		local amount = self:essenceCost(percent, true)
+		local str = ('%.1f%% (%.1f)'):format(percent, amount)
 		d:add({'color',0x6f,0xff,0x83}, 'Essence cost: ', {'color',164,190,77}, str, true)
 	end
 	if t.sustain_essence then
 		local percent = util.getval(t.sustain_essence, self, t)
 		local amount = self:realMaxEssence() * percent * 0.01
-		local str = ('%d%% (%d)'):format(percent, amount)
+		local str = ('%d%% (%.1f)'):format(percent, amount)
 		d:add({'color',0x6f,0xff,0x83}, 'Sustain essence cost: ', {'color',164,190,77}, str, true)
 	end
 end

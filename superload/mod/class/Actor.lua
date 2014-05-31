@@ -47,8 +47,9 @@ function _M:regenResources()
 end
 
 -- Retrieve the actual essence cost.
-function _M:essenceCost(percent)
-	return percent * self:realMaxEssence() * 0.01
+function _M:essenceCost(percent, no_fatigue)
+	local fatigue = no_fatigue and 1 or (100 + self:combatFatigue()) * 0.01
+	return percent * self:realMaxEssence() * 0.01 * fatigue
 end
 
 -- Get the actualy max essence, minus sustains.

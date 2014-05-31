@@ -75,7 +75,6 @@ newBirthDescriptor {
 			Silyhe = 'allow',
 			Naiar = 'allow',},},}
 
--- TODO: Make fatigue effect essence.
 newBirthDescriptor {
 	type = 'subclass',
 	name = 'Jadir',
