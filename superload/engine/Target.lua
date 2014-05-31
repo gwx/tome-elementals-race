@@ -48,49 +48,121 @@ function core.fov.calc_rect(source_x, source_y, x, y, w, h, filter, apply)
 	end
 end
 
-local getType = _M.getType
 function _M:getType(t)
-	t = getType(self, t)
-
-	t.block_path_old = t.block_path
-	t.block_path = function(typ, lx, ly, for_highlights)
-		if not game.level.map:isBound(lx, ly) then
-			return true, false, false
-		elseif not typ.no_restrict then
-			-- Add in second range.
-			if typ.range2 and typ.start_x2 and typ.start_y2 then
-				local dist = core.fov.distance(typ.start_x2, typ.start_y2, lx, ly)
-				if dist > typ.range2 then return true, false, false end
-			end
-			local is_known = game.level.map.remembers(lx, ly) or game.level.map.seens(lx, ly)
-			-- Let pass_terrain optionally be a function.
-			if type(typ.pass_terrain) == 'function' then
-				local terrain = game.level.map(lx, ly, Map.TERRAIN)
-				if not typ.pass_terrain(terrain, lx, ly) then
+	if not t then return {} end
+	-- Add the default values
+	t = table.clone(t)
+	-- Default type def
+	local target_type = {
+		range = 20,
+		selffire = true,
+		friendlyfire = true,
+		friendlyblock = true,
+		--- Determines how a path is blocked for a target type
+		--@param typ The target type table
+		block_path = function(typ, lx, ly, for_highlights)
+			if not game.level.map:isBound(lx, ly) then
+				return true, false, false
+			elseif not typ.no_restrict then
+				if typ.range and typ.start_x then
+					local dist = core.fov.distance(typ.start_x, typ.start_y, lx, ly)
+					if dist > typ.range then return true, false, false end
+				elseif typ.range and typ.source_actor and typ.source_actor.x then
+					local dist = core.fov.distance(typ.source_actor.x, typ.source_actor.y, lx, ly)
+					if dist > typ.range then return true, false, false end
+				end
+				if typ.range2 and typ.start_x2 and typ.start_y2 then
+					local dist = core.fov.distance(typ.start_x2, typ.start_y2, lx, ly)
+					if dist > typ.range2 then return true, false, false end
+				end
+				local is_known = game.level.map.remembers(lx, ly) or game.level.map.seens(lx, ly)
+				if typ.requires_knowledge and not is_known then
+					return true, false, false
+				end
+				local terrain = game.level.map(lx, ly, engine.Map.TERRAIN)
+				local pass_terrain =
+					type(typ.pass_terrain) == 'function' and
+					typ.pass_terrain(terrain, lx, ly) or
+					typ.pass_terrain
+				if not pass_terrain and
+					game.level.map:checkEntity(lx, ly, engine.Map.TERRAIN, 'block_move') and
+					not game.level.map:checkEntity(lx, ly, engine.Map.TERRAIN, 'pass_projectile')
+				then
 					if for_highlights and not is_known then
 						return false, 'unknown', true
 					else
 						return true, true, false
 					end
+				-- If we explode due to something other than terrain, then we should explode ON the tile, not before it
+				elseif typ.stop_block then
+					local nb = game.level.map:checkAllEntitiesCount(lx, ly, 'block_move')
+					-- Reduce for pass_projectile or pass_terrain, which was handled above
+					if game.level.map:checkEntity(lx, ly, engine.Map.TERRAIN, 'block_move') and (typ.pass_terrain or game.level.map:checkEntity(lx, ly, engine.Map.TERRAIN, 'pass_projectile')) then
+						nb = nb - 1
+					end
+					-- Reduce the nb blocking for friendlies
+					if not typ.friendlyblock and typ.source_actor and typ.source_actor.reactionToward then
+						local a = game.level.map(lx, ly, engine.Map.ACTOR)
+						if a and typ.source_actor:reactionToward(a) > 0 then
+							nb = nb - 1
+						end
+					end
+					if nb > 0 then
+						if for_highlights then
+							-- Targeting highlight should be yellow if we don't know what we're firing through
+							if not is_known then
+								return false, 'unknown', true
+							-- Don't show the path as blocked if it's blocked by an actor we can't see
+							elseif nb == 1 and typ.source_actor and typ.source_actor.canSee and not typ.source_actor:canSee(game.level.map(lx, ly, engine.Map.ACTOR)) then
+								return false, true, true
+							end
+						end
+						return true, true, true
+					end
+				end
+				if for_highlights and not is_known then
+					return false, 'unknown', true
 				end
 			end
+			-- If we don't block the path, then the explode point should be here
+			return false, true, true
+		end,
+		block_radius = function(typ, lx, ly, for_highlights)
+			return not typ.no_restrict and game.level.map:checkEntity(lx, ly, engine.Map.TERRAIN, 'block_move') and not game.level.map:checkEntity(lx, ly, engine.Map.TERRAIN, 'pass_projectile') and not (for_highlights and not (game.level.map.remembers(lx, ly) or game.level.map.seens(lx, ly)))
 		end
+	}
 
-		return t.block_path_old(typ, lx, ly, for_highlights)
-	end
-
-	local update = {}
-
+	-- And now modify for the default types
 	if t.type then
+		if t.type:find('ball') then
+			target_type.ball = t.radius
+		end
+		if t.type:find('cone') then
+			target_type.cone = t.radius
+			target_type.cone_angle = t.cone_angle or 55
+			target_type.selffire = false
+		end
+		if t.type:find('wall') then
+			if util.isHex() then
+				--with a hex grid, a wall should only be defined by the number of spots
+				t.halfmax_spots = t.halflength
+				t.halflength = 2*t.halflength
+			end
+			target_type.wall = t.halflength
+		end
+		if t.type:find('bolt') then
+			target_type.stop_block = true
+		elseif t.type:find('beam') then
+			target_type.line = true
+		end
 		if t.type:find('rect') then
-			update.rect = {w = t.w or 1, h = t.h or 1,}
-			if t.x then update.start_x = t.x end
-			if t.y then update.start_y = t.y end
-			update.no_line = true
+			target_type.rect = {w = t.w or 1, h = t.h or 1,}
+			if t.x then target_type.start_x = t.x end
+			if t.y then target_type.start_y = t.y end
+			target_type.no_line = true
 		end
 	end
-
-	table.update(t, update)
+	table.update(t, target_type)
 	return t
 end
 
