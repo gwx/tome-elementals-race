@@ -179,7 +179,7 @@ newTalent {
 					self, x, y, DamageType.PHYSICAL, damage)
 
 				local actor = game.level.map(x, y, map.ACTOR)
-				if actor then
+				if actor and actor:canBe('stun') and actor:canBe('stone') and actor:canBe('instakill') then
 					actor:setEffect('EFF_PRIMORDIAL_PETRIFICATION', 10, {apply_power = self:combatSpellpower(),})
 				end
 			end
