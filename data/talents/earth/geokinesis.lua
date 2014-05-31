@@ -158,9 +158,11 @@ newTalent {
 		return math.floor(self:getTalentLevel(t) * 0.35)
 	end,
 	action = function(self, t)
+		local _
 		local tg = util.getval(t.target, self, t)
 		local x, y = self:getTarget(tg)
 		if not x or not y then return end
+		_, x, y = self:canProject(tg, x, y)
 
 		local target = game.level.map(x, y, Map.ACTOR)
 		if not target then return end
