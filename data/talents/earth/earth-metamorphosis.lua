@@ -19,6 +19,7 @@ local stats = require 'engine.interface.ActorStats'
 local map = require 'engine.Map'
 local active_terrain = require 'elementals-race.active-terrain'
 local object = require 'mod.class.Object'
+local grid = require 'mod.class.Grid'
 
 newTalentType {
 	type = 'elemental/earth-metamorphosis',
@@ -162,8 +163,13 @@ newTalent {
 					not oe.active_terrain and
 					not oe.change_level and not oe.change_zone)
 			then
+				local terrain = game.zone:makeEntityByName(game.level, 'terrain', 'WALL')
+				if not terrain then
+					grid:loadList('/data/general/grids/basic.lua', nil, game.zone.grid_list)
+					terrain = game.zone:makeEntityByName(game.level, 'terrain', 'WALL')
+				end
 				local e = active_terrain.new {
-					terrain = game.zone:makeEntityByName(game.level, 'terrain', 'WALL'),
+					terrain = terrain,
 					name = self.name:capitalize()..'\'s Primordial Stone',
 					temporary = duration + 1,
 					x = x, y = y,
