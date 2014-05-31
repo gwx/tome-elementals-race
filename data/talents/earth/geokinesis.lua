@@ -334,7 +334,6 @@ Defense increases with spellpower.]])
 	end,}
 
 -- TODO: Make it hit targets along path.
--- TODO: Fix errors with overlapping source and target.
 -- TODO: Implement special hit.
 newTalent {
 	name = 'Architect\'s Wrath', short_name = 'ARCHITECTS_WRATH',
