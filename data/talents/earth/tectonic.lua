@@ -143,7 +143,9 @@ newTalent {
 						summoner_gain_exp = true,
 						summoner = self,}
 				end
+				game.level.map:particleEmitter(wx, wy, 1, 'ball_matter', {radius = 1,})
 			end
+			game:playSoundNear({x = x, y = y,}, 'talents/earth')
 		end
 
 		self:project(tg, x, y, projector)
