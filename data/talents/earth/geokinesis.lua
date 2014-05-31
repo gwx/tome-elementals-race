@@ -463,11 +463,13 @@ newTalent {
 				dig = false,
 				temporary_timeout = function(self)
 					local map = require 'engine.Map'
-					self:removeLevel()
+
+					-- Don't move back on top of an active tile.
 					local present = game.level.map(self.sx, self.sy, map.TERRAIN)
-					if present and present.active_terrain then
-						present:removeLevel()
-					end
+					if present and present.active_terrain then return end
+
+					self:removeLevel()
+
 					if self.old_source.active_terrain then
 						self.old_source:move(self.sx, self.sy)
 					else
