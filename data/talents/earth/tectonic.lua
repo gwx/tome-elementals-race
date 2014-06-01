@@ -195,6 +195,20 @@ newTalent {
 		end
 		self:project(tg, self.x, self.y, projector)
 
+		game.level.map:particleEmitter(
+			self.x, self.y, radius, 'shout', {
+				additive = true,
+				life = 6,
+				size = 12,
+				distorion_factor = -1,
+				radius = radius,
+				nb_circles = 5,
+				rm = 0.3, rM = 0.7,
+				gm = 0.3, gM = 0.7,
+				bm = 0.1, bM = 0.2,
+				am = 0.4, aM = 0.6})
+		game:playSoundNear(self, 'talents/earth')
+
 		if #targets == 0 then return true end
 
 		table.sort(targets, function(a, b) return a.distance > b.distance end)
