@@ -17,6 +17,8 @@
 local eutil = require 'elementals-race.util'
 local active_terrain = require 'elementals-race.active-terrain'
 local grid = require 'mod.class.Grid'
+local map = require 'engine.Map'
+local ACTOR = map.ACTOR
 --local stats = require 'engine.interface.ActorStats'
 --local object = require 'mod.class.Object'
 
@@ -155,6 +157,80 @@ newTalent {
 		return ([[Smites down an enemy in range %d, hitting them for %d%% weapon damage plus an additional %d physical damage. A prison of rocks will form behind them, cutting off their retreat for %d turns.]])
 			:format(util.getval(t.range, self, t),
 							util.getval(t.weapon_damage, self, t) * 100,
-							util.getval(t.physical_damage, self, t),
+							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.physical_damage, self, t)),
 							util.getval(t.duration, self, t))
+	end,}
+
+newTalent {
+	name = 'Separation',
+	type = {'elemental/tectonic', 2,},
+	require = make_require(2),
+	points = 5,
+	essence = 14,
+	cooldown = 10,
+	range = 0,
+	radius = 4,
+	damage = function(self, t)
+		return self:combatTalentPhysicalDamage(t, 70, 280)
+	end,
+	stun = 2,
+	tactical = {ATTACKAREA = {PHYSICAL = 2}, DISABLE = {STUN = 1,},},
+	target = function(self, t)
+		return {type = 'ball', talent = t, selffire = false,
+						range = util.getval(t.range, self, t),
+						radius = util.getval(t.radius, self, t) - 1,}
+	end,
+	action = function(self, t)
+		local tg = util.getval(t.target, self, t)
+		local radius = tg.radius + 1
+		local targets = {}
+		local projector = function(x, y, tg, self)
+			local actor = game.level.map(x, y, ACTOR)
+			if not actor then return end
+			table.insert(targets, {
+										 x = x,
+										 y = y,
+										 actor = actor,
+										 distance = core.fov.distance(self.x, self.y, x, y),})
+		end
+		self:project(tg, self.x, self.y, projector)
+
+		if #targets == 0 then return true end
+
+		table.sort(targets, function(a, b) return a.distance > b.distance end)
+
+		local damage = util.getval(t.damage, self, t)
+		local stun = util.getval(t.stun, self, t)
+		local power = self:combatPhysicalpower()
+		for _, target in pairs(targets) do
+			local actor = target.actor
+			if actor:canBe('knockback') then
+				-- If we hit a solid tile, take damage and stun.
+				local on_terrain = function(terrain, x, y)
+					if not actor:canMove(x, y, true) then
+						-- onTickEnd so we can see them get knocked back before they die.
+						game:onTickEnd(
+							function()
+								local dam = self:physicalCrit(
+									damage, nil, actor, self:combatAttack(), actor:combatDefense())
+								DamageType:get(DamageType.PHYSICAL).projector(
+									self, actor.x, actor.y, DamageType.PHYSICAL, dam)
+								if actor:canBe('stun') then
+									actor:setEffect('EFF_STUNNED', stun, {apply_power = power,})
+								end
+						end)
+						return true
+					end
+				end
+				actor:knockback(self.x, self.y, radius - target.distance, nil, on_terrain)
+			end
+		end
+
+		return true
+	end,
+	info = function(self, t)
+		return ([[Knocks back all nearby enemies out to a radius of %d. Enemies knocked into walls take %d physical damage and are stunned for %d turns.]])
+			:format(util.getval(t.radius, self, t),
+							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)),
+							util.getval(t.stun, self, t))
 	end,}
