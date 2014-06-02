@@ -275,6 +275,7 @@ newTalent {
 			quest = true,
 			unique = true,
 			identified = true,
+			no_drop = true,
 			wielder = {},}
 		armor:resolve()
 		self:addObject('INVEN', armor)
