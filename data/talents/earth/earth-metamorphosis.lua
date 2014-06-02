@@ -157,6 +157,7 @@ newTalent {
 			local x, y = target.x, target.y
 			local original = game.level.map(x, y, Map.TERRAIN)
 			local terrain = active_terrain.create {
+				src = self,
 				terrain_name = 'WALL',
 				terrain_file = '/data/general/grids/basic.lua',
 				name = self.name:capitalize()..'\'s Primordial Stone',

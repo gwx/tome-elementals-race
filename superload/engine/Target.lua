@@ -337,9 +337,12 @@ function _M:realDisplay(dispx, dispy)
 	end
 
 	if self.target_type.ball and self.target_type.ball > 0 then
+		local x, y = stop_radius_x, stop_radius_y
+		if self.target_type.ball_not_radius then
+			x, y = stop_x, stop_y
+		end
 		core.fov.calc_circle(
-			stop_radius_x,
-			stop_radius_y,
+			x, y,
 			game.level.map.w,
 			game.level.map.h,
 			self.target_type.ball,

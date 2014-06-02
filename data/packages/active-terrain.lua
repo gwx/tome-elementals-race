@@ -116,7 +116,6 @@ function _M:init(t, no_default)
 		self._mo = nil
 	end
 
-
 	if self.no_add then
 		self.no_add = nil
 	else
@@ -184,7 +183,24 @@ function _M:addMap(force)
 		game.level.map(self.x, self.y, map.TERRAIN, self)
 		self.in_map = true
 
+		if self.src then
+			self.inc_damage = self.src.inc_damage
+			self.resists_pen = self.src.resists_pen
+		end
+
+		self:resonate()
 		self:doNicerTiles()
+	end
+end
+
+function _M:resonate()
+	-- Resonating Stone effect.
+	if self.src and self.src:knowTalent('T_RESONATING_STONE') then
+		local t = self.src:getTalentFromId('T_RESONATING_STONE')
+		self.resonating = {
+			duration = util.getval(t.duration, self.src, t),
+			damage = util.getval(t.damage, self.src, t),}
+		self:addAction(t.resonate_action, 'resonate')
 	end
 end
 
@@ -232,8 +248,16 @@ function _M:move(x, y, force)
 end
 
 -- Add an action to be performed every turn.
-function _M:addAction(action)
-	table.insert(self.action_list, action)
+function _M:addAction(action, id)
+	if id then
+		self.action_list[id] = action
+	else
+		table.insert(self.action_list, action)
+	end
+end
+
+function _M:removeAction(id)
+	self.action_list[id] = nil
 end
 
 -- Override to allow active terrain to merge into each other.

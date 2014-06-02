@@ -108,16 +108,17 @@ newTalent {
 
 			local original = game.level.map(x, y, Map.TERRAIN)
 			local e = active_terrain.create {
+				src = self,
 				terrain_name = 'BOULDER',
 				terrain_file = '/data-elementals-race/terrain.lua',
 				name = self.name:capitalize()..'\'s boulder',
 				desc = 'a thrown boulder',
 				temporary = util.getval(t.duration, self, t) + 1,
 				x = x, y = y,
+				nice_tiler = false,
 				copy_missing = original, -- Copy graphic stuff so it looks like we're on top.
 				can_dig = true,
-				nicer_tiles = 'self',
-				define_as = original.define_as,}
+				nicer_tiles = 'self',}
 		end
 		self:project(tg, x, y, terrain_projector)
 

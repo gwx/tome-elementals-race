@@ -470,6 +470,7 @@ newTalent {
 			local target_floor = game.level.map(tx, ty, Map.TERRAIN)
 
 			target.active = active_terrain.create {
+				src = self,
 				terrain = target.terrain,
 				old_source = target.terrain,
 				old_target = target_floor,

@@ -19,6 +19,7 @@ local active_terrain = require 'elementals-race.active-terrain'
 local grid = require 'mod.class.Grid'
 local map = require 'engine.Map'
 local ACTOR = map.ACTOR
+local TERRAIN = map.TERRAIN
 --local stats = require 'engine.interface.ActorStats'
 --local object = require 'mod.class.Object'
 
@@ -117,33 +118,18 @@ newTalent {
 			for _, offsets in pairs(walls) do
 				local wx, wy = x + offsets.x, y + offsets.y
 				local terrain = game.level.map(wx, wy, Map.TERRAIN)
-				if not terrain.does_block_move and
-					not terrain.active_terrain and
-					not terrain.special and not terrain.temporary and
-					not game.level.map(wx, wy, Map.ACTOR)
-				then
-					local e = active_terrain.new {
-						terrain = grid.new {
-							type = terrain.type, subtype = terrain.subtype,
-							name = self.name:capitalize()..'\'s Chasm',
-							image = 'terrain/huge_rock.png',
-							display = '#', color=colors.WHITE, --back_color=colors.DARK_GREY,
-							always_remember = true,
-							desc = 'a chasm',
-							type = 'wall',
-							can_pass = {pass_wall = 1},
-							does_block_move = true,
-							show_tooltip = true,
-							block_move = true,
-							block_sight = true,},
+				if not game.level.map(wx, wy, Map.ACTOR) and not terrain.does_block_move then
+					local e = active_terrain.create {
+						src = self,
+						terrain_name = 'BOULDER',
+						terrain_file = '/data-elementals-race/terrain.lua',
+						name = self.name:capitalize()..'\'s Chasm',
+						desc = 'a rocky chasm',
 						temporary = duration + 1,
 						x = wx, y = wy,
-						canAct = false,
-						dig = function(src, x, y, self)
-							self:removeLevel()
-						end,
-						summoner_gain_exp = true,
-						summoner = self,}
+						nice_tiler = false,
+						can_dig = true,
+						nicer_tiles = 'self',}
 				end
 				game.level.map:particleEmitter(wx, wy, 1, 'ball_matter', {radius = 1,})
 			end
@@ -264,8 +250,32 @@ newTalent {
 	damage = function(self, t)
 		return self:combatTalentPhysicalDamage(t, 20, 80)
 	end,
-	add_wall = function(self, t, wall)
-
+	resonate_action = function(terrain)
+		terrain.resonating.duration = terrain.resonating.duration - 1
+		if terrain.resonating.duration <= 0 then
+			terrain:removeAction('resonate')
+		else
+			game.level.map:particleEmitter(
+				terrain.x, terrain.y, radius, 'shout', {
+					additive = true,
+					life = 4,
+					size = 2,
+					distorion_factor = 0.3,
+					radius = 1,
+					nb_circles = 3,
+					rm = 0.7, rM = 0.9,
+					gm = 0.7, gM = 0.9,
+					bm = 0.7, bM = 0.9,
+					am = 0.4, aM = 0.6})
+			local tg = {type = 'ball', range = 0, radius = 1,
+									selffire = false, friendlyfire = false,
+									start_x = terrain.x, start_y = terrain.y,}
+			local damage_type = require 'engine.DamageType'
+			terrain.src.__project_source = {name = ('%s\'s resonance'):format(terrain.src.name:capitalize())}
+			terrain.src:project(
+				tg, terrain.x, terrain.y, damage_type.PHYSICAL, terrain.resonating.damage)
+			terrain.src.__project_source = nil
+		end
 	end,
 	info = function(self, t)
 		return ([[All walls manipulated or created by you resonate for %d turns.
@@ -274,4 +284,133 @@ Resonating terrain deals %d physical damage to adjacent enemies each turn. #SLAT
 			:format(util.getval(t.duration, self, t),
 							util.getval(t.radius, self, t),
 							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)))
+	end,}
+
+newTalent {
+	name = 'Detonation',
+	type = {'elemental/tectonic', 4,},
+	require = make_require(4),
+	points = 5,
+	essence = 18,
+	cooldown = 14,
+	tactical = {ATTACKAREA = {PHYSICAL = 2}, DISABLE = {CONFUSE = 1,},},
+	range = function(self, t)
+		return math.floor(self:combatTalentScale(t, 3, 5))
+	end,
+	damage = function(self, t)
+		return self:combatTalentPhysicalDamage(t, 60, 220)
+	end,
+	bleed = 3,
+	radius = 3,
+	radius2 = 1,
+	target = function(self, t)
+		return {type = 'ball', ball_not_radius = true,
+						range = util.getval(t.range, self, t),
+						radius = util.getval(t.radius, self, t),}
+	end,
+	damage = function(self, t)
+		return self:combatTalentPhysicalDamage(t, 70, 280)
+	end,
+	confuse_power = function(self, t)
+		return self:combatTalentPhysicalDamage(t, 20, 70)
+	end,
+	confuse = 2,
+	action = function(self, t)
+		local _
+		local tg = util.getval(t.target, self, t)
+		local x, y = self:getTarget(tg)
+		if not x or not y then return end
+		_, x, y = self:canProject(tg, x, y)
+
+		local terrain = game.level.map(x, y, map.TERRAIN)
+		if not terrain.dig then return end
+
+		self:project({type = 'hit', range = tg.range,}, x, y, DamageType.DIG)
+
+		-- Damage
+		tg = {type = 'ball', selffire = false,
+					range = 0, start_x = x, start_y = y,
+					radius = util.getval(t.radius, self, t),}
+		local damage = util.getval(t.damage, self, t)
+		local bleed_duration = util.getval(t.bleed, self, t)
+		local bleed = damage / bleed_duration
+		local radius2 = util.getval(t.radius2, self, t)
+		local confuse = util.getval(t.confuse, self, t)
+		local confuse_power = util.getval(t.confuse_power, self, t)
+		local projector = function(x, y, tg, self)
+			local crit_add = 0
+			local do_confuse = false
+
+			local range = core.fov.distance(self.x, self.y, x, y)
+			if range <= radius2 then
+				crit_add = 100
+				do_confuse = true
+			end
+
+			local actor = game.level.map(x, y, ACTOR)
+			if not actor then return end
+
+			local mult = self:physicalCrit(1, nil, actor, self:combatAttack(), actor:combatDefense(), crit_add)
+			DamageType:get(DamageType.PHYSICAL).projector(
+				self, x, y, DamageType.PHYSICAL, damage * mult)
+
+			if actor:canBe('cut') then
+				actor:setEffect('EFF_CUT', bleed_duration, {power = bleed * mult,})
+			end
+
+			if do_confuse and actor:canBe('confuse') then
+				actor:setEffect('EFF_CONFUSED', confuse, {
+													apply_power = self:combatPhysicalpower(),
+													power = confuse_power,})
+			end
+		end
+		self:project(tg, x, y, projector)
+
+		game.level.map:particleEmitter(x, y, tg.radius + 1, 'ball_earth', {radius = tg.radius + 1,})
+		game:playSoundNear({x = x, y = y,}, 'talents/lightning_loud')
+
+		if self:knowTalent('T_RESONATING_STONE') then
+			tg = {type = 'ball', no_restrict = true,
+						filter = function(x, y)
+							local terrain = game.level.map(x, y, TERRAIN)
+							return terrain.dig
+						end,
+						range = 0,
+						radius = self:callTalent('T_RESONATING_STONE', 'radius'),
+						start_x = x, start_y = y,}
+			projector = function(x, y, tg, self)
+				local terrain = game.level.map(x, y, TERRAIN)
+				if terrain.resonate then
+					terrain:resonate()
+				else
+					active_terrain.create {
+						src = self,
+						terrain = terrain,
+						x = x, y = y,
+						action_list = {
+							stop_on_resonate_finish = function(self)
+								local eutil = require 'elementals-race.util'
+								local duration = eutil.get(self, 'resonating', 'duration')
+								if not duration or duration <= 0 then
+									self:removeLevel()
+								end
+							end,},}
+				end
+			end
+			self:project(tg, x, y, projector)
+		end
+
+		return true
+	end,
+	info = function(self, t)
+		return ([[Detonates the target wall in range of %d, showering all targets within %d tiles with deadly shrapnel, destroying the wall in the process. Targets hit take %d physical damage, once on hit and once as bleeding damage over %d turns.
+Targets within %d tile(s) of the destroyed wall are hit critically and are also confused with %d%% power for %d turns.
+Damage, confusion chance and power scale with physical power.]])
+			:format(util.getval(t.range, self, t),
+							util.getval(t.radius, self, t),
+							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)),
+							util.getval(t.bleed, self ,t),
+							util.getval(t.radius2, self, t),
+							util.getval(t.confuse_power, self, t),
+							util.getval(t.confuse, self, t))
 	end,}
