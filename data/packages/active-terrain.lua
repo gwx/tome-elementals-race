@@ -98,7 +98,8 @@ function _M:init(t, no_default)
 		self.terrain = game.nicer_tiles:getTile(self.terrain_name)
 		if not self.terrain and self.terrain_file then
 			grid:loadList(self.terrain_file, nil, game.zone.grid_list)
-			self.terrain = game.zone:makeEntityByName(game.level, 'terrain', self.terrain_name)
+			--self.terrain = game.zone:makeEntityByName(game.level, 'terrain', self.terrain_name)
+			self.terrain = game.nicer_tiles:getTile(self.terrain_name)
 		end
 		--self.terrain_name = nil
 		--self.terrain_file = nil
