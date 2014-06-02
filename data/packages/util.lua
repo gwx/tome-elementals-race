@@ -76,6 +76,17 @@ function _M.update(f, table, ...)
 end
 
 --[=[
+  If the source contains the given key.
+  returns the key, the value, and if it succeeded.
+]=]
+function _M.hask(source, key)
+  for k, v in pairs(source) do
+    if k == key then return k, v, true end
+  end
+  return nil, nil, false
+end
+
+--[=[
   If the source contains the given value.
   returns the key, the value, and if it succeeded.
 ]=]
@@ -84,6 +95,16 @@ function _M.hasv(source, value)
     if v == value then return k, v, true end
   end
   return nil, nil, false
+end
+
+--[=[
+  If the source has any of the given keys set. Returns the first found key if so, otherwise nil.
+]=]
+function _M.any_key(source, keys)
+	if type(source) ~= 'table' then return end
+	for _, k in pairs(keys) do
+		if source[k] ~= nil then return k end
+	end
 end
 
 --[=[

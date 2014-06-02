@@ -15,7 +15,8 @@
 
 
 -- For active terrain.
-local Map = require 'engine.Map'
+local map = require 'engine.Map'
+local TERRAIN = map.TERRAIN
 local _M = loadPrevious(...)
 
 local replaceAll = _M.replaceAll
@@ -27,14 +28,15 @@ function _M:replaceAll(level)
 
 	for _, r in pairs(self.repl) do
 		-- Safety check
-		local og = level.map(r[1], r[2], Map.TERRAIN)
+		local og = level.map(r[1], r[2], TERRAIN)
 		if og and (og.change_zone or og.change_level) then
 			print('[NICE TILER] *warning* refusing to remove zone/level changer at ', r[1], r[2], og.change_zone, og.change_level)
 		elseif og.active_terrain then
 			og.terrain = r[3]
-			level.map(r[1], r[2], Map.TERRAIN, og)
+			level.map.changed = true
+			level.map:updateMap(r[1], r[2])
 		else
-			level.map(r[1], r[2], Map.TERRAIN, overlay(self, level, 'replace', r[1], r[2], r[3]))
+			level.map(r[1], r[2], TERRAIN, overlay(self, level, 'replace', r[1], r[2], r[3]))
 		end
 	end
 	self.repl = {}

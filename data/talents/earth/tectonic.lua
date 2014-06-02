@@ -248,3 +248,30 @@ newTalent {
 							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)),
 							util.getval(t.stun, self, t))
 	end,}
+
+newTalent {
+	name = 'Resonating Stone',
+	type = {'elemental/tectonic', 3,},
+	require = make_require(3),
+	points = 5,
+	mode = 'passive',
+	duration = function(self, t)
+		return math.floor(self:combatTalentScale(t, 3, 5))
+	end,
+	radius = function(self, t)
+		return math.floor(self:combatTalentScale(t, 1, 3))
+	end,
+	damage = function(self, t)
+		return self:combatTalentPhysicalDamage(t, 20, 80)
+	end,
+	add_wall = function(self, t, wall)
+
+	end,
+	info = function(self, t)
+		return ([[All walls manipulated or created by you resonate for %d turns.
+Destroying walls also resonates all walls within radius %d.
+Resonating terrain deals %d physical damage to adjacent enemies each turn. #SLATE#(UNIMPLEMENTED: It also has a chance to afflict them with a variety of negative mental effects.)#LAST#]])
+			:format(util.getval(t.duration, self, t),
+							util.getval(t.radius, self, t),
+							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)))
+	end,}

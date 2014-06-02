@@ -155,46 +155,34 @@ newTalent {
 		local duration = util.getval(t.duration, self, t)
 		for _, target in pairs(targets) do
 			local x, y = target.x, target.y
+			local original = game.level.map(x, y, Map.TERRAIN)
+			local terrain = active_terrain.create {
+				terrain_name = 'WALL',
+				terrain_file = '/data/general/grids/basic.lua',
+				name = self.name:capitalize()..'\'s Primordial Stone',
+				temporary = duration + 1,
+				x = x, y = y,
+				can_dig = true,
+				nicer_tiles = 'around',
+				copy_missing = original,}
 
-			local oe = game.level.map(x, y, Map.TERRAIN)
-			if not oe or (
-					not oe.special and
-					not oe:attr('temporary') and
-					not oe.active_terrain and
-					not oe.change_level and not oe.change_zone)
-			then
-				local terrain = game.zone:makeEntityByName(game.level, 'terrain', 'WALL')
-				if not terrain then
-					grid:loadList('/data/general/grids/basic.lua', nil, game.zone.grid_list)
-					terrain = game.zone:makeEntityByName(game.level, 'terrain', 'WALL')
-				end
-				local e = active_terrain.new {
-					terrain = terrain,
-					name = self.name:capitalize()..'\'s Primordial Stone',
-					temporary = duration + 1,
-					x = x, y = y,
-					canAct = false,
-					dig = function(src, x, y, self)
-						self:removeLevel()
-					end,
-					nicer_tiles = true,
-					summoner_gain_exp = true,
-					summoner = self,}
+			DamageType:get(DamageType.PHYSICAL).projector(
+				self, x, y, DamageType.PHYSICAL, damage)
 
-				DamageType:get(DamageType.PHYSICAL).projector(
-					self, x, y, DamageType.PHYSICAL, damage)
-
-				local actor = game.level.map(x, y, map.ACTOR)
-				if actor and actor:canBe('stun') and actor:canBe('stone') and actor:canBe('instakill') then
-					actor:setEffect('EFF_PRIMORDIAL_PETRIFICATION', 10, {apply_power = self:combatSpellpower(),})
-				end
+			local actor = game.level.map(x, y, map.ACTOR)
+			if actor and actor:canBe('stun') and actor:canBe('stone') and actor:canBe('instakill') then
+				actor:setEffect('EFF_PRIMORDIAL_PETRIFICATION', 10, {apply_power = self:combatSpellpower(),})
 			end
 		end
 
-		-- Nicer tile the walls.
 		for _, target in pairs(targets) do
-			game.nicer_tiles:updateAround(game.level, target.x, target.y)
+			for x = target.x - 1, target.x + 1 do
+				for y = target.y - 1, target.y + 1 do
+					game.nicer_tiles:handle(game.level, x, y)
+				end
+			end
 		end
+		game.nicer_tiles:replaceAll(game.level)
 
 		self:move(x, y, true)
 		game:playSoundNear(self, 'talents/earth')

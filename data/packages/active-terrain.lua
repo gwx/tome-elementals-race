@@ -15,34 +15,117 @@
 
 
 require 'engine.class'
+local eutil = require 'elementals-race.util'
 local object = require 'engine.Object'
 local map = require 'engine.Map'
+local TERRAIN = map.TERRAIN
 local grid = require 'mod.class.Grid'
 module('elementals-race.active-terrain', package.seeall, class.inherit(object))
 
-function _M:init(t, no_default)
-	-- Update own metatable to route through terrain.
+-- Return if the target tile is free to place active terrain on.
+function _M.tile_free(x, y)
+	local tile = game.level.map(x, y, TERRAIN)
+	local reasons = {'special', 'temporary', 'change_level', 'change_zone', 'active_terrain'}
+	local reason = eutil.any_key(tile, reasons)
+	if reason then
+		return nil, reason
+	end
+	return true
+end
+
+-- Attempt to create terrain, checking for existing terrain that would
+-- cause it to fail. Returns the terrain if succesful, nil if not.
+function _M.create(t)
+	if t.x and t.y then
+		-- Check for existing terrain.
+		local original = game.level.map(x, y, TERRAIN)
+		-- If it's active terrain, run our own on_replace_active.
+		if eutil.get(original, 'active_terrain') and t.on_replace_active then
+			return t.on_replace_active(t, original, x, y)
+		end
+		-- Fail if there's some weird terrain at the target.
+		local ok, reason = _M.tile_free(t.x, t.y)
+		if not ok then return nil, reason end
+	end
+	-- Otherwise create as normal.
+	return _M.new(t)
+end
+
+-- Update own metatable to route through terrain.
+local set_meta = function(self)
 	local meta = getmetatable(self)
 	local class = meta.__index
 	meta.__index = function(self, key)
-		local result = class[key]
+		-- First try immediate class stuff.
+		local result = rawget(class, key)
+		-- Then try stuff from terrain.
 		if result == nil then
 			local terrain = rawget(self, 'terrain')
 			result = terrain and terrain[key]
 		end
+		-- Then try deep class stuff.
+		if result == nil then
+			result = class[key]
+		end
 		return result
 	end
+	meta.__newindex = function(self, key, value)
+		local terrain = rawget(self, 'terrain')
+		if (key == '_mo' or key == '_last_mo') and terrain then
+			terrain[key] = value
+		else
+			rawset(self, key, value)
+		end
+	end
+end
+
+function _M:init(t, no_default)
+	set_meta(self)
 
 	self.in_level = false
 	self.in_map = false
 	self.active_terrain = true
+	self.action_list = {}
+	self.canAct = false
 
 	self.tooltip = grid.tooltip
 
 	t = t or {}
 	object.init(self, t, no_default)
 
-	self:addMap()
+	if not self.terrain and self.terrain_name then
+		self.terrain = game.level:findEntity({define_as = self.terrain_name,})
+		if not self.terrain and self.terrain_file then
+			grid:loadList(self.terrain_file, nil, game.zone.grid_list)
+			self.terrain = game.zone:makeEntityByName(game.level, 'terrain', self.terrain_name)
+		end
+		--self.terrain_name = nil
+		--self.terrain_file = nil
+	end
+
+	if self.can_dig and not self.dig then
+		self.dig = function(src, x, y, self) self:removeLevel() end
+		self.can_dig = nil
+	end
+
+	if self.copy_missing then
+		table.update(self, self.copy_missing)
+		self._last_mo = nil
+		self._mo = nil
+	end
+
+
+	if self.no_add then
+		self.no_add = nil
+	else
+		self:addMap()
+	end
+end
+
+
+function _M:loaded()
+	set_meta(self)
+	object.loaded(self)
 end
 
 -- Add to level if necessary.
@@ -59,6 +142,26 @@ function _M:removeLevel()
 		self:removeMap()
 		game.level:removeEntity(self)
 		self.in_level = false
+	end
+end
+
+-- Do nicer tiles.
+function _M:doNicerTiles()
+	local map = require 'engine.Map'
+	if not map.tiles.nicer_tiles then return end
+	if self.nicer_tiles == 'self' then
+		game.nicer_tiles:handle(game.level, self.x, self.y)
+	elseif self.nicer_tiles == 'around' then
+		for x = self.x - 1, self.x + 1 do
+			for y = self.y - 1, self.y + 1 do
+				game.nicer_tiles:handle(game.level, x, y)
+			end
+		end
+	end
+	-- onTickEnd so if we change several adjacent tiles at once, they
+	-- don't all get messed up.
+	if self.nicer_tiles then
+		game.nicer_tiles:replaceAll(game.level)
 	end
 end
 
@@ -79,9 +182,7 @@ function _M:addMap(force)
 		game.level.map(self.x, self.y, map.TERRAIN, self)
 		self.in_map = true
 
-		if self.nicer_tiles then
-			game.nicer_tiles:updateAround(game.level, self.x, self.y)
-		end
+		self:doNicerTiles()
 	end
 end
 
@@ -104,9 +205,7 @@ function _M:removeMap()
 			game.level.map:remove(self.x, self.y, map.TERRAIN)
 		end
 
-		if self.nicer_tiles then
-			game.nicer_tiles:updateAround(game.level, self.x, self.y)
-		end
+		self:doNicerTiles()
 	end
 end
 
@@ -130,12 +229,19 @@ function _M:move(x, y, force)
 	self:addMap()
 end
 
+-- Add an action to be performed every turn.
+function _M:addAction(action)
+	table.insert(self.action_list, action)
+end
+
 -- Override to allow active terrain to merge into each other.
--- Rturn true to stop the rest of the move function.
+-- Return true to stop the rest of the addMap function.
 function _M:merge(other) return end
 
 function _M:act()
 	self:useEnergy()
+	-- Actions
+	for _, action in pairs(self.action_list) do action(self) end
 	-- Temporary terrain.
 	if self.temporary then
 		self.temporary = self.temporary - 1

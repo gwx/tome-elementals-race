@@ -14,15 +14,17 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-local hook = function(self, data)
-	dofile('/data-elementals-race/resources.lua')
-
-  local load_data = function(loader, name)
-    require(loader):loadDefinition('/data-elementals-race/'..name..'.lua')
-  end
-  load_data('engine.interface.ActorTalents', 'talents')
-  load_data('engine.interface.ActorTemporaryEffects', 'effects')
-	load_data('engine.Birther', 'birth')
-  load_data('engine.DamageType', 'damage-types')
-end
-class:bindHook('ToME:load', hook)
+-- This has no image set. Meant to be filled in with whatever it's
+-- 'overlaying'. See the copy_missing option in active_terrain.
+newEntity {
+	define_as = 'BOULDER',
+	type = 'wall', subtype = 'floor',
+	name = 'boulder',
+	add_mos = {{image = 'terrain/huge_rock.png',},},
+	display = '#', color_r = 210, color_g = 210, color_b = 30, back_color = colors.GREY,
+	z = 3,
+	always_remember = true,
+	does_block_move = true,
+	can_pass = {pass_wall = 1,},
+	block_sight = false,
+	air_level = -10,}

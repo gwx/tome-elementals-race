@@ -106,32 +106,18 @@ newTalent {
 			DamageType:get(DamageType.PHYSICAL).projector(
 				self, x, y, DamageType.PHYSICAL, dam)
 
-			local oe = game.level.map(x, y, Map.TERRAIN)
-			if oe and oe.special then return end
-			if oe and oe:attr('temporary') and not oe.active_terrain then return end
-
-			local e = active_terrain.new {
-				terrain = grid.new {
-					type = oe.type, subtype = oe.subtype,
-					name = self.name:capitalize()..'\'s Boulder',
-					image = 'terrain/huge_rock.png',
-					display = '#', color=colors.WHITE, --back_color=colors.DARK_GREY,
-					always_remember = true,
-					desc = 'a thrown boulder',
-					type = 'wall',
-					can_pass = {pass_wall = 1},
-					does_block_move = true,
-					show_tooltip = true,
-					block_move = true,
-					block_sight = true,},
-				temporary = t.duration(self, t) + 1,
+			local original = game.level.map(x, y, Map.TERRAIN)
+			local e = active_terrain.create {
+				terrain_name = 'BOULDER',
+				terrain_file = '/data-elementals-race/terrain.lua',
+				name = self.name:capitalize()..'\'s boulder',
+				desc = 'a thrown boulder',
+				temporary = util.getval(t.duration, self, t) + 1,
 				x = x, y = y,
-				canAct = false,
-				dig = function(src, x, y, self)
-					self:removeLevel()
-				end,
-				summoner_gain_exp = true,
-				summoner = self,}
+				copy_missing = original, -- Copy graphic stuff so it looks like we're on top.
+				can_dig = true,
+				nicer_tiles = 'self',
+				define_as = original.define_as,}
 		end
 		self:project(tg, x, y, terrain_projector)
 

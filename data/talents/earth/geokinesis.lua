@@ -404,6 +404,7 @@ newTalent {
 			local is_known = game.level.map.remembers(x, y) or game.level.map.seens(x, y)
 			if (not by_coord[x] or not by_coord[x][y]) and
 				(game.level.map:checkEntity(x, y, Map.TERRAIN, 'block_move') or
+					 game.level.map:checkEntity(x, y, Map.TERRAIN, 'special') or
 					 game.level.map:checkEntity(x, y, Map.TERRAIN, 'temporary') or
 					 game.level.map:checkEntity(x, y, Map.TERRAIN, 'change_level') or
 					 game.level.map:checkEntity(x, y, Map.TERRAIN, 'change_zone'))
@@ -435,11 +436,7 @@ newTalent {
 		for _, target in pairs(targets) do
 			local sx, sy = x1 + target.x, y1 + target.y
 			target.terrain = game.level.map(sx, sy, Map.TERRAIN)
-			if not target.terrain.temporary then
-				DamageType:get(DamageType.DIG).projector(self, sx, sy, DamageType.DIG)
-			elseif target.terrain.active_terrain then
-				target.terrain:removeLevel()
-			end
+			DamageType:get(DamageType.DIG).projector(self, sx, sy, DamageType.DIG)
 		end
 
 		-- Do damage.
@@ -472,37 +469,50 @@ newTalent {
 			local tx, ty = x3 + target.x, y3 + target.y
 			local target_floor = game.level.map(tx, ty, Map.TERRAIN)
 
-			target.active = active_terrain.new {
+			target.active = active_terrain.create {
 				terrain = target.terrain,
 				old_source = target.terrain,
 				old_target = target_floor,
 				temporary = duration,
-				nicer_tiles = true,
 				x = tx, y = ty, sx = sx, sy = sy,
-				canAct = false,
-				dig = false,
 				temporary_timeout = function(self)
-					local map = require 'engine.Map'
 
-					-- Don't move back on top of an active tile.
-					local present = game.level.map(self.sx, self.sy, map.TERRAIN)
-					if present and present.active_terrain then return end
+					-- Don't move back on top of a special tile.
+					if not self.tile_free(self.sx, self.sy) then return end
 
 					self:removeLevel()
+					local TERRAIN = require 'engine.Map' .TERRAIN
+					game.level.map(self.sx, self.sy, TERRAIN, self.old_source)
 
-					if self.old_source.active_terrain then
-						self.old_source:move(self.sx, self.sy)
-					else
-						game.level.map(self.sx, self.sy, map.TERRAIN, self.old_source)
+					for _, target in pairs(targets) do
+						for x = self.x - 1, self.x + 1 do
+							for y = self.y - 1, self.y + 1 do
+								game.nicer_tiles:handle(game.level, x, y)
+							end
+						end
+						for x = self.sx - 1, self.sx + 1 do
+							for y = self.sy - 1, self.sy + 1 do
+								game.nicer_tiles:handle(game.level, x, y)
+							end
+						end
 					end
-					game.nicer_tiles:updateAround(game.level, self.sx, self.sy)
+					game.nicer_tiles:replaceAll(game.level)
 				end,}
 		end
 
-		-- Nicer tile the walls.
 		for _, target in pairs(targets) do
-			game.nicer_tiles:updateAround(game.level, target.active.x, target.active.y)
+			for x = x1 + target.x - 1, x1 + target.x + 1 do
+				for y = y1 + target.y - 1, y1 + target.y + 1 do
+					game.nicer_tiles:handle(game.level, x, y)
+				end
+			end
+			for x = x3 + target.x - 1, x3 + target.x + 1 do
+				for y = y3 + target.y - 1, y3 + target.y + 1 do
+					game.nicer_tiles:handle(game.level, x, y)
+				end
+			end
 		end
+		game.nicer_tiles:replaceAll(game.level)
 
 		game:playSoundNear(self, 'talents/earth')
 		return true

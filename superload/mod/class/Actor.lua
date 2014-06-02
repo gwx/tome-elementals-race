@@ -19,6 +19,7 @@ local eutil = require 'elementals-race.util'
 local target = require 'engine.Target'
 local map = require 'engine.Map'
 local damage_type = require 'engine.DamageType'
+local grid = require 'mod.class.Grid'
 
 -- Learn Essence Pool
 local learnPool = _M.learnPool
@@ -769,7 +770,5 @@ function _M:project(t, x, y, damtype, dam, particles)
 	damage_type:projectingFor(self, nil)
 	return grids, stop_x, stop_y
 end
-
-
 
 return _M
