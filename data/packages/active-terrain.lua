@@ -94,7 +94,8 @@ function _M:init(t, no_default)
 	object.init(self, t, no_default)
 
 	if not self.terrain and self.terrain_name then
-		self.terrain = game.level:findEntity({define_as = self.terrain_name,})
+		--self.terrain = game.level:findEntity({define_as = self.terrain_name,})
+		self.terrain = game.nicer_tiles:getTile(self.terrain_name)
 		if not self.terrain and self.terrain_file then
 			grid:loadList(self.terrain_file, nil, game.zone.grid_list)
 			self.terrain = game.zone:makeEntityByName(game.level, 'terrain', self.terrain_name)
