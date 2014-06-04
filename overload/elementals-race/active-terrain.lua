@@ -148,26 +148,30 @@ end
 
 -- Do nicer tiles.
 function _M:doNicerTiles()
-	local map = require 'engine.Map'
-	if not map.tiles.nicer_tiles then return end
-	if self.nicer_tiles == 'self' then
-		game.nicer_tiles:handle(game.level, self.x, self.y)
-	elseif self.nicer_tiles == 'around' then
-		for x = self.x - 1, self.x + 1 do
-			for y = self.y - 1, self.y + 1 do
-				game.nicer_tiles:handle(game.level, x, y)
+	game:onTickEnd(
+		function()
+			local map = require 'engine.Map'
+			if not map.tiles.nicer_tiles then return end
+			if self.nicer_tiles == 'self' then
+				game.nicer_tiles:handle(game.level, self.x, self.y)
+			elseif self.nicer_tiles == 'around' then
+				for x = self.x - 1, self.x + 1 do
+					for y = self.y - 1, self.y + 1 do
+						game.nicer_tiles:handle(game.level, x, y)
+					end
+				end
 			end
-		end
-	end
-	-- onTickEnd so if we change several adjacent tiles at once, they
-	-- don't all get messed up.
-	if self.nicer_tiles then
-		game.nicer_tiles:replaceAll(game.level)
-	end
+			-- onTickEnd so if we change several adjacent tiles at once, they
+			-- don't all get messed up.
+			if self.nicer_tiles then
+				game.nicer_tiles:replaceAll(game.level)
+			end
+	end)
 end
 
 function _M:addMap(force)
 	if (not self.in_map or force) and self.x and self.y then
+		game.log('ADDING MAP')
 		-- Grab the new terrain we're covering.
 		local present = game.level.map(self.x, self.y, map.TERRAIN)
 		if present then

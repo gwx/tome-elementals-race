@@ -33,6 +33,8 @@ function _M:replaceAll(level)
 			print('[NICE TILER] *warning* refusing to remove zone/level changer at ', r[1], r[2], og.change_zone, og.change_level)
 		elseif og.active_terrain then
 			og.terrain = r[3]
+			og._mo = nil
+			og._last_mo = nil
 			level.map.changed = true
 			level.map:updateMap(r[1], r[2])
 		else

@@ -158,14 +158,18 @@ newTalent {
 			local original = game.level.map(x, y, Map.TERRAIN)
 			local terrain = active_terrain.create {
 				src = self,
-				terrain_name = 'WALL',
-				terrain_file = '/data/general/grids/basic.lua',
+				terrain_name = 'WALL_TEMP',
+				terrain_file = '/data-elementals-race/terrain.lua',
 				name = self.name:capitalize()..'\'s Primordial Stone',
 				temporary = duration + 1,
 				x = x, y = y,
 				can_dig = true,
 				nicer_tiles = 'around',
-				copy_missing = original,}
+				image = original.image,
+				nice_editer = false,
+				nice_editer2 = false,
+				copy_missing = original,
+			}
 
 			DamageType:get(DamageType.PHYSICAL).projector(
 				self, x, y, DamageType.PHYSICAL, damage)
