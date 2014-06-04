@@ -15,6 +15,6 @@
 
 local class = require 'engine.class'
 
-for _, file in pairs{'packages', 'data', 'actor', 'combat', 'damage-projector', 'uiset/minimalist'} do
+for _, file in pairs{'data', 'actor', 'combat', 'damage-projector', 'uiset/minimalist'} do
 	dofile('hooks/elementals-race/'..file..'.lua')
 end
