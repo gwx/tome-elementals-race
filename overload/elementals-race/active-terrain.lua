@@ -48,7 +48,7 @@ function _M.create(t)
 		if not ok then return nil, reason end
 	end
 	-- Otherwise create as normal.
-	return _M.new(t)
+	return _M.new(t, true)
 end
 
 -- Update own metatable to route through terrain.
@@ -71,8 +71,8 @@ local set_meta = function(self)
 	end
 	meta.__newindex = function(self, key, value)
 		local terrain = rawget(self, 'terrain')
-		if (key == '_mo' or key == '_last_mo') and terrain then
-			terrain[key] = value
+		if (key == '_mo' or key == '_last_mo') then
+			if terrain then terrain[key] = value end
 		else
 			rawset(self, key, value)
 		end
@@ -171,7 +171,6 @@ end
 
 function _M:addMap(force)
 	if (not self.in_map or force) and self.x and self.y then
-		game.log('ADDING MAP')
 		-- Grab the new terrain we're covering.
 		local present = game.level.map(self.x, self.y, map.TERRAIN)
 		if present then

@@ -20,6 +20,7 @@ local entity = require 'engine.Entity'
 local object = require 'mod.class.Object'
 local stats = require 'engine.interface.ActorStats'
 local particles = require 'engine.Particles'
+local map = require 'engine.Map'
 
 newTalentType {
 	type = 'elemental/geokinesis',
@@ -433,11 +434,14 @@ newTalent {
 
 
 		-- Dig original walls.
+		local nicer = map.tiles.nicer_tiles
+		map.tiles.nicer_tiles = false
 		for _, target in pairs(targets) do
 			local sx, sy = x1 + target.x, y1 + target.y
 			target.terrain = game.level.map(sx, sy, Map.TERRAIN)
 			DamageType:get(DamageType.DIG).projector(self, sx, sy, DamageType.DIG)
 		end
+		map.tiles.nicer_tiles = nicer
 
 		-- Do damage.
 		local damage = self:spellCrit(util.getval(t.damage, self, t))
@@ -475,6 +479,7 @@ newTalent {
 				old_source = target.terrain,
 				old_target = target_floor,
 				temporary = duration,
+				nicer_tiles = 'around',
 				x = tx, y = ty, sx = sx, sy = sy,
 				temporary_timeout = function(self)
 
@@ -485,22 +490,22 @@ newTalent {
 					local TERRAIN = require 'engine.Map' .TERRAIN
 					game.level.map(self.sx, self.sy, TERRAIN, self.old_source)
 
-					for _, target in pairs(targets) do
-						for x = self.x - 1, self.x + 1 do
-							for y = self.y - 1, self.y + 1 do
-								game.nicer_tiles:handle(game.level, x, y)
-							end
+					game.nicer_tiles:replaceAll(game.level)
+					for x = self.x - 1, self.x + 1 do
+						for y = self.y - 1, self.y + 1 do
+							game.nicer_tiles:handle(game.level, x, y)
 						end
-						for x = self.sx - 1, self.sx + 1 do
-							for y = self.sy - 1, self.sy + 1 do
-								game.nicer_tiles:handle(game.level, x, y)
-							end
+					end
+					for x = self.sx - 1, self.sx + 1 do
+						for y = self.sy - 1, self.sy + 1 do
+							game.nicer_tiles:handle(game.level, x, y)
 						end
 					end
 					game.nicer_tiles:replaceAll(game.level)
 				end,}
 		end
 
+		game.nicer_tiles:replaceAll(game.level)
 		for _, target in pairs(targets) do
 			for x = x1 + target.x - 1, x1 + target.x + 1 do
 				for y = y1 + target.y - 1, y1 + target.y + 1 do
