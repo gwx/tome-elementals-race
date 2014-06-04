@@ -31,8 +31,7 @@ function _M:learnPool(t)
 	learnPool(self, t)
 end
 
-local regenResources = _M.regenResources
-function _M:regenResources()
+function _M:calculateResources()
 	-- Update essence values with latest life values.
 	if self:knowTalent('T_ESSENCE_POOL') then
 		self.max_essence = self.max_life * 0.67 * (100 - (self.sustain_essence or 0)) * 0.01
@@ -44,6 +43,11 @@ function _M:regenResources()
 				util.bound((self.healing_factor or 1), 0, 2.5)
 		end
 	end
+end
+
+local regenResources = _M.regenResources
+function _M:regenResources()
+	self:calculateResources()
 	regenResources(self)
 end
 
@@ -769,6 +773,15 @@ function _M:project(t, x, y, damtype, dam, particles)
 	end
 	damage_type:projectingFor(self, nil)
 	return grids, stop_x, stop_y
+end
+
+local resetToFull = _M.resetToFull
+function _M:resetToFull()
+	if self.dead then return end
+	self:calculateResources()
+	self.essence = self.max_essence
+	self.jaggedbody = self.max_jaggedbody
+	resetToFull(self)
 end
 
 return _M
