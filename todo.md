@@ -1,3 +1,9 @@
+Stuff to be Added Later
+=======================
+- The Jadir shield tree.
+- The other 3 races.
+- The 3 trees all elementals can learn.
+
 Graphics / Effects
 ==================
 - [General] Jadir images.
