@@ -251,15 +251,13 @@ newTalent {
 	essence = 20,
 	cooldown = 21,
 	no_npc_use = true,
-	-- Enable timer on icon for 1.2:
-	--[[
 	iconOverlay = function(self, t, p)
 		local _, crystal = next(p.crystals)
+		game.log('%s %s', _, crystal)
 		if not crystal then return '' end
 		local fnt = 'buff_font_small'
 		return tostring(math.ceil(crystal.temporary)), fnt
 	end,
-	--]]
 	length = function(self, t)
 		return math.ceil(self:combatTalentScale(t, 5, 8)) * (0.5 + self:getCon(0.5, true))
 	end,
@@ -396,18 +394,10 @@ newTalent {
 		return true
 	end,
 	info = function(self, t)
-		local timer = ''
-		if self:isTalentActive('T_SILICINE_SLICERS') then
-			local _, crystal = next(self.sustain_talents['T_SILICINE_SLICERS'].crystals)
-			if crystal then
-				timer = ('#GOLD#TURNS LEFT: %d#LAST#\n'):format(crystal.temporary)
-			end
-		end
-		return ([[%sCreates a length %d line of sharp crystals in a target line between two points, neither farther than %d from you. The line persists for %d turns. Any enemy walking into the wickedly sharp crystals bleeds for %d physical damage over %d turns and has their global speed cut by %d%% for the duration.
+		return ([[Creates a length %d line of sharp crystals in a target line between two points, neither farther than %d from you. The line persists for %d turns. Any enemy walking into the wickedly sharp crystals bleeds for %d physical damage over %d turns and has their global speed cut by %d%% for the duration.
 Deactivating the ability early shatters the crystals. Every crystal rains shrapnel, applying the above effect in radius %d.
 Damage, maximum line length and duration increase scale with constitution.]])
-			:format(timer,
-							util.getval(t.length, self, t),
+			:format(util.getval(t.length, self, t),
 							util.getval(t.range, self, t),
 							util.getval(t.duration, self, t),
 							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)),
