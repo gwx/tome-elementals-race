@@ -171,7 +171,7 @@ end
 
 function _M:addMap(force)
 	if (not self.in_map or force) and self.x and self.y then
-		-- Grab the new terrain we're covering.
+		-- Grab the new terrain we're old_feat.
 		local present = game.level.map(self.x, self.y, map.TERRAIN)
 		if present then
 			if present.active_terrain then
@@ -179,7 +179,7 @@ function _M:addMap(force)
 				if present:merge(self) then return end
 				present:removeLevel()
 			end
-			self.covering = present
+			self.old_feat = present
 		end
 
 		self:addLevel()
@@ -212,16 +212,16 @@ function _M:removeMap()
 		game.level.map:remove(self.x, self.y, map.TERRAIN)
 		self.in_map = false
 
-		-- Replace the terrain we were covering.
-		if self.covering then
-			if self.covering.active_terrain then
-				self.covering.x = self.x
-				self.covering.y = self.y
-				self.covering:addMap()
+		-- Replace the terrain we were old_feat.
+		if self.old_feat then
+			if self.old_feat.active_terrain then
+				self.old_feat.x = self.x
+				self.old_feat.y = self.y
+				self.old_feat:addMap()
 			else
-				game.level.map(self.x, self.y, map.TERRAIN, self.covering)
+				game.level.map(self.x, self.y, map.TERRAIN, self.old_feat)
 			end
-			self.covering = nil
+			self.old_feat = nil
 		else
 			game.level.map:remove(self.x, self.y, map.TERRAIN)
 		end
