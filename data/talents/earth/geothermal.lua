@@ -32,6 +32,27 @@ local make_require = function(tier)
 		level = function(level) return -5 + tier * 4 + level end,}
 end
 
+local get_tree_points_raw = function(self)
+	local amt = 0
+	for _, talent in pairs {'T_ROCK_MORTAR', 'T_INSULATION', 'T_PYROCLASTIC_BURST', 'T_SMOLDERING_CORE'} do
+		amt = amt + self:getTalentLevelRaw(talent)
+	end
+	return amt
+end
+
+local passive_block = function(self, t, p)
+	local block = self:getTalentLevelRaw(t) * 5
+	self:talentTemporaryValue(p, 'partial_block_types', {
+															[DamageType.FIRE] = block,
+															[DamageType.COLD] = block,})
+end
+
+local block_info = function(self, t)
+	local points = get_tree_points_raw(self)
+	return ('Also allows handheld shields to always block fire and cold damage types with at least %d%% power.')
+		:format(util.bound(points * 5, 0, 100))
+end
+
 newTalent {
 	name = 'Rock Mortar',
 	type = {'elemental/geothermal', 1,},
@@ -49,6 +70,7 @@ newTalent {
 	end,
 	passives = function(self, t, p)
 		self:talentTemporaryValue(p, 'jaggedbody_reflect', util.getval(t.reflect, self, t))
+		passive_block(self, t, p)
 	end,
 	target = function(self, t)
 		return {
@@ -80,12 +102,15 @@ newTalent {
 		local damage = util.getval(t.damage, self, t)
 		return ([[Fires a rock mortar at the target, dealing %d physical and %d fire damage in radius %d.
 Also, Jagged Body returns %d%% more damage.
-Damage increases with spellpower.]])
+Damage increases with spellpower.
+
+%s]])
 			:format(
 				Talents.damDesc(self, DamageType.PHYSICAL, damage),
 				Talents.damDesc(self, DamageType.FIRE, damage),
 				util.getval(t.radius, self, t),
-				util.getval(t.reflect, self, t) * 100)
+				util.getval(t.reflect, self, t) * 100,
+				block_info(self, t))
 	end,}
 
 newTalent {
@@ -123,16 +148,20 @@ newTalent {
 			[DamageType.FIRE] = {[DamageType.PHYSICAL] = conversion,},
 			[DamageType.COLD] = {[DamageType.PHYSICAL] = conversion,},}
 		self:talentTemporaryValue(p, 'conversion_resists', resists)
+		passive_block(self, t, p)
 	end,
 	recompute_passives = {stats = {stats.STAT_MAG,},},
 	info = function(self, t)
 		return ([[Your hard outer shell does good to keep the gooey candy center warm.
 Increases physical resistance by %d%% and increases the maximum capacity of Jagged Body by %d%%.
-Also, %d%% (scaling with magic) of your physical resistance is added to your to fire and cold resistance.]])
+Also, %d%% (scaling with magic) of your physical resistance is added to your to fire and cold resistance.
+
+%s]])
 			:format(
 				util.getval(t.resist, self, t),
 				util.getval(t.jagged, self, t) * 100,
-				util.getval(t.conversion, self, t))
+				util.getval(t.conversion, self, t),
+				block_info(self, t))
 	end,}
 
 newTalent {
@@ -159,6 +188,7 @@ newTalent {
 	passives = function(self, t, p)
 		self:talentTemporaryValue(p, 'jaggedbody_regen_flat', util.getval(t.regen, self, t))
 		self:recomputePassives('T_JAGGED_BODY')
+		passive_block(self, t, p)
 	end,
 	recompute_passives = {stats = {stats.STAT_MAG,},},
 	-- If we unlearn the last level, passives never gets called.
@@ -198,14 +228,17 @@ newTalent {
 		return ([[Bouts of molten rage explode from within, solidifying on both you and the immediate surroundings.
 Instantly regenerates %d%% of your missing Jagged Body shield and pins all adjacent for %d turns. Each turn, those pinned take %d fire damage (scaling with spellpower).
 Passively increases jagged body regeneration by %.1f points per turn (scaling with magic).
-Total jagged body restoration, including that from spent essence, will be %d.]])
+Total jagged body restoration, including that from spent essence, will be %d.
+
+%s]])
 			:format(
 				restore * 100,
 				util.getval(t.duration, self, t),
 				Talents.damDesc(self, DamageType.FIRE, util.getval(t.damage, self, t)),
 				util.getval(t.regen, self, t),
 				restore * (self:getMaxJaggedbody() - self:getJaggedbody()) +
-					self:essenceCost(util.getval(t.essence, self, t)))
+					self:essenceCost(util.getval(t.essence, self, t)),
+				block_info(self, t))
 	end,}
 
 -- TODO set midpoint to 50%.
@@ -232,6 +265,7 @@ newTalent {
 			[DamageType.ACID] = {[DamageType.FIRE] = conversion,},
 			[DamageType.LIGHTNING] = {[DamageType.FIRE] = conversion,},}
 		self:talentTemporaryValue(p, 'convert_received', converts)
+		passive_block(self, t, p)
 	end,
 	recompute_passives = {stats = {stats.STAT_MAG,},},
 	info = function(self, t)
@@ -241,7 +275,10 @@ newTalent {
 These effects vary with your present level of jagged body shield:
 Converts from %d%% at 0%% shield to %d%% at 100%% shield of all cold, acid, or lightning damage received into fire damage.
 Increases fire resist penetration by %d%% at 100%% shield to %d%% at 0%% shield.
-Both effects scale with magic.]])
+Both effects scale with magic.
+
+%s]])
 			:format(conversion, conversion * 2,
-							penetration, penetration * 2)
+							penetration, penetration * 2,
+							block_info(self, t))
 	end,}

@@ -29,6 +29,27 @@ local make_require = function(tier)
 		level = function(level) return -5 + tier * 4 + level end,}
 end
 
+local get_tree_points_raw = function(self)
+	local amt = 0
+	for _, talent in pairs {'T_IVY_MESH', 'T_PUT_ROOTS', 'T_PREDATORY_VINES', 'T_YGGDRASIL'} do
+		amt = amt + self:getTalentLevelRaw(talent)
+	end
+	return amt
+end
+
+local passive_block = function(self, t, p)
+	local block = self:getTalentLevelRaw(t) * 5
+	self:talentTemporaryValue(p, 'partial_block_types', {
+															[DamageType.NATURE] = block,
+															[DamageType.BLIGHT] = block,})
+end
+
+local block_info = function(self, t)
+	local points = get_tree_points_raw(self)
+	return ('Also allows handheld shields to always block nature and blight damage types with at least %d%% power.')
+		:format(util.bound(points * 5, 0, 100))
+end
+
 newTalent {
 	name = 'Ivy Mesh',
 	type = {'elemental/symbiosis', 1,},
@@ -38,14 +59,20 @@ newTalent {
 	poison = function(self, t) return self:combatTalentSpellDamage(t, 20, 80) end,
 	save_per = function(self, t) return 2 + self:getTalentLevel(t) * 0.5 end,
 	save_max = function(self, t) return 14 + self:getTalentLevel(t) * 2 end,
+	passives = function(self, t, p)
+		passive_block(self, t, p)
+	end,
 	info = function(self, t)
 		return ([[The Jadir's body has become overgrown with thorny vines, any enemy attacking in melee is poisoned and suffers %d nature damage each turn for 3 turns, halving each turn.
 The fresh residue of the vines increases your spell save by %d, for every enemy currently afflicted with the poison, up to %d.
-Damage done increases with spellpower.]])
+Damage done increases with spellpower.
+
+%s]])
 			:format(
 				Talents.damDesc(self, DamageType.NATURE, t.poison(self, t)),
 				t.save_per(self, t),
-				t.save_max(self, t))
+				t.save_max(self, t),
+				block_info(self, t))
 	end,}
 
 newTalent {
@@ -78,6 +105,9 @@ newTalent {
 						radius = util.getval(t.radius, self, t),
 						selffire = false, talent = t,}
 	end,
+	passives = function(self, t, p)
+		passive_block(self, t, p)
+	end,
 	action = function(self, t)
 		local effect = game.level.map:addEffect(
 			self, self.x, self.y, t.duration(self, t),
@@ -94,13 +124,16 @@ newTalent {
 	end,
 	info = function(self, t)
 		return ([[Send entangling roots out in radius %d for %d turns. While standing in them, the roots will increase your healing factor by %d%% and your physical save by %d. Any enemy moving through them wil take %d nature damage, and will be pinned for 4 turns the fourth and subsequent times which they receive damage.
-Healing factor, damage and pinning power increase with spellpower.]])
+Healing factor, damage and pinning power increase with spellpower.
+
+%s]])
 			:format(
 				util.getval(t.radius, self, t),
 				util.getval(t.duration, self, t),
 				t.healing(self, t) * 100,
 				t.save(self, t),
-				Talents.damDesc(self, DamageType.NATURE, t.damage(self, t)))
+				Talents.damDesc(self, DamageType.NATURE, t.damage(self, t)),
+				block_info(self, t))
 	end,}
 
 newTalent {
@@ -121,6 +154,9 @@ newTalent {
 						range = util.getval(t.range, self, t),
 						radius = util.getval(t.radius, self, t),
 						selffire = false, talent = t,}
+	end,
+	passives = function(self, t, p)
+		passive_block(self, t, p)
 	end,
 	action = function(self, t)
 		-- Grab valid targets.
@@ -157,11 +193,14 @@ newTalent {
 	info = function(self, t)
 		return ([[An entire ecosystem begins to form on your body. At your command, %d carnivorous vines shoot forth, attaching themselves to a random enemy in radius %d for 5 turns. Each turn they deal %d nature damage and apply or refresh the Ivy Mesh poison. Affected enemies cannot escape the leash range of 5 tiles away from you.
 Multiple vines may stack onto the same target if there are no other targets present, stacking the damage and decreasing the leash range by 1 for each extra vine attached.
-Damage increases with spellpower.]])
+Damage increases with spellpower.
+
+%s]])
 			:format(
 				util.getval(t.shots, self, t),
 				util.getval(t.radius, self, t),
-				Talents.damDesc(self, DamageType.NATURE, util.getval(t.damage, self, t)))
+				Talents.damDesc(self, DamageType.NATURE, util.getval(t.damage, self, t)),
+				block_info(self, t))
 	end,}
 
 newTalent {
@@ -189,8 +228,12 @@ newTalent {
 																	[DamageType.NATURE] = resist,
 																	[DamageType.BLIGHT] = resist,})
 		end
+		passive_block(self, t, p)
 	end,
 	info = function(self, t)
-		return ([[Surge essence through your body to make it bloom with life. Consumes 10%% of your current essence each turn, healing you for %d%% of the essence used. This will also give you nature and blight resistance, ranging from 0%% at 0%% essence to %d%% at 100%% essence (scaling with spellpower).]])
-			:format(t.heal(self, t) * 100, t.resist(self, t))
+		return ([[Surge essence through your body to make it bloom with life. Consumes 10%% of your current essence each turn, healing you for %d%% of the essence used. This will also give you nature and blight resistance, ranging from 0%% at 0%% essence to %d%% at 100%% essence (scaling with spellpower).
+
+%s]])
+			:format(t.heal(self, t) * 100, t.resist(self, t),
+							block_info(self, t))
 	end,}

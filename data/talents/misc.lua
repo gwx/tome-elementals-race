@@ -19,3 +19,15 @@ Talents:getTalentFromId('T_NO_FATIGUE').require.special.fct = function(self)
 						self:getTalentLevelRaw('T_ARMOUR_TRAINING'))
 		>= 3
 end
+
+-- Partial blocking damage types.
+local block = Talents:getTalentFromId('T_BLOCK')
+local getBlockedTypes = block.getBlockedTypes
+block.getBlockedTypes = function(self, t)
+	local types, msg = getBlockedTypes(self, t)
+	if type(types) ~= 'table' then return nil, msg end
+	for t, percent in pairs(self.partial_block_types or {}) do
+		if not types[t] then types[t] = percent end
+	end
+	return types, msg
+end
