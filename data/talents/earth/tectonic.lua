@@ -128,6 +128,7 @@ newTalent {
 						temporary = duration + 1,
 						x = wx, y = wy,
 						nice_tiler = false,
+						copy_missing = terrain,
 						can_dig = true,
 						nicer_tiles = 'self',}
 				end
