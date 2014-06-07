@@ -181,7 +181,9 @@ newTalent {
 
 		local silence = util.getval(t.silence, self, t)
 		if silence > 0 then
-			target:setEffect('EFF_SILENCED', silence, {apply_power = spellpower,})
+			target:setEffect('EFF_SILENCED', silence, {
+												 apply_power = spellpower,
+												 no_ct_effect = true,})
 		end
 
 		game.level.map:particleEmitter(x, y, 1, 'choking_dust', {})
