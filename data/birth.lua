@@ -59,6 +59,7 @@ newBirthDescriptor {
 		starting_zone = 'trollmire',
 		starting_quest = 'start-allied',
 		starting_intro = 'cornac',
+		forbid_combat_training = true,
 		inscription_restrictions = {
 			['inscriptions/infusions'] = true,},
 		disease_immune = 1,

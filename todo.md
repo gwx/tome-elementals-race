@@ -19,7 +19,7 @@ Mechanics
 - [Talent] Resonating Stone: Figure out what negative effects to use, and then add them.
 - [Talent] Brutish Stride: Make it charge faster if no enemies are in sight.
 - [Talent] Sandstorm: Have it slow down projectiles.
-- [General] Prevent Elementals from learning Combat Training.
+- [General] Prevent Elementals from learning Combat Training (in ID).
 - [Talent] Smoldering Core: Change scaling midpoint to 50% for both bonuses.
 - [Talent] Rock Shell: Should only reduce incoming physical/magical crit rate instead of all. This might end up being too hard to do.
 - [Talent] Architect's Wrath: Should hit things along the movement path of the walls as well.

@@ -13,8 +13,19 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-local class = require 'engine.class'
 
-for _, file in pairs{'data', 'actor', 'combat', 'chat', 'damage-projector', 'uiset/minimalist'} do
-	dofile('hooks/elementals-race/'..file..'.lua')
+local hook = function(self, data)
+	if self.name ~= 'last-hope-weapon-store' then return end
+	local training = self:get('training').answers
+	for _, v in pairs(training) do
+		if v[1] == 'Please train me in generic weapons and armour usage.' then
+			local original = v.cond
+			v.cond = function(npc, player)
+				if player.forbid_combat_training then return end
+				return original(npc, player)
+			end
+			break
+		end
+	end
 end
+class:bindHook('Chat:load', hook)
