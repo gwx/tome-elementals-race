@@ -59,7 +59,7 @@ newTalent {
 	daze = function(self, t) return 10 + self:getStr(15, true) end,
 	info = function(self, t)
 		return ([[The Jadir's body gives it a huge advantage when fighting in close quarters.
-Increases physical power by %d and damage done by %d%% with swords, axes, maces, and unarmed attacks.
+Increases physical power by %d and damage done by %d%% with swords, axes, maces, staves, and unarmed attacks.
 Also gives each blow a %d%% chance (scaling with Strength) to daze the enemy for 1 turn.]])
 			:format(t.getDamage(self, t),
 							t.getPercentInc(self, t) * 100,

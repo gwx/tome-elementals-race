@@ -31,7 +31,8 @@ hook = function(self, data)
 	-- Heavy Arms daze
 	t = self:getTalentFromId('T_HEAVY_ARMS')
 	if self:knowTalent('T_HEAVY_ARMS') and hitted and
-		eutil.hasv({'mace', 'axe', 'sword'}, eutil.get(data, 'weapon', 'talented')) and
+		eutil.hasv({'mace', 'axe', 'sword', 'unarmed', 'staff'},
+							 eutil.get(data, 'weapon', 'talented')) and
 		rng.percent(t.daze(self, t))
 	then
 		if target:canBe('stun') then

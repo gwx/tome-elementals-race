@@ -19,7 +19,7 @@ local eutil = require 'elementals-race.util'
 local _M = loadPrevious(...)
 
 -- Add T_HEAVY_ARMS to weapon masteries.
-for _, x in pairs {'axe', 'mace', 'sword', 'unarmed',} do
+for _, x in pairs {'axe', 'mace', 'sword', 'unarmed', 'staff'} do
 	_M:addCombatTraining(x, 'T_HEAVY_ARMS')
 end
 
