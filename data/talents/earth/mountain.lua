@@ -168,7 +168,7 @@ newTalent {
 	require = make_require(4),
 	points = 5,
 	mode = 'passive',
-	life = function(self, t)
+	p_life = function(self, t)
 		return self:combatTalentScale(t, 30, 80) * (0.5 + self:getCon(0.5, true))
 	end,
 	hardiness = function(self, t)
@@ -192,7 +192,7 @@ newTalent {
 		if level >= 5 then
 			self:talentTemporaryValue(p, 'resists', {[DamageType.PHYSICAL] = 10,})
 		end
-		self:talentTemporaryValue(p, 'max_life', t.life(self, t))
+		self:talentTemporaryValue(p, 'max_life', util.getval(t.p_life, self, t))
 		self:talentTemporaryValue(p, 'combat_armor_hardiness', t.hardiness(self, t))
 		self:recomputePassives('T_JAGGED_BODY')
 	end,
@@ -204,6 +204,6 @@ newTalent {
 3 Points: Increases Jagged Body shield regeneration by an extra 2%%.
 4 Points: Teluric Fist's breakthrough chance is now 100%% and will ignore target's knockback resistance 25%% of the time.
 5 Points: Physical resistance raised by 10%%.]])
-			:format(util.getval(t.life, self, t),
+			:format(util.getval(t.p_life, self, t),
 							util.getval(t.hardiness, self, t))
 	end,}
