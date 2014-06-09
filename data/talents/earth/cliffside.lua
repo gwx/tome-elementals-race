@@ -98,3 +98,42 @@ newTalent {
 			:format(util.getval(t.damage, self, t) * 100,
 							util.getval(t.constrict, self, t))
 	end,}
+
+newTalent {
+	name = 'Parade',
+	type = {'elemental/cliffside', 3,},
+	require = make_require(3),
+	points = 5,
+	mode = 'sustained',
+	sustain_essence = 10,
+	cooldown = 27,
+	jagged = function(self, t) return self:combatTalentScale(t, 0.25, 0.5) end,
+	debuff = function(self, t) return math.ceil(self:combatTalentScale(t, 0.15, 1.15)) end,
+	on_pre_use = function(self, t, silent)
+		if not self:hasShield() then
+			if not silent then
+				game.logPlayer(self, 'You must be wielding a shield to use this talent.')
+			end
+			return false
+		end
+		return true
+	end,
+	activate = function(self, t)
+		local p = {}
+		local block = eutil.get(self:hasShield(), 'special_combat', 'block') or 0
+		self:talentTemporaryValue(p, 'max_jaggedbody', util.getval(t.jagged, self, t) * block)
+		self:recomputePassives('T_JAGGED_BODY')
+		return p
+	end,
+	deactivate = function(self, t, p)
+		self:recomputePassives('T_JAGGED_BODY')
+		return true
+	end,
+	info = function(self, t)
+		local debuff = util.getval(t.debuff, self, t)
+		return ([[Your shield becomes connected to your very being, it's power increasing massively in return.
+Increases your maximum jagged body value by %d%% of your shield's blocking value.
+Passively increases the duration of the counterstrike debuff on attackers by %d turns.
+Passively increases the number of counterstrikes you can perform on a target while they're vulnerable by %d.]])
+			:format(util.getval(t.jagged, self, t) * 100, debuff, debuff)
+	end,}

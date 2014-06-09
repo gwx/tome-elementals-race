@@ -26,6 +26,12 @@ blocking.do_block = function(type, dam, eff, self, src)
 		crit_inc = t.getCritInc(self, t)
 		nb = nb + dur_inc
 	end
+	if self:knowTalent('T_PARADE') then
+		local t = self:getTalentFromId('T_PARADE')
+		local amt = util.getval(t.debuff, self, t)
+		dur_inc = dur_inc + amt
+		nb = nb + amt
+	end
 	local b = eff.d_types[type]
 	if not b then return dam end
 	if not self:knowTalent(self.T_ETERNAL_GUARD) then eff.dur = 0 end
