@@ -75,7 +75,7 @@ newTalent {
 	cooldown = 9,
 	tactical = {ATTACK = 3,},
 	accuracy = function(self, t)
-		return self:combatTalentScale(t, 15, 30) * (0.5 + self:getStr(0.5, true))
+		return self:combatTalentScale(t, 20, 50) * (0.5 + self:getStr(0.5, true))
 	end,
 	damage = function(self, t)
 		return self:combatTalentPhysicalDamage(t, 20, 250)
