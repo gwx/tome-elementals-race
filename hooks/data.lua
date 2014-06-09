@@ -15,8 +15,6 @@
 
 
 local hook = function(self, data)
-	dofile('/data-elementals-race/resources.lua')
-
   local load_data = function(loader, name)
     require(loader):loadDefinition('/data-elementals-race/'..name..'.lua')
   end

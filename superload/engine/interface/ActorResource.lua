@@ -14,8 +14,10 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-local resources = require 'engine.interface.ActorResource'
+local _M = loadPrevious(...)
 
-resources:defineResource('Jagged Body', 'jaggedbody', 'T_JAGGED_BODY', 'jaggedbody_regen', 'Your earthen body sprouts many sharp, rock-hard protrusions, blocking damage of any kind.', 0, 0)
+_M:defineResource('Jagged Body', 'jaggedbody', 'T_JAGGED_BODY', 'jaggedbody_regen', 'Your earthen body sprouts many sharp, rock-hard protrusions, blocking damage of any kind.', 0, 0)
 
-resources:defineResource('Essence', 'essence', 'T_ESSENCE_POOL', 'essence_regen', 'Essence is your ability to manipulate the earth. It regenerates at the same rate as your life and your jagged body shield is increased by 33% of all essence spent.')
+_M:defineResource('Essence', 'essence', 'T_ESSENCE_POOL', 'essence_regen', 'Essence is your ability to manipulate the earth. It regenerates at the same rate as your life and your jagged body shield is increased by 33% of all essence spent.')
+
+return _M
