@@ -123,9 +123,7 @@ function _M:replaceAll(level)
 						g.add_displays[#g.add_displays].image = g.add_displays[#g.add_displays].image:format(rng.range(e.min or 1, e.max or 1))
 					end
 				end
-				if active then game.log('ACTIVE1: %s', rawget(active, 'image')) end
 				if e.image then g.image = e.image:format(rng.range(e.min or 1, e.max or 1)) end
-				if active then game.log('ACTIVE2: %s', rawget(active, 'image')) end
 			end
 
 			if active then

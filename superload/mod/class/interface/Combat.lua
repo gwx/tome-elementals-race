@@ -93,6 +93,9 @@ end
 -- Brutish Stride
 local attackTargetWith = _M.attackTargetWith
 function _M:attackTargetWith(target, weapon, damtype, mult, force_dam)
+	-- Discard any counterstrike being activated.
+	self.turn_procs.counterstrike_activated = nil
+
 	mult = mult or 1
 	local stride = self:hasEffect('EFF_BRUTISH_STRIDE')
 	local radius_id, angle_id

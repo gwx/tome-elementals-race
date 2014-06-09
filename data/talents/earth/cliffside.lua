@@ -14,7 +14,10 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+local eutil = require 'elementals-race.util'
 local stats = require 'engine.interface.ActorStats'
+local map = require 'engine.Map'
+local ACTOR = map.ACTOR
 
 newTalentType {
 	type = 'elemental/cliffside',
@@ -46,4 +49,52 @@ Allows counterstrikes after incomplete blocks.]])
 			:format(util.getval(t.chance, self, t),
 							util.getval(t.damage, self, t) * 100,
 							25 + (self.combat_critical_power or 0) * 0.5)
+	end,}
+
+newTalent {
+	name = 'Shield Stomper',
+	type = {'elemental/cliffside', 2,},
+	require = make_require(2),
+	points = 5,
+	essence = 10,
+	cooldown = 14,
+	range = 1,
+	requires_target = true,
+	tactical = {ATTACK = 2,},
+	target = function(self, t)
+		return {type = 'hit', range = util.getval(t.range, self, t),}
+	end,
+	tactical = { ATTACK = { PHYSICAL = 1 } },
+	damage = function(self, t) return self:combatTalentScale(t, 1, 1.5) end,
+	constrict = function(self, t) return math.floor(self:combatTalentScale(t, 2, 4)) end,
+	on_pre_use = function(self, t, silent)
+		if not self:hasShield() then
+			if not silent then
+				game.logPlayer(self, 'You must be wielding a shield to use this talent.')
+			end
+			return false
+		end
+		return true
+	end,
+	action = function(self, t)
+		local tg = util.getval(t.target, self, t)
+		local x, y, actor = self:getTarget(tg)
+		if not x or not y or not actor then return end
+		if core.fov.distance(self.x, self.y, x, y) > tg.range then return end
+
+		local combat = self:hasShield().special_combat
+		local damage = util.getval(t.damage, self, t) * combat.block
+		local speed, hit = self:attackTargetWith(actor, combat, nil, nil, damage)
+
+		if hit and self.turn_procs.counterstrike_activated and actor:canBe('pin') then
+			actor:setEffect('EFF_CONSTRICTED', util.getval(t.constrict, self, t), {
+												src = self,
+												apply_power = self:combatPhysicalpower(),})
+		end
+		return true
+	end,
+	info = function(self, t)
+		return ([[Buries the target enemy under the sheer power of your shield, dealing %d%% of the shield's block value as physical damage. If this is a counterstrike, the target is constricted for %d turns as well.]])
+			:format(util.getval(t.damage, self, t) * 100,
+							util.getval(t.constrict, self, t))
 	end,}

@@ -253,7 +253,6 @@ newTalent {
 	no_npc_use = true,
 	iconOverlay = function(self, t, p)
 		local _, crystal = next(p.crystals)
-		game.log('%s %s', _, crystal)
 		if not crystal then return '' end
 		local fnt = 'buff_font_small'
 		return tostring(math.ceil(crystal.temporary)), fnt

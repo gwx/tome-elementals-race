@@ -100,7 +100,10 @@ hook = function(self, data)
 			local damage = util.getval(pestle.damage, self, pestle)
 			self:attackTargetWith(target, shield.special_combat, damtype, damage)
 		end
-		if counterstrike then self:attr('crushing_blow', -1) end
+		if counterstrike then
+			self:attr('crushing_blow', -1)
+			self.turn_procs.counterstrike_activated = true
+		end
 		self:attr('in_pestle', -1)
 	end
 
@@ -119,9 +122,6 @@ hook = function(self, data)
 			game.logSeen(self, '%s\'s sharkskin fails to disarm %s!', target.name:capitalize(), self.name)
 		end
 	end
-
-	-- Discard any counterstrike being activated.
-	self.turn_procs.counterstrike_activated = nil
 
 	return true
 end
