@@ -82,6 +82,28 @@ hook = function(self, data)
 		end
 	end
 
+	-- Pestle extra hit.
+	if hitted and not target.dead and
+		self:knowTalent('T_PESTLE') and not self:attr('in_pestle')
+	then
+		self:attr('in_pestle', 1)
+		local shield = self:hasShield()
+		local pestle = self:getTalentFromId('T_PESTLE')
+		local chance = util.getval(pestle.chance, self, pestle)
+		local counterstrike = false
+		if self.turn_procs.counterstrike_activated then
+			counterstrike = true
+			chance = 100
+			self:attr('crushing_blow', 1)
+		end
+		if shield and rng.percent(chance) then
+			local damage = util.getval(pestle.damage, self, pestle)
+			self:attackTargetWith(target, shield.special_combat, damtype, damage)
+		end
+		if counterstrike then self:attr('crushing_blow', -1) end
+		self:attr('in_pestle', -1)
+	end
+
 	-- Sharkskin add effect.
 	if target and target:knowTalent('T_SHARKSKIN') and hitted then
 		target:callTalent('T_SHARKSKIN', 'on_hit')
@@ -97,6 +119,9 @@ hook = function(self, data)
 			game.logSeen(self, '%s\'s sharkskin fails to disarm %s!', target.name:capitalize(), self.name)
 		end
 	end
+
+	-- Discard any counterstrike being activated.
+	self.turn_procs.counterstrike_activated = nil
 
 	return true
 end

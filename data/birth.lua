@@ -103,7 +103,7 @@ newBirthDescriptor {
 		['elemental/geothermal'] = {true, 0.3,},
 		['elemental/erosion'] = {true, 0.3,},
 		['elemental/eyal-resolver'] = {true, 0.3,},
-		--['technique/combat-training'] = {true, 0.3,},
+		['elemental/cliffside'] = {true, 0.3,},
 		['elemental/tectonic'] = {false, 0.3,},
 		['elemental/earth-metamorphosis'] = {false, 0.3,},},
 	talents = {
@@ -130,4 +130,12 @@ newBirthDescriptor {
 			{type = 'armor', subtype = 'hands', name = 'iron gauntlets',
 			 autoreq = false, ego_chance = -1000},
 			{type = 'ammo', subtype = 'shot', name = 'pouch of iron shots',
-			 autoreq = false, ego_chance = -1000},},},}
+			 autoreq = false, ego_chance = -1000},},
+		resolvers.inventory {
+			id = true, inven = 'QS_MAINHAND',
+			{type = 'weapon', subtype = 'mace', name = 'iron mace',
+			 autoreq = true, ego_chance = -1000,},},
+		resolvers.inventory {
+			id = true, inven = 'QS_OFFHAND',
+			{type = 'armor', subtype = 'shield', name = 'iron shield',
+			 autoreq = true, ego_chance = -1000,},},},}

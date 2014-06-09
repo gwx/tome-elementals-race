@@ -40,7 +40,7 @@ blocking.do_block = function(type, dam, eff, self, src)
 		game:delayedLogMessage(self, src, "block_heal", "#CRIMSON##Source# heals from blocking with %s shield!", string.his_her(self))
 	end
 	if eff.properties.ref and src.life then DamageType.defaultProjector(src, src.x, src.y, type, blocked, tmp, true) end
-	if (self:knowTalent(self.T_RIPOSTE) or amt == 0) and src.life then
+	if (self:knowTalent(self.T_RIPOSTE) or self:attr('block_always_counterstrike') or amt == 0) and src.life then
 		src:setEffect('EFF_COUNTERSTRIKE', (1 + dur_inc) * math.max(1, (src.global_speed or 1)), {
 										power = eff.power,
 										no_ct_effect = true,
@@ -56,4 +56,12 @@ blocking.do_block = function(type, dam, eff, self, src)
 		end
 	end
 	return amt
+end
+
+-- Remember being counterstriked for rest of the attack.
+local counterstrike = TemporaryEffects.tempeffect_def.EFF_COUNTERSTRIKE
+local onStrike = counterstrike.onStrike
+counterstrike.onStrike = function(self, eff, dam, src)
+	if src then src.turn_procs.counterstrike_activated = true end
+	return onStrike(self, eff, dam, src)
 end
