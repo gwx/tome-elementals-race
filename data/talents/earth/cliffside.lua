@@ -18,6 +18,7 @@ local eutil = require 'elementals-race.util'
 local stats = require 'engine.interface.ActorStats'
 local map = require 'engine.Map'
 local ACTOR = map.ACTOR
+local TERRAIN = map.TERRAIN
 
 newTalentType {
 	type = 'elemental/cliffside',
@@ -136,4 +137,87 @@ Increases your maximum jagged body value by %d%% of your shield's blocking value
 Passively increases the duration of the counterstrike debuff on attackers by %d turns.
 Passively increases the number of counterstrikes you can perform on a target while they're vulnerable by %d.]])
 			:format(util.getval(t.jagged, self, t) * 100, debuff, debuff)
+	end,}
+
+newTalent {
+	name = 'Earth Render',
+	type = {'elemental/cliffside', 4,},
+	require = make_require(4),
+	points = 5,
+	essence = 15,
+	cooldown = 12,
+	requires_target = true,
+	tactical = {ATTACK = {PHYSICAL = 2,},},
+	range = function(self, t) return self:combatTalentScale(t, 3, 7) end,
+	target = function(self, t)
+		return {type = 'bolt', range = util.getval(t.range, self, t),}
+	end,
+	damage = function(self, t) return self:combatTalentPhysicalDamage(t, 60, 300) end,
+	bash_damage = function(self, t) return self:combatTalentScale(t, 1.4, 2.2) end,
+	on_pre_use = function(self, t, silent)
+		if not self:hasShield() then
+			if not silent then
+				game.logPlayer(self, 'You must be wielding a shield to use this talent.')
+			end
+			return false
+		end
+		return true
+	end,
+	action = function(self, t)
+		local _
+		local tg = util.getval(t.target, self, t)
+		local x, y = self:getTarget(tg)
+		if not x or not y then return end
+		_, x, y = self:canProject(tg, x, y)
+		local actor = game.level.map(x, y, ACTOR)
+		if not actor then return end
+
+		local damage = util.getval(t.damage, self, t)
+		local counterstrike = actor:hasEffect('EFF_COUNTERSTRIKE')
+		if counterstrike then
+			damage = actor:callEffect('EFF_COUNTERSTRIKE', 'onStrike', damage, self)
+		end
+		DamageType:get('PHYSICAL').projector(self, x, y, 'PHYSICAL', damage)
+		actor:setEffect('EFF_OFFBALANCE', 3, {apply_power = self:combatPhysicalpower(),})
+
+		game.level.map:particleEmitter(actor.x, actor.y, 1, 'ball_earth', {radius = 1,})
+		game:playSoundNear(actor, 'talents/earth')
+
+		if counterstrike then
+			local block = function(_, bx, by)
+				return game.level.map:checkEntity(bx, by, TERRAIN, 'block_move', self)
+			end
+			local line = self:lineFOV(x, y, block)
+
+			-- Find final move location.
+			local tx, ty, lx, ly, is_blocked
+			repeat
+				tx, ty = lx, ly
+				lx, ly, is_blocked = line:step()
+			until is_blocked or not lx or not ly or
+				game.level.map:checkAllEntities(lx, ly, 'block_move', self)
+
+			-- If this isn't adjacent to the target, cancel.
+			local distance = core.fov.distance(tx, ty, x, y)
+			if distance > 1 then return true end
+
+			-- Do the move.
+			local ox, oy = self.x, self.y
+			self:move(tx, ty, true)
+			if config.settings.tome.smooth_move > 0 then
+				self:resetMoveAnim()
+				self:setMoveAnim(ox, oy, 8, 5)
+			end
+
+			-- And the attack
+			local combat = self:hasShield().special_combat
+			local damage = util.getval(t.bash_damage, self, t)
+			self:attackTargetWith(actor, combat, nil, damage)
+		end
+		return true
+	end,
+	info = function(self, t)
+		return ([[Ruptures the very ground under the target, dealing %d physical damage and throwing them off-balance for 3 turns. If this is a counterstrike, you will use the momentum to rush toward the enemy, getting a free shield bash at %d%% shield damage.]])
+			:format(Talents.damDesc(self, 'PHYSICAL', util.getval(t.damage, self, t)),
+							util.getval(t.bash_damage, self, t) * 100)
 	end,}
