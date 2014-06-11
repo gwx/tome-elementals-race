@@ -56,14 +56,14 @@ newTalent {
 		combat = {
 			talented = 'earthen-gun', accuracy_effect = 'mace',
 			sound = 'actions/sling', sound_miss = 'actions/sling',
-			range = 8, physspeed = 0.8,},
-		proj_image = resolvers.image_material('shot_s', 'metal'),},
+			range = 8, physspeed = 0.8,},},
 	default_ammo = entity.new {
 		combat = {
 			shots_left = 0,
 			accuracy_effect = 'mace', damrange = 1.2,
 			dam = 5, apr = 1, physcrit = 3,
 			dammod = {dex = 0.7, cun = 0.5,},},
+		proj_image = 'object/shot_s_iron.png',
 		infinite = true,},
 	passives = function(self, t, p)
 		self:talentTemporaryValue(p, 'shots_sub_mag', 1)
@@ -111,6 +111,7 @@ newTalent {
 		self.archery_weapon_override = {t.shooter, ammo, ignore_disarm = true,}
 		for _, target in pairs(targets) do
 			target.ammo = combat
+			target.acombat = combat -- for weapons pack compatability
 		end
 
 		local disarmed = self:attr('disarmed')
