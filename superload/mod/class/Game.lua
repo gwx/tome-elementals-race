@@ -18,9 +18,8 @@ local _M = loadPrevious(...)
 
 local changeLevelReal = _M.changeLevelReal
 function _M:changeLevelReal(lev, zone, params)
-	-- TODO: See if this still really needs to be done.
 	if self.player:isTalentActive('T_LIVING_MURAL') then
-		self.player:forceUseTalent('T_LIVING_MURAL', {ignore_energy = true,})
+		self.player.living_mural_anchor = nil
 	end
 
 	changeLevelReal(self, lev, zone, params)
