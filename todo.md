@@ -20,4 +20,3 @@ Mechanics
 - [General] Prevent Elementals from learning Combat Training (in ID).
 - [Talent] Architect's Wrath: Should hit things along the movement path of the walls as well.
 - [Talent] Amorphous: Prevent it from teleporting you between two disjoint dust clouds.
-- [Talent] Plate of Genesis: Equip on learn if you don't have anything else equipped.

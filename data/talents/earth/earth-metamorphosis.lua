@@ -318,6 +318,10 @@ newTalent {
 		local armor, _, slot = self:findInAllInventoriesBy('define_as', 'GENESIS_PLATE')
 		if not armor then armor = t.create_armor(self, t) end
 		t.update_armor(self, t, armor, slot == self.INVEN_BODY)
+
+		if not self:getInven('BODY')[1] then
+			self:wearObject(armor)
+		end
 	end,
 	on_unlearn = function(self, t)
 		local armor, index, slot = self:findInAllInventoriesBy('define_as', 'GENESIS_PLATE')
