@@ -251,6 +251,9 @@ newTalent {
 	damage = function(self, t)
 		return self:combatTalentPhysicalDamage(t, 20, 80)
 	end,
+	gloom = function(self, t)
+		return self:combatTalentSpellDamage(t, 0, 25)
+	end,
 	resonate_action = function(terrain)
 		terrain.resonating.duration = terrain.resonating.duration - 1
 		if terrain.resonating.duration <= 0 then
@@ -275,16 +278,19 @@ newTalent {
 			terrain.src.__project_source = {name = ('%s\'s resonance'):format(terrain.src.name:capitalize())}
 			terrain.src:project(
 				tg, terrain.x, terrain.y, damage_type.PHYSICAL, terrain.resonating.damage)
+			terrain.src:project(
+				tg, terrain.x, terrain.y, damage_type.ITEM_MIND_GLOOM, terrain.resonating.gloom)
 			terrain.src.__project_source = nil
 		end
 	end,
 	info = function(self, t)
 		return ([[All walls manipulated or created by you resonate for %d turns.
 Destroying walls also resonates all walls within radius %d.
-Resonating terrain deals %d physical damage to adjacent enemies each turn. #SLATE#(UNIMPLEMENTED: It also has a chance to afflict them with a variety of negative mental effects.)#LAST#]])
+Resonating terrain deals %d physical damage and has a %d%% chance to cause random insanity to adjacent enemies each turn.]])
 			:format(util.getval(t.duration, self, t),
 							util.getval(t.radius, self, t),
-							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)))
+							Talents.damDesc(self, DamageType.PHYSICAL, util.getval(t.damage, self, t)),
+							util.getval(t.gloom, self, t))
 	end,}
 
 newTalent {

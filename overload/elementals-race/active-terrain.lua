@@ -202,7 +202,8 @@ function _M:resonate()
 		local t = self.src:getTalentFromId('T_RESONATING_STONE')
 		self.resonating = {
 			duration = util.getval(t.duration, self.src, t),
-			damage = util.getval(t.damage, self.src, t),}
+			damage = util.getval(t.damage, self.src, t),
+			gloom = util.getval(t.gloom, self.src, t),}
 		self:addAction(t.resonate_action, 'resonate')
 	end
 end

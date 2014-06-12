@@ -241,7 +241,6 @@ Total jagged body restoration, including that from spent essence, will be %d.
 				block_info(self, t))
 	end,}
 
--- TODO set midpoint to 50%.
 newTalent {
 	name = 'Smoldering Core',
 	type = {'elemental/geothermal', 4,},
@@ -257,8 +256,9 @@ newTalent {
 	-- Recomputed on every incJaggedbody call.
 	passives = function(self, t, p)
 		local cur, max = self:getJaggedbody(), self:getMaxJaggedbody()
-		local conversion = util.getval(t.conversion, self, t) * (1 + cur / max)
-		local penetration = util.getval(t.penetration, self, t) * (2 - cur / max)
+		local pct = cur / max
+		local conversion = util.getval(t.conversion, self, t) * util.bound(1 + pct * 2, 1, 2)
+		local penetration = util.getval(t.penetration, self, t) * util.bound(1 + (1 - pct) * 2, 1, 2)
 		self:talentTemporaryValue(p, 'resists_pen', {[DamageType.FIRE] = penetration,})
 		local converts = {
 			[DamageType.COLD] = {[DamageType.FIRE] = conversion,},
@@ -273,8 +273,8 @@ newTalent {
 		local penetration = util.getval(t.penetration, self, t)
 		return ([[A smoldering core houses within your chest and woe betides those who chip away to expose it.
 These effects vary with your present level of jagged body shield:
-Converts from %d%% at 0%% shield to %d%% at 100%% shield of all cold, acid, or lightning damage received into fire damage.
-Increases fire resist penetration by %d%% at 100%% shield to %d%% at 0%% shield.
+Converts from %d%% at 0%% shield to %d%% at 50%% or more shield of all cold, acid, or lightning damage received into fire damage.
+Increases fire resist penetration by %d%% at 100%% shield to %d%% at 50%% or less shield.
 Both effects scale with magic.
 
 %s]])

@@ -504,8 +504,8 @@ end
 
 -- Afterecho
 local onWear = _M.onWear
-function _M:onWear(o, bypass_set)
-	onWear(self, o, bypass_set)
+function _M:onWear(o, inven_id, bypass_set)
+	onWear(self, o, inven_id, bypass_set)
 	if o.slot == 'MAINHAND' or o.slot == 'OFFHAND' or
 		o.offslot == 'MAINHAND' or o.offslot == 'OFFHAND'
 	then
@@ -519,8 +519,8 @@ function _M:onWear(o, bypass_set)
 end
 
 local onTakeoff = _M.onTakeoff
-function _M:onTakeoff(o, bypass_set)
-	onTakeoff(self, o, bypass_set)
+function _M:onTakeoff(o, inven_id, bypass_set)
+	onTakeoff(self, o, inven_id, bypass_set)
 	if o.slot == 'MAINHAND' or o.slot == 'OFFHAND' or
 		o.offslot == 'MAINHAND' or o.offslot == 'OFFHAND'
 	then
