@@ -227,6 +227,14 @@ function _M:move(x, y, force)
 
 	local moved = self.x ~= sx or self.y ~= sy
 
+	-- Firedancer
+	if moved and self:attr('heat_step_gain') then
+		local threshold = self.heat_step_threshold or 20
+		if self:getHeat() < threshold then
+			self:incHeat(self.heat_step_gain)
+		end
+	end
+
 	-- Living Mural
 	if self:isTalentActive('T_LIVING_MURAL') and moved then
 		local deactivate = false

@@ -152,7 +152,8 @@ newBirthDescriptor {
 		['elemental/magma'] = {false, 0.3,},
 		['elemental/fire-metamorphosis'] = {false, 0.3,},},
 	talents = {
-		[ActorTalents.T_WRATHFUL_STRIKE] = 1,},
+		[ActorTalents.T_WRATHFUL_STRIKE] = 1,
+		[ActorTalents.T_FIREDANCER] = 1,},
 	experience = 1.4,
 	copy = {
 		moddable_tile = "human_#sex#",

@@ -109,8 +109,9 @@ hook = function(self, data)
 		self:recomputePassives('T_YGGDRASIL')
 	end
 
-	-- Update Blazes.
+	-- Update Fire talents.
 	self:recomputeSustain('T_BLAZES')
+	self:recomputePassives('T_FIREDANCER')
 
 	-- Cooldown Spark of Defiance
 	if self:knowTalent('T_SPARK_OF_DEFIANCE') then

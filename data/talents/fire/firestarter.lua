@@ -17,10 +17,12 @@
 local eutil = require 'elementals-race.util'
 local ACTOR = require('engine.Map').ACTOR
 local TERRAIN = require('engine.Map').TERRAIN
+local stats = require 'engine.interface.ActorStats'
 
 newTalentType {
 	type = 'elemental/firestarter',
 	name = 'Firestarter',
+	generic = true,
 	description = 'Fan the Flames',
 	allow_random = true,}
 
@@ -31,9 +33,42 @@ local make_require = function(tier)
 end
 
 newTalent {
-	name = 'Blazing Rush',
+	name = 'Firedancer',
 	type = {'elemental/firestarter', 1,},
 	require = make_require(1),
+	points = 5,
+	mode = 'passive',
+	speed = function(self, t) return self:elementalScale(t, 'dex', 0.03, 0.2) end,
+	accuracy = function(self, t) return self:elementalScale(t, 'dex', 10, 40) end,
+	crit = function(self, t) return self:elementalScale(t, 'dex', 2, 10) end,
+	heat_gain = function(self, t) return math.floor(self:combatTalentScale(t, 2, 6)) end,
+	heat_threshold = 50,
+	passives = function(self, t, p)
+		self:talentTemporaryValue(p, 'global_speed_add', self:heatScale(util.getval(t.speed, self, t)))
+		self:talentTemporaryValue(p, 'combat_atk', self:heatScale(util.getval(t.accuracy, self, t)))
+		self:talentTemporaryValue(p, 'combat_physcrit', self:heatScale(util.getval(t.crit, self, t)))
+		self:talentTemporaryValue(p, 'heat_step_threshold', util.getval(t.heat_threshold, self, t))
+		self:talentTemporaryValue(p, 'heat_step_gain', util.getval(t.heat_gain, self, t))
+	end,
+	recompute_passives = {stats = {stats.STAT_DEX,},},
+	info = function(self, t)
+		local speed = util.getval(t.speed, self, t) * 100
+		local accuracy = util.getval(t.accuracy, self, t)
+		local crit = util.getval(t.crit, self, t)
+		return ([[Increases your global speed by %d%% <%d%%>, your accuracy by %d <%d> and physical crit chance by %d%% <%d%%>. These scale with dexterity.
+You recover %d heat with every tile you moved, provided you are under %d heat.
+#GREY#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
+			:format(self:heatScale(speed, 100), self:heatScale(speed),
+							self:heatScale(accuracy, 100), self:heatScale(accuracy),
+							self:heatScale(crit, 100), self:heatScale(crit),
+							util.getval(t.heat_gain, self, t),
+							util.getval(t.heat_threshold, self, t))
+	end,}
+
+newTalent {
+	name = 'Blazing Rush',
+	type = {'elemental/firestarter', 2,},
+	require = make_require(2),
 	points = 5,
 	cooldown = 16,
 	tactical = {ESCAPE = 2,},
