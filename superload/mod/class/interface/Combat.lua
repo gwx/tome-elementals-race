@@ -127,4 +127,12 @@ function _M:elementalScale(t, stat, min, max)
 	return min + self:combatTalentScale(t, 0, max - min) * (0.5 + self:getStat(stat, 0.5, true))
 end
 
+-- Scaling function used in elemental talents.
+function _M:elementalScalePower(t, power, min, max)
+	if power == 'physical' then power = self:combatPhysicalpower() end
+	if power == 'spell' then power = self:combatSpellpower() end
+	if power == 'mental' then power = self:combatMindpower() end
+	return min + self:combatTalentScale(t, 0, max - min) * (0.5 + power * 0.005)
+end
+
 return _M

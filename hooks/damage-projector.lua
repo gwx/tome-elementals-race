@@ -16,6 +16,8 @@
 
 local eutil = require 'elementals-race.util'
 local damage_type = require 'engine.DamageType'
+local map = require 'engine.Map'
+local ACTOR = map.ACTOR
 local hook
 
 hook = function(self, data)
@@ -25,6 +27,7 @@ hook = function(self, data)
 	local dam = data.dam
 	local tmp = data.tmp
 	local no_martyr = data.no_martyr
+	local target = game.level.map(x, y, ACTOR)
 	local stopped
 
 	local convert_received = eutil.get(self, 'convert_received', type)
@@ -43,6 +46,27 @@ hook = function(self, data)
 		convert_received.__disabled = nil
 		-- Reduce total damage.
 		dam = dam * math.max(0, 100 - total) * 0.01
+	end
+
+	local resist_heat_conversion = eutil.get(self, 'resist_heat_conversions', type)
+	if resist_heat_conversion then
+		local resisted
+		-- Find amount resisted.
+		local pen = 0
+		if src.resists_pen then pen = (src.resists_pen.all or 0) + (src.resists_pen[type] or 0) end
+		local dominated = target:hasEffect(target.EFF_DOMINATED)
+		if dominated and dominated.src == src then pen = pen + (dominated.resistPenetration or 0) end
+		if target:attr("sleep") and src.attr and src:attr("night_terror") then pen = pen + src:attr("night_terror") end
+		local res = target:combatGetResist(type)
+		pen = util.bound(pen, 0, 100)
+		if res > 0 then	res = res * (100 - pen) / 100 end
+		print("[PROJECTOR] res", res, (100 - res) / 100, " on dam", dam)
+		if res >= 100 then resisted = dam
+		elseif res <= 0 then resisted = 0
+		else resisted = dam * res * 0.01
+		end
+		-- Add heat.
+		target:incHeat(resisted * resist_heat_conversion * 0.01)
 	end
 
 	data.dam = dam

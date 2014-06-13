@@ -23,7 +23,7 @@ for folder, files in pairs {
 	earth = {'misc', 'mountain', 'avalanche', 'symbiosis', 'geokinesis',
 					 'geothermal', 'eyal-resolver', 'erosion',
 					 'earth-metamorphosis', 'tectonic', 'cliffside',},
-	fire = {'misc', 'brand',},}
+	fire = {'misc', 'brand', 'heat',},}
 do
 	for _, file in pairs(files) do
 		load('/data-elementals-race/talents/'..folder..'/'..file..'.lua')
