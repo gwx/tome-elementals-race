@@ -46,7 +46,7 @@ newTalent {
 	tactical = {ATTACK = 2,},
 	autolearn_talent = 'T_RELOAD',
 	target = function(self, t)
-		return {type = 'beam', on_move = t.on_move, pierce = t.pierce(self, t),
+		return {type = 'hit', on_move = t.on_move, pierce = t.pierce(self, t),
 						range = util.getval(t.range, self, t),}
 	end,
 	damage = function(self, t) return self:combatTalentSpellDamage(t, 50, 200) end,
