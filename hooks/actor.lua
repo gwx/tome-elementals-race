@@ -108,6 +108,9 @@ hook = function(self, data)
 	if self:knowTalent('T_YGGDRASIL') then
 		self:recomputePassives('T_YGGDRASIL')
 	end
+
+	-- Update Blazes.
+	self:recomputeSustain('T_BLAZES')
 end
 class:bindHook('Actor:actBase:Effects', hook)
 

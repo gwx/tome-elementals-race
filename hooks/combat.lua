@@ -123,6 +123,14 @@ hook = function(self, data)
 		end
 	end
 
+	-- Melee Project Percent
+	if hitted and not target.dead and self.melee_project_percent then
+		for typ, percent in pairs(self.melee_project_percent) do
+			damage_type:get(typ).projector(
+				self, target.x, target.y, 'FIRE', dam * 0.01 * percent)
+		end
+	end
+
 	return true
 end
 class:bindHook('Combat:attackTargetWith', hook)

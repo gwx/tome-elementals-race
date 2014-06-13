@@ -51,16 +51,21 @@ function _M:calculateResources()
 
 	-- Update heat.
 	if self:knowTalent('T_HEAT_POOL') then
+		local pool = self:getTalentFromId('T_HEAT_POOL')
+		local hit = self.hit_heat_regen or 0
+		local base = self.base_heat_regen or 0
+		local min = (self.min_heat_regen or 0) + util.getval(pool.regen_min, self, pool)
 		if self.turn_procs.did_direct_damage then
-			self.heat_regen = 0
+			self.heat_regen = hit
 		else
-			local pool = self:getTalentFromId('T_HEAT_POOL')
-			local min = util.getval(pool.regen_min, self, pool)
+			if self.heat_regen == hit then self.heat_regen = base end
 			local mod = util.getval(pool.regen_mod, self, pool)
 			self.heat_regen = math.max(min, self.heat_regen + mod)
 		end
 	end
 end
+
+function _M:resetHeat() self.heat_regen = self.base_heat_regen or 0 end
 
 local regenResources = _M.regenResources
 function _M:regenResources()
@@ -102,6 +107,20 @@ function _M:recomputePassives(talent)
 		else
 			self.talents_learn_vals[t.id] = nil
 		end
+	end
+end
+
+-- Recompute an active sustain.
+function _M:recomputeSustain(talent)
+	if self:isTalentActive(talent) then
+		local p = self.sustain_talents[talent]
+		if p and type(p) == 'table' and p.__tmpvals then
+			for i = 1, #p.__tmpvals do
+				self:removeTemporaryValue(p.__tmpvals[i][1], p.__tmpvals[i][2])
+			end
+		end
+		local t = self:getTalentFromId(talent)
+		self.sustain_talents[talent] = t.activate(self, t)
 	end
 end
 

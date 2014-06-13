@@ -166,9 +166,9 @@ newBirthDescriptor {
 			{type = 'weapon', subtype = 'greatsword', name = 'iron greatsword',
 			 autoreq = true, ego_chance = -1000},
  			{type = 'armor', subtype = 'light', name = 'rough leather armour',
-			 autoreq = false, ego_chance = -1000},
+			 autoreq = true, ego_chance = -1000},
 			{type = 'armor', subtype = 'hands', name = 'rough leather gloves',
-			 autoreq = false, ego_chance = -1000},},},}
+			 autoreq = true, ego_chance = -1000},},},}
 
 newBirthDescriptor {
 	type = 'subrace',

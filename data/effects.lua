@@ -14,6 +14,6 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-for _, name in pairs {'earth', 'misc'} do
+for _, name in pairs {'earth', 'fire', 'misc'} do
 	load('/data-elementals-race/effects/'..name..'.lua')
 end

@@ -39,7 +39,7 @@ newTalent {
 	range = 1,
 	no_energy = 'fake',
 	damage = function(self, t)
-		return self:elementalScale(t, 'str', 1.1, 2)
+		return self:elementalScale(t, 'str', 1, 1.7)
 	end,
 	fire = function(self, t)
 		return self:combatTalentScale(t, 50, 80)
@@ -87,10 +87,115 @@ newTalent {
 		local fire = util.getval(t.fire, self, t)
 		return ([[Strike the target enemy for %d%% <%d%%> weapon damage, %d%% <%d%%> of which is converted to fire damage. If this hits, gain %d heat.
 Damage increases with strength and heat.
-Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
+#GREY#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
 			:format(self:heatScale(damage - 100, 100) + 100,
 							self:heatScale(damage - 100) + 100,
 							fire,
 							util.bound(self:getHeat() * 0.01 * fire, 0, 100),
 							util.getval(t.heat_gain, self, t))
+	end,}
+
+newTalent {
+	name = 'Blazes',
+	type = {'elemental/brand', 2,},
+	require = make_require(2),
+	points = 5,
+	mode = 'sustained',
+	base_heat_regen = -5,
+	min_heat_regen = -5,
+	hit_heat_regen = 5,
+	cooldown = 26,
+	power = function(self, t) return self:elementalScale(t, 'str', 8, 18) end,
+	fire = function(self, t) return self:elementalScale(t, 'str', 16, 48) end,
+	activate = function(self, t)
+		local p = {}
+		self:talentTemporaryValue(p, 'combat_dam', util.getval(t.power, self, t))
+		self:talentTemporaryValue(p, 'melee_project_percent', {
+																FIRE = self:heatScale(util.getval(t.fire, self, t))})
+		self:talentTemporaryValue(p, 'base_heat_regen', util.getval(t.base_heat_regen, self, t))
+		self:talentTemporaryValue(p, 'min_heat_regen', util.getval(t.min_heat_regen, self, t))
+		self:talentTemporaryValue(p, 'hit_heat_regen', util.getval(t.hit_heat_regen, self, t))
+		return p
+	end,
+	deactivate = function(self, t) return true end,
+	info = function(self, t)
+		local fire = util.getval(t.fire, self, t)
+		return ([[Increases your physical power by %d and adds an additional %d%% <%d%%> fire damage to your weapon attacks.
+This costs %d heat per turn, but you will gain a net %d heat on any turn on which you deal damage.
+Scales with Strength.
+#GREY#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
+			:format(util.getval(t.power, self, t),
+							self:heatScale(fire, 100),
+							self:heatScale(fire),
+							-util.getval(t.base_heat_regen, self, t),
+							util.getval(t.hit_heat_regen, self, t))
+	end,}
+
+newTalent {
+	name = 'Relentless Fires',
+	type = {'elemental/brand', 3,},
+	require = make_require(3),
+	points = 5,
+	cooldown = 9,
+	tactical = {ATTACK = 3,},
+	range = 1,
+	hits = 5,
+	damage = function(self, t) return self:elementalScale(t, 'str', 0.2, 0.4) end,
+	heat_gain = 4,
+	action = function(self, t)
+		local tg = {type = 'ball', range = 0, radius = util.getval(t.range, self, t), selffire = false,}
+		local actors = {}
+		local is_hostile = function(target) return self:reactionToward(target) < 0 end
+		self:project(tg, self.x, self.y, eutil.actor_grabber(actors, is_hostile))
+
+		if #actors == 0 then return end
+
+		local damage = self:heatScale(util.getval(t.damage, self, t) - 0.1) + 0.1
+		local heat_gain = util.getval(t.heat_gain, self, t)
+		for i = 1, util.getval(t.hits, self, t) do
+			local actor = rng.table(actors)
+			if self:attackTarget(actor, nil, damage, true) then
+				self:incHeat(heat_gain)
+			end
+			if actor.dead then table.removeFromList(actors, actor) end
+			if #actors == 0 then break end
+		end
+
+		return true
+	end,
+	info = function(self, t)
+		local damage = util.getval(t.damage, self, t) * 100
+		return ([[Randomly strikes nearby enemies %d times for %d%% <%d%%> weapon damage, gaining %d heat for every hit.
+Scales with strength.
+#GREY#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
+			:format(util.getval(t.hits, self, t),
+							self:heatScale(damage - 10, 100) + 10,
+							self:heatScale(damage - 10) + 10,
+							util.getval(t.heat_gain, self, t))
+	end,}
+
+newTalent {
+	name = 'Eruption',
+	type = {'elemental/brand', 4,},
+	require = make_require(4),
+	points = 5,
+	cooldown = 36,
+	tactical = {ATTACKAREA = 3,},
+	range = 1,
+	fire = function(self, t) return self:elementalScale(t, 'str', 10, 17) end,
+	duration = function(self, t) return math.floor(self:combatTalentScale(t, 2, 5)) end,
+	heat_gain = 100,
+	action = function(self, t)
+		self:resetHeat()
+		self:incHeat(util.getval(t.heat_gain, self, t))
+		self:setEffect('EFF_ERUPTION', util.getval(t.duration, self, t), {
+										 fire = util.getval(t.fire, self, t),})
+		game:playSoundNear(self, 'talents/fire')
+		return true
+	end,
+	info = function(self, t)
+		return ([[Instantly heats up, increasing all fire damage done by %d%% for %d turns.
+Damage scales with strength.]])
+			:format(util.getval(t.fire, self, t),
+							util.getval(t.duration, self, t))
 	end,}
