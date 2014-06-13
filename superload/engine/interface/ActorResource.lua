@@ -20,6 +20,6 @@ _M:defineResource('Jagged Body', 'jaggedbody', 'T_JAGGED_BODY', 'jaggedbody_rege
 
 _M:defineResource('Essence', 'essence', 'T_ESSENCE_POOL', 'essence_regen', 'Essence is your ability to manipulate the earth. It regenerates at the same rate as your life and your jagged body shield is increased by 33% of all essence spent.')
 
-_M:defineResource('Heat', 'heat', 'T_HEAT_POOL', 'heat_regen', 'Heat is your ability to manipulate flames. It degenerates by an increasing amount every turn not spent attacking.')
+_M:defineResource('Heat', 'heat', 'T_HEAT_POOL', 'heat_regen', 'Heat is your ability to manipulate flames. It degenerates by an increasing amount every turn you do not deal direct damage.')
 
 return _M

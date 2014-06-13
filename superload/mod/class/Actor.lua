@@ -20,6 +20,7 @@ local target = require 'engine.Target'
 local map = require 'engine.Map'
 local damage_type = require 'engine.DamageType'
 local grid = require 'mod.class.Grid'
+local effects = require 'engine.interface.ActorTemporaryEffects'
 
 -- Learn Resource Pools
 local learnPool = _M.learnPool
@@ -45,6 +46,18 @@ function _M:calculateResources()
 			self.essence_regen =
 				(self.max_essence * 0.01 + self.life_regen) *
 				util.bound((self.healing_factor or 1), 0, 2.5)
+		end
+	end
+
+	-- Update heat.
+	if self:knowTalent('T_HEAT_POOL') then
+		if self.turn_procs.did_direct_damage then
+			self.heat_regen = 0
+		else
+			local pool = self:getTalentFromId('T_HEAT_POOL')
+			local min = util.getval(pool.regen_min, self, pool)
+			local mod = util.getval(pool.regen_mod, self, pool)
+			self.heat_regen = math.max(min, self.heat_regen + mod)
 		end
 	end
 end
@@ -792,6 +805,17 @@ function _M:resetToFull()
 	self.essence = self.max_essence
 	self.jaggedbody = self.max_jaggedbody
 	resetToFull(self)
+end
+
+-- Heat counter.
+local onTakeHit = _M.onTakeHit
+function _M:onTakeHit(value, src, death_note)
+	if eutil.get(src, 'knowTalent') and src:knowTalent('T_HEAT_POOL') and
+		not effects.in_timed_effects
+	then
+		src.turn_procs.did_direct_damage = true
+	end
+	return onTakeHit(self, value, src, death_note)
 end
 
 return _M

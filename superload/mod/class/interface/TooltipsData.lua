@@ -22,6 +22,6 @@ _M.TOOLTIP_ESSENCE = [[#GOLD#Essence#LAST#
 This is your ability to manipulate earth. It regenerates by 1% times your healing factor per turn, plus any life regeneration you have. Your Jagged Body shield is increased by 33% of all essence spent.]]
 
 _M.TOOLTIP_HEAT = [[#GOLD#Heat#LAST#
-This is your ability to manipulate flames. It increasingly degenerates by 5 for each turn you do not spend attacking.]]
+This is your ability to manipulate flames. It increasingly degenerates by 5 for each turn you do not directly deal damage.]]
 
 return _M

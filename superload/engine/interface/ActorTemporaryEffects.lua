@@ -14,12 +14,14 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-newTalent {
-	name = 'Heat Pool',
-	type = {'base/class', 1,},
-	info = 'Allows you to have a heat pool. Essence is used to manipulate flame.',
-	mode = 'passive',
-	hide = 'always',
-	no_unlearn_last = true,
-	regen_min = -25,
-	regen_mod = -5,}
+local _M = loadPrevious(...)
+
+-- Set a flag so we know if we're currently doing timed effects.
+local timedEffects = _M.timedEffects
+function _M:timedEffects(filter)
+	self.in_timed_effects = true
+	timedEffects(self, filter)
+	self.in_timed_effects = nil
+end
+
+return _M
