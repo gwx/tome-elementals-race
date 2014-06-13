@@ -33,6 +33,8 @@ function _M.tile_free(x, y)
 	return true
 end
 
+function _M:altered() end
+
 -- Attempt to create terrain, checking for existing terrain that would
 -- cause it to fail. Returns the terrain if succesful, nil if not.
 function _M.create(t)
