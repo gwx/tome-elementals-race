@@ -25,20 +25,15 @@ end
 newBirthDescriptor {
 	type = 'race',
 	name = 'Elemental',
-	desc = {'Sentient beings created as part of nature\'s reaction to its gradual corruption by the spellblaze.'},
+	desc = {'Sentient beings created as part of nature\'s reaction to its gradual corruption by the spellblaze.',
+					'Elementals are immune to disease and poison but cannot use runes.',},
 	descriptor_choices = {
 		subrace = {
 			__ALL__ = 'disallow',
-			Elemental = 'allow',},
+			Jadir = 'allow',},
 		class = {
 			__ALL__ = 'disallow',
-			Elemental = 'allow',},},}
-
-newBirthDescriptor {
-	type = 'subrace',
-	name = 'Elemental',
-	desc = {'Sentient beings created as part of nature\'s reaction to its gradual corruption by the spellblaze.',
-					'Elementals are immune to disease and poison but cannot use runes.',},
+			None = 'allow',},},
 	random_escort_possibilities = {
 		{'tier1.1', 1, 2}, {'tier1.2', 1, 2}, {'daikara', 1, 2},
 		{'old-forest', 1, 4}, {'dreadfell', 1, 8}, {'reknor', 1, 2},},
@@ -66,19 +61,7 @@ newBirthDescriptor {
 		poison_immune = 1,},}
 
 newBirthDescriptor {
-	type = 'class',
-	name = 'Elemental',
-	desc = {'One of the various elementals.'},
-	descriptor_choices = {
-		subclass = {
-			__ALL__ = 'disallow',
-			Jadir = 'allow',
-			Asha = 'allow',
-			Silyhe = 'allow',
-			Naiar = 'allow',},},}
-
-newBirthDescriptor {
-	type = 'subclass',
+	type = 'subrace',
 	name = 'Jadir',
 	desc = {
 		'The Earth Elemental.',
