@@ -107,7 +107,8 @@ newBirthDescriptor {
 		['elemental/tectonic'] = {false, 0.3,},
 		['elemental/earth-metamorphosis'] = {false, 0.3,},},
 	talents = {
-		[ActorTalents.T_HEAVY_ARMS] = 1,
+--		[ActorTalents.T_HEAVY_ARMS] = 1,
+		[ActorTalents.T_PINPOINT_TOSS] = 1,
 		[ActorTalents.T_EARTHEN_GUN] = 1,
 		[ActorTalents.T_JAGGED_BODY] = 1,},
 	experience = 1.4,

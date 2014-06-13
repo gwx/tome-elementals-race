@@ -46,30 +46,9 @@ local grounded_pre_use = function(self, t, silent)
 end
 
 newTalent {
-	name = 'Heavy Arms',
+	name = 'Pinpoint Toss',
 	type = {'elemental/avalanche', 1,},
 	require = make_require(1),
-	points = 5,
-	mode = 'passive',
-	getWeaponPower = function(self, t) return self:getTalentLevel(t) * 0.7 end,
-	getDamage = function(self, t) return t.getWeaponPower(self, t) * 10 end,
-	getPercentInc = function(self, t)
-		return math.sqrt(t.getWeaponPower(self, t) / 5) / 2
-	end,
-	daze = function(self, t) return 10 + self:getStr(15, true) end,
-	info = function(self, t)
-		return ([[The Jadir's body gives it a huge advantage when fighting in close quarters.
-Increases physical power by %d and damage done by %d%% with swords, axes, maces, staves, and unarmed attacks.
-Also gives each blow a %d%% chance (scaling with Strength) to daze the enemy for 1 turn.]])
-			:format(t.getDamage(self, t),
-							t.getPercentInc(self, t) * 100,
-							t.daze(self, t))
-	end,}
-
-newTalent {
-	name = 'Pinpoint Toss',
-	type = {'elemental/avalanche', 2,},
-	require = make_require(2),
 	points = 5,
 	essence = 15,
 	cooldown = 9,
@@ -133,6 +112,27 @@ Damage, range, accuracy, and duration scale with Strength.]])
 			:format( Talents.damDesc(self, DamageType.PHYSICAL, t.damage(self, t)),
 							t.duration(self, t),
 							t.accuracy(self, t))
+	end,}
+
+newTalent {
+	name = 'Heavy Arms',
+	type = {'elemental/avalanche', 2,},
+	require = make_require(2),
+	points = 5,
+	mode = 'passive',
+	getWeaponPower = function(self, t) return self:getTalentLevel(t) * 0.7 end,
+	getDamage = function(self, t) return t.getWeaponPower(self, t) * 10 end,
+	getPercentInc = function(self, t)
+		return math.sqrt(t.getWeaponPower(self, t) / 5) / 2
+	end,
+	daze = function(self, t) return 10 + self:getStr(15, true) end,
+	info = function(self, t)
+		return ([[The Jadir's body gives it a huge advantage when fighting in close quarters.
+Increases physical power by %d and damage done by %d%% with swords, axes, maces, staves, and unarmed attacks.
+Also gives each blow a %d%% chance (scaling with Strength) to daze the enemy for 1 turn.]])
+			:format(t.getDamage(self, t),
+							t.getPercentInc(self, t) * 100,
+							t.daze(self, t))
 	end,}
 
 newTalent {
