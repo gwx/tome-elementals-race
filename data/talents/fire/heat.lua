@@ -22,6 +22,7 @@ newTalentType {
 	type = 'elemental/heat',
 	name = 'Heat',
 	description = 'Don\'t Touch',
+	generic = true,
 	allow_random = true,}
 
 local make_require = function(tier)
