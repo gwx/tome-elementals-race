@@ -94,7 +94,7 @@ newTalent {
 		end
 		self:project(tg, x, y, projector)
 
-		game.level.map:particleEmitter(x, y, tg.radius, "ball_earth", {radius = tg.radius,})
+		game.level.map:particleEmitter(x, y, tg.radius, 'ball_earth', {radius = tg.radius,})
 		game:playSoundNear(self, 'talents/fire')
 		return true
 	end,

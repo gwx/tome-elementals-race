@@ -38,3 +38,23 @@ newEffect {
 	activate = function(self, eff)
 		self:effectTemporaryValue(eff, 'inc_damage', {FIRE = eff.fire,})
 	end,}
+
+newEffect {
+	name = 'CONSUMED_FLAME', image = 'talents/consume.png',
+	desc = 'Consumed Flame',
+	long_desc = function(self, eff)
+		return ([[Target gains %d heat every turn.]]):format(eff.heat)
+	end,
+	type = 'physical',
+	subtype = {nature = true, fire = true,},
+	status = 'beneficial',
+	parameters = {heat = 10,},
+	on_gain = function(self, eff)
+		return '#Target# consumes its own heat!', '+Consumed Flame'
+	end,
+	on_lose = function(self, eff)
+		return '#Target#\'s consumed heat runs out!', '-Consumed Flame'
+	end,
+	on_timeout = function(self, eff)
+		self:incHeat(eff.heat)
+	end,}

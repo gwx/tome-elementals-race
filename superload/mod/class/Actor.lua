@@ -544,6 +544,17 @@ function _M:incJaggedbody(v)
 	self:recomputePassives('T_SMOLDERING_CORE')
 end
 
+-- Heat
+local incHeat = _M.incHeat
+function _M:incHeat(v)
+	local heat = self:getHeat()
+	incHeat(self, v)
+	local overflow = heat + v - self:getHeat()
+	if overflow and overflow > 0 and self:knowTalent('T_HEAT_OVERFLOW') then
+		self.heat_overflow = (self.heat_overflow or 0) + overflow
+	end
+end
+
 -- Afterecho
 local onWear = _M.onWear
 function _M:onWear(o, inven_id, bypass_set)
@@ -616,6 +627,11 @@ function _M:useEnergy(val)
 			self:removeEffect('EFF_BRUTISH_STRIDE', nil, true)
 		end
   end
+
+	-- Heat Overflow
+	if self:attr('heat_overflow') then
+		self:callTalent('T_HEAT_OVERFLOW', 'do_overflow')
+	end
 end
 
 -- Completely override project.

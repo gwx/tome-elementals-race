@@ -92,3 +92,57 @@ Also increases your maximum Heat by %d.
 							util.getval(t.cooldown_heat, self, t),
 							util.getval(t.max_heat, self, t))
 	end,}
+
+newTalent {
+	name = 'Consume',
+	type = {'elemental/heat', 3,},
+	require = make_require(3),
+	points = 5,
+	cooldown = 24,
+	tactical = {HEAL = 3,},
+	range = 0,
+	power = function(self, t) return self:elementalScalePower(t, 'spell', 1, 2.2) end,
+	duration = 4,
+	heat_gain = 0.75,
+	action = function(self, t)
+		local heat = self:getHeat()
+		self:incHeat(-heat)
+		self:heal(self:spellCrit(heat * util.getval(t.power, self, t)), self)
+		local duration = util.getval(t.duration, self, t)
+		self:setEffect('EFF_CONSUMED_FLAME', duration, {
+										 heat = util.getval(t.heat_gain, self, t) * heat / duration,})
+		game:playSoundNear(self, 'talents/fire')
+		return true
+	end,
+	info = function(self, t)
+		return ([[Consume all your heat to heal %d%% as much life.
+Recovers %d%% of consumed heat over %d turns.
+Scales with spellpower.]])
+			:format(util.getval(t.power, self, t) * 100,
+							util.getval(t.heat_gain, self, t) * 100,
+							util.getval(t.duration, self, t))
+	end,}
+
+newTalent {
+	name = 'Heat Overflow',
+	type = {'elemental/heat', 4,},
+	require = make_require(4),
+	points = 5,
+	mode = 'passive',
+	power = function(self, t) return self:elementalScalePower(t, 'spell', 1, 1.7) end,
+	radius = function(self, t) return self:combatTalentScale(t, 1, 4) end,
+	do_overflow = function(self, t)
+		if self:attr('heat_overflow') then
+			local tg = {type = 'ball', range = 0, radius = util.getval(t.radius, self, t),
+									talent = t, selffire = false,}
+			self:project(tg, self.x, self.y, 'FIRE', util.getval(t.power, self, t) * self.heat_overflow)
+			game:playSoundNear(self, 'talents/fire')
+			game.level.map:particleEmitter(self.x, self.y, tg.radius, 'ball_fire', {radius = tg.radius,})
+		end
+		self.heat_overflow = 0
+	end,
+	info = function(self, t)
+		return ([[Your fiery touch knows no bound - should you gain heat in excess of your maximum heat, this unused heat will scorch all enemies in radius %d with %d%% as much fire damage, scaling with spellpower.]])
+			:format(util.getval(t.radius, self, t),
+							util.getval(t.power, self, t) * 100)
+	end,}
