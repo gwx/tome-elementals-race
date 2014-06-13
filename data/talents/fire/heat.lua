@@ -60,3 +60,35 @@ Scales with spellpower.]])
 							util.getval(t.armor, self, t),
 							util.getval(t.hardiness, self, t))
 	end,}
+
+newTalent {
+	name = 'Spark of Defiance',
+	type = {'elemental/heat', 2,},
+	require = make_require(2),
+	points = 5,
+	mode = 'passive',
+	power_base = 1,
+	power_heat = 0.005,
+	reflect = function(self, t) return self:combatTalentScale(t, 0.3, 0.5) end,
+	cooldown = 16,
+	cooldown_heat = 100,
+	max_heat = function(self, t) return math.floor(self:combatTalentScale(t, 10, 30)) end,
+	passives = function(self, t, p)
+		self:talentTemporaryValue(p, 'max_heat', util.getval(t.max_heat, self, t))
+	end,
+	info = function(self, t)
+		local heat = self:getHeat()
+		local power_base = util.getval(t.power_base, self, t)
+		local power_heat = util.getval(t.power_heat, self, t)
+		return ([[You burn brighter every time somebody tries to put you out. Every challenge is answered in overwhelming tones.
+Passing a save will roll %d%% <%d%%> of your associated power against the enemy's save. Successful roll will not only negate the effect, but reflect it at %d%% power. #SLATE#Unimplemented:(Any damage reflected is converted into fire.)#WHITE#
+This effect has a cooldown of %d turns, but cools down twice as fast if your heat is %d or more.
+Also increases your maximum Heat by %d.
+#GREY#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
+			:format((power_base + 100 * power_heat) * 100,
+							(power_base + heat * power_heat) * 100,
+							util.getval(t.reflect, self, t) * 100,
+							util.getval(t.cooldown, self, t),
+							util.getval(t.cooldown_heat, self, t),
+							util.getval(t.max_heat, self, t))
+	end,}

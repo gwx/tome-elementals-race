@@ -111,6 +111,15 @@ hook = function(self, data)
 
 	-- Update Blazes.
 	self:recomputeSustain('T_BLAZES')
+
+	-- Cooldown Spark of Defiance
+	if self:knowTalent('T_SPARK_OF_DEFIANCE') then
+		local t = self:getTalentFromId('T_SPARK_OF_DEFIANCE')
+		if self:getHeat() >= util.getval(t.cooldown_heat, self, t) then
+			self:alterTalentCoolingdown('T_SPARK_OF_DEFIANCE', -1)
+		end
+	end
+
 end
 class:bindHook('Actor:actBase:Effects', hook)
 

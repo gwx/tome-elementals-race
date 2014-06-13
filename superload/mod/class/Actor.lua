@@ -830,11 +830,64 @@ end
 local onTakeHit = _M.onTakeHit
 function _M:onTakeHit(value, src, death_note)
 	if eutil.get(src, 'knowTalent') and src:knowTalent('T_HEAT_POOL') and
-		not effects.in_timed_effects
+		not self.in_timed_effects and not src.in_timed_effects
 	then
 		src.turn_procs.did_direct_damage = true
 	end
 	return onTakeHit(self, value, src, death_note)
+end
+
+-- Effect reflection
+local on_set_temporary_effect = _M.on_set_temporary_effect
+function _M:on_set_temporary_effect(eff_id, e, p)
+	local apply = p.apply_power
+	local dur = p.dur
+	on_set_temporary_effect(self, eff_id, e, p)
+	local saved = apply and not p.apply_power and dur ~= 0 and p.dur == 0
+	local src = p.src or game.current_actor
+
+	if self:knowTalent('T_SPARK_OF_DEFIANCE') and
+		not self:isTalentCoolingDown('T_SPARK_OF_DEFIANCE') and
+		saved and src
+	then
+		local t = self:getTalentFromId('T_SPARK_OF_DEFIANCE')
+		local reflected = table.clone(p, true)
+		reflected.src = self
+
+		-- Find power type.
+		if e.type == 'physical' then reflected.apply_power = self:combatPhysicalpower() end
+		if e.type == 'mental' then reflected.apply_power = self:combatMindpower() end
+		if e.type == 'magical' then reflected.apply_power = self:combatSpellpower() end
+
+		if reflected.apply_power then
+			game.logSeen(self, '#ORANGE#%s defies effect \'%s\' back on %s!', self.name:capitalize(), e.desc, src.name)
+			local apply = util.getval(t.power_base, self, t) + self:getHeat() * util.getval(t.power_heat, self, t)
+			reflected.apply_power = apply * reflected.apply_power
+			local power = util.getval(t.reflect, self, t)
+			for param, _ in pairs(e.parameters) do
+				if type(reflected[param]) == 'number' then
+					reflected[param] = reflected[param] * power
+				end
+			end
+			src:setEffect(eff_id, dur, reflected)
+			self:startTalentCooldown('T_SPARK_OF_DEFIANCE')
+		end
+	end
+end
+
+-- Do things.
+local act = _M.act
+function _M:act()
+	game.current_actor = self
+	return act(self)
+end
+
+-- Set a flag so we know if we're currently doing timed effects.
+local timedEffects = _M.timedEffects
+function _M:timedEffects(filter)
+	self.in_timed_effects = true
+	timedEffects(self, filter)
+	self.in_timed_effects = nil
 end
 
 return _M
