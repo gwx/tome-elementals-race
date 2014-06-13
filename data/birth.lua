@@ -31,7 +31,8 @@ newBirthDescriptor {
 		subrace = {
 			__ALL__ = 'disallow',
 			Jadir = 'allow',
-			Asha = config.settings.cheat and 'allow' or 'disallow',},
+			Asha = config.settings.cheat and 'allow' or 'disallow',
+			['Chaotic Elemental'] = config.settings.cheat and 'allow' or 'disallow',},
 		class = {
 			__ALL__ = 'disallow',
 			None = 'allow',},},
@@ -168,3 +169,76 @@ newBirthDescriptor {
 			 autoreq = false, ego_chance = -1000},
 			{type = 'armor', subtype = 'hands', name = 'rough leather gloves',
 			 autoreq = false, ego_chance = -1000},},},}
+
+newBirthDescriptor {
+	type = 'subrace',
+	name = 'Chaotic Elemental',
+	locked = function() return profile.mod.allow_build.adventurer or 'hide' end,
+	desc = {
+		'Any kind of elemental you want.',
+		'#GOLD#Stat modifiers:',
+		'#LIGHT_BLUE# * +2 Strength, +2 Dexterity, +2 Constitution',
+		'#LIGHT_BLUE# * +2 Magic, +2 Willpower, +2 Cunning',
+		'#GOLD#Life per level:#LIGHT_BLUE# 10',
+		'#GOLD#Experience penalty:#LIGHT_BLUE# 40%',
+		'',
+		'#GREY#',},
+	inc_stats = {str = 2, dex = 2, con = 2, mag = 2, wil = 2, cun = 2,},
+	power_source = {nature = true,},
+	talents_types = function(birth)
+		local tts = {}
+		local race = getBirthDescriptor('race', 'Elemental')
+		for elemental, allow in pairs(race.descriptor_choices.subrace) do
+			if elemental ~= '__ALL__' and elemental ~= 'Chaotic Elemental' then
+				elemental = getBirthDescriptor('subrace', elemental)
+				if elemental.talents_types then
+					local tt = elemental.talents_types
+					if type(tt) == 'function' then tt = tt(birth) end
+					for t, _ in pairs(tt) do
+						tts[t] = {false, 0}
+					end
+				end
+				if elemental.unlockable_talents_types then
+					local tt = elemental.unlockable_talents_types
+					if type(tt) == 'function' then tt = tt(birth) end
+					for t, v in pairs(tt) do
+						if profile.mod.allow_build[v[3]] then
+							tts[t] = {false, 0}
+						end
+					end
+				end
+			end
+		end
+		return tts
+	end,
+	experience = 1.4,
+	copy_add = {
+		unused_generics = 2,
+		unused_talents = 3,
+		unused_talents_types = 7,},
+	copy = {
+		moddable_tile = "human_#sex#",
+		moddable_tile_base = "base_higher_01.png",
+		--moddable_tile_nude = true,
+		subtype = 'chaos',
+		max_life = 100,
+		life_rating = 10,
+		resolvers.inventorybirth{ id=true, transmo=true,
+			{type="weapon", subtype="dagger", name="iron dagger", autoreq=true, ego_chance=-1000},
+			{type="weapon", subtype="dagger", name="iron dagger", autoreq=true, ego_chance=-1000},
+			{type="weapon", subtype="longsword", name="iron longsword", ego_chance=-1000, ego_chance=-1000},
+			{type="weapon", subtype="longsword", name="iron longsword", ego_chance=-1000, ego_chance=-1000},
+			{type="weapon", subtype="staff", name="elm staff", autoreq=true, ego_chance=-1000},
+			{type="weapon", subtype="mindstar", name="mossy mindstar", autoreq=true, ego_chance=-1000},
+			{type="weapon", subtype="mindstar", name="mossy mindstar", autoreq=true, ego_chance=-1000},
+			{type="armor", subtype="hands", name="iron gauntlets", autoreq=true, ego_chance=-1000, ego_chance=-1000},
+			{type="armor", subtype="hands", name="rough leather gloves", ego_chance=-1000, ego_chance=-1000},
+			{type="armor", subtype="light", name="rough leather armour", ego_chance=-1000, ego_chance=-1000},
+			{type="armor", subtype="cloth", name="linen robe", autoreq=true, ego_chance=-1000},
+			{type="scroll", subtype="rune", name="manasurge rune", ego_chance=-1000, ego_chance=-1000},
+			{type="weapon", subtype="longbow", name="elm longbow", autoreq=true, ego_chance=-1000},
+			{type="ammo", subtype="arrow", name="quiver of elm arrows", autoreq=true, ego_chance=-1000},
+			{type="weapon", subtype="sling", name="rough leather sling", autoreq=true, ego_chance=-1000},
+			{type="ammo", subtype="shot", name="pouch of iron shots", autoreq=true, ego_chance=-1000},
+		},
+	},}
