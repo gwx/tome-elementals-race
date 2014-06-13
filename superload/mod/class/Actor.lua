@@ -21,12 +21,16 @@ local map = require 'engine.Map'
 local damage_type = require 'engine.DamageType'
 local grid = require 'mod.class.Grid'
 
--- Learn Essence Pool
+-- Learn Resource Pools
 local learnPool = _M.learnPool
 function _M:learnPool(t)
 	local tt = self:getTalentTypeFrom(t.type[1])
 	if t.essence or t.sustain_essence then
 		self:checkPool(t.id, 'T_ESSENCE_POOL')
+	end
+	tt = self:getTalentTypeFrom(t.type[1])
+	if t.heat or t.sustain_heat then
+		self:checkPool(t.id, 'T_HEAT_POOL')
 	end
 	learnPool(self, t)
 end
@@ -60,6 +64,12 @@ end
 -- Get the actualy max essence, minus sustains.
 function _M:realMaxEssence()
 	return 100 * self:getMaxEssence() / (100 - (self.sustain_essence or 0))
+end
+
+-- Scale a value by your current heat.
+function _M:heatScale(amount, heat)
+	heat = heat or self:getHeat()
+	return amount * util.bound(math.sqrt(heat / 30), 0.5, 2)
 end
 
 -- Recompute the passives on a given talent.

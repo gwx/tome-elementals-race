@@ -135,6 +135,15 @@ function _M.adder(amt)
 	return function(x) return amt + (x or 0) end
 end
 
+-- Various Functions:
+function _M.attr_changer(amt)
+	return function(x)
+		x = (x or 0) + amt
+		if x == 0 then return end
+		return x
+	end
+end
+
 -- Clone table by reference
 function _M.ref_clone(table)
 	local result = {}

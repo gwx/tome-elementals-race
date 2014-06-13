@@ -37,6 +37,8 @@ local shader = require "engine.Shader"
 	local fshat_life = self.fshat_life
 	local fshat_equi_dark = self.fshat_equi_dark
 	local fshat_equi = self.fshat_equi
+	local fshat_mana_dark = self.fshat_mana_dark
+	local fshat_mana = self.fshat_mana
 	local font_sha = self.font_sha
 	local sfont_sha = self.sfont_sha
 
@@ -44,6 +46,8 @@ local shader = require "engine.Shader"
 	local jb_sha = shader.new("resources", {require_shader=4, delay_load=true, color=jb_c, speed=1000, distort={1.5,1.5}})
 	local essence_c = {164/255, 190/255, 77/255}
 	local essence_sha = shader.new("resources", {require_shader=4, delay_load=true, color=essence_c, speed=1000, distort={1.5,1.5}})
+	local heat_c = {255/255, 97/255, 0/255,}
+	local heat_sha = shader.new("resources", {require_shader=4, delay_load=true, color=heat_c, speed=1000, distort={1.5,1.5}})
 
 	-- Jagged Body health bar
 	local jb = player:knowTalent('T_JAGGED_BODY')
@@ -117,6 +121,42 @@ local shader = require "engine.Shader"
 	elseif game.mouse:getZone('res:essence') then
 		game.mouse:unregisterZone('res:essence')
 	end
+
+
+	-- Heat bar
+	local heat = player:knowTalent('T_HEAT_POOL')
+	if heat and not player._hide_resource_heat then
+		sshat[1]:toScreenFull(x-6, y+8, sshat[6], sshat[7], sshat[2], sshat[3], 1, 1, 1, a)
+		bshat[1]:toScreenFull(x, y, bshat[6], bshat[7], bshat[2], bshat[3], 1, 1, 1, a)
+		if heat_sha.shad then heat_sha:setUniform("a", a) heat_sha.shad:use(true) end
+		local p = math.min(1, math.max(0, player.heat / player.max_heat))
+		shat[1]:toScreenPrecise(x+49, y+10, shat[6] * p, shat[7], 0, p * 1/shat[4], 0, 1/shat[5], heat_c[1], heat_c[2], heat_c[3], a)
+		if heat_sha.shad then heat_sha.shad:use(false) end
+
+		local heat_regen = player.heat_regen
+		if not self.res.heat or self.res.heat.vc ~= player.heat or self.res.heat.vm ~= player.max_heat or self.res.heat.vr ~= heat_regen then
+			self.res.heat = {
+				vc = player.heat, vm = player.max_heat, vr = jb_heat,
+				cur = {core.display.drawStringBlendedNewSurface(font_sha, (player.heat < 0) and "???" or ("%d/%d"):format(player.heat, player.max_heat), 255, 255, 255):glTexture()},
+				regen={core.display.drawStringBlendedNewSurface(sfont_sha, ("%+0.2f"):format(heat_regen), 255, 255, 255):glTexture()},
+			}
+		end
+		local dt = self.res.heat.cur
+		dt[1]:toScreenFull(2+x+64, 2+y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 0, 0, 0, 0.7 * a)
+		dt[1]:toScreenFull(x+64, y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 1, 1, 1, a)
+		dt = self.res.heat.regen
+		dt[1]:toScreenFull(2+x+144, 2+y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 0, 0, 0, 0.7 * a)
+		dt[1]:toScreenFull(x+144, y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 1, 1, 1, a)
+
+		local front = fshat_mana_dark
+		if player.heat >= player.max_heat then front = fshat_mana end
+		front[1]:toScreenFull(x, y, front[6], front[7], front[2], front[3], 1, 1, 1, a)
+		self:showResourceTooltip(bx+x*scale, by+y*scale, fshat[6], fshat[7], "res:heat", self.TOOLTIP_HEAT)
+		x, y = self:resourceOrientStep(orient, bx, by, scale, x, y, fshat[6], fshat[7])
+	elseif game.mouse:getZone('res:heat') then
+		game.mouse:unregisterZone('res:heat')
+	end
+
 
 	data.x = x
 	data.y = y

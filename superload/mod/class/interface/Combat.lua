@@ -122,4 +122,9 @@ function _M:attackTargetWith(target, weapon, damtype, mult, force_dam)
 	return unpack(results)
 end
 
+-- Scaling function used in elemental talents.
+function _M:elementalScale(t, stat, min, max)
+	return min + self:combatTalentScale(t, 0, max - min) * (0.5 + self:getStat(stat, 0.5, true))
+end
+
 return _M

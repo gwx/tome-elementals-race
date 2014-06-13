@@ -21,7 +21,7 @@ for _, world in pairs {'Maj\'Eyal', 'Infinite', 'Arena',} do
 	end
 end
 
--- TODO: Prevent from learning combat training.
+-- TODO: Prevent from learning combat training (in ID).
 newBirthDescriptor {
 	type = 'race',
 	name = 'Elemental',
@@ -30,7 +30,8 @@ newBirthDescriptor {
 	descriptor_choices = {
 		subrace = {
 			__ALL__ = 'disallow',
-			Jadir = 'allow',},
+			Jadir = 'allow',
+			Asha = config.settings.cheat and 'allow' or 'disallow',},
 		class = {
 			__ALL__ = 'disallow',
 			None = 'allow',},},
@@ -72,9 +73,9 @@ newBirthDescriptor {
 		'#LIGHT_BLUE# * +4 Magic, +0 Willpower, -2 Cunning',
 		'#GOLD#Life per level:#LIGHT_BLUE# 13',
 		'#GOLD#Experience penalty:#LIGHT_BLUE# 40%',
-		'#WHITE#',
-		'Jadir is, if the element doesn\'t betray it already, the beefier of the four classes. If it hits, it hits hard, if it tanks, it tanks even harder. I wanted this class to have the most "inert" of skillsets, that is skills that don\'t require complex targeting, as it would be more fitting for a class that\'s supposed to rely less on mobility and more on the raw stat bulk - hence the majority of the skills having a focus on point-blank AoE skills, sustains or enhancements.',
 		'',
+		'#GREY#',
+		'Jadir is, if the element doesn\'t betray it already, the beefier of the four classes. If it hits, it hits hard, if it tanks, it tanks even harder. I wanted this class to have the most "inert" of skillsets, that is skills that don\'t require complex targeting, as it would be more fitting for a class that\'s supposed to rely less on mobility and more on the raw stat bulk - hence the majority of the skills having a focus on point-blank AoE skills, sustains or enhancements.',
 		'This does of course not mean that it\'s a class entirely grounded in it\'s ability to manipulate the game elements beyond just punching them. To compensate for the lack of speed it has a variety of skills that affect the environment, in particular walls. It felt very fitting, both for the lore and the general playstyle, an earth elemental controlling natural solid physical obstacles.'},
 	inc_stats = {str = 4, dex = -2, con = 5, mag = 4, cun = -2,},
 	power_source = {nature = true,},
@@ -123,3 +124,47 @@ newBirthDescriptor {
 			id = true, inven = 'QS_OFFHAND',
 			{type = 'armor', subtype = 'shield', name = 'iron shield',
 			 autoreq = true, ego_chance = -1000,},},},}
+
+newBirthDescriptor {
+	type = 'subrace',
+	name = 'Asha',
+	desc = {
+		'The Fire Elemental.',
+		'#GOLD#Stat modifiers:',
+		'#LIGHT_BLUE# * +3 Strength, +5 Dexterity, -2 Constitution',
+		'#LIGHT_BLUE# * +4 Magic, -1 Willpower, +0 Cunning',
+		'#GOLD#Life per level:#LIGHT_BLUE# 10',
+		'#GOLD#Experience penalty:#LIGHT_BLUE# 40%',
+		'',
+		'#GREY#',
+		'Asha is probably my favourite designed class, or at least the most favourite in terms of theoretical gameplay. It\'s fast-paced, full of synergetic chains of skills, but streamlined to the point where there\'s no need for overthinking to play it effectively. It\'s centered on the wedge of offensive play and mobility and the player is rewarded for remaining in fight, for as long as possible.',},
+	inc_stats = {str = 3, dex = 5, con = -2, mag = 4, wil = -1,},
+	power_source = {nature = true,},
+	talents_types = {
+		['elemental/brand'] = {true, 0.3,},
+		['elemental/heat'] = {true, 0.3,},
+		['elemental/firestarter'] = {true, 0.3,},
+		['elemental/pyrokinesis'] = {true, 0.3,},
+		['elemental/power'] = {true, 0.3,},
+		['elemental/chaos'] = {true, 0.3,},
+		['elemental/illusions-of-fire'] = {true, 0.3,},
+		['elemental/magma'] = {false, 0.3,},
+		['elemental/fire-metamorphosis'] = {false, 0.3,},},
+	talents = {
+		[ActorTalents.T_WRATHFUL_STRIKE] = 1,},
+	experience = 1.4,
+	copy = {
+		moddable_tile = "human_#sex#",
+		moddable_tile_base = "base_higher_01.png",
+		--moddable_tile_nude = true,
+		subtype = 'fire',
+		max_life = 100,
+		life_rating = 10,
+		resolvers.equip {
+			id = true,
+			{type = 'weapon', subtype = 'greatsword', name = 'iron greatsword',
+			 autoreq = true, ego_chance = -1000},
+ 			{type = 'armor', subtype = 'light', name = 'rough leather armour',
+			 autoreq = false, ego_chance = -1000},
+			{type = 'armor', subtype = 'hands', name = 'rough leather gloves',
+			 autoreq = false, ego_chance = -1000},},},}
