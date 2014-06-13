@@ -173,7 +173,11 @@ newBirthDescriptor {
 newBirthDescriptor {
 	type = 'subrace',
 	name = 'Chaotic Elemental',
-	locked = function() return profile.mod.allow_build.adventurer or 'hide' end,
+	locked = function()
+		return profile.mod.allow_build.adventurer or
+			config.settings.cheat or
+			'hide'
+	end,
 	desc = {
 		'Any kind of elemental you want.',
 		'#GOLD#Stat modifiers:',
