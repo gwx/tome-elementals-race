@@ -21,3 +21,4 @@ Mechanics
 - [Talent] Architect's Wrath: Should hit things along the movement path of the walls as well.
 - [Talent] Amorphous: Prevent it from teleporting you between two disjoint dust clouds.
 - [Talent] Cry of Eyal: Disable when you run out of max life.
+- [General] Make temporary terrain not teleport drops.
