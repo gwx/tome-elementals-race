@@ -22,3 +22,8 @@ Mechanics
 - [Talent] Amorphous: Prevent it from teleporting you between two disjoint dust clouds.
 - [Talent] Cry of Eyal: Disable when you run out of max life.
 - [General] Make temporary terrain not teleport drops.
+
+Considerations
+==============
+- Jadir still need accuracy, maybe. Put a stacking defense debuff on sandstorm?
+- Should Afterechoes work if you only have a shield equipped?
