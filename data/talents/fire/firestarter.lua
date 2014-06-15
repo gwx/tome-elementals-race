@@ -188,3 +188,42 @@ Duration and critical chance scale with dexterity.]])
 							util.getval(t.heat_gain, self, t),
 							util.getval(t.stealth, self, t) * 100)
 	end,}
+
+--[==[
+newTalent {
+	name = 'Tendrils of Fire',
+	type = {'elemental/firestarter', 4,},
+	require = make_require4),
+	points = 5,
+	cooldown = 26,
+	tactical = {DAMAGE = 2, DEBUFF = 1,},
+	range = 2,
+	duration = function(self, t) return math.floor(self:combatTalentScale(t, 2, 6)) end,
+	damage = function(self, t) return 25 + self:getDex(25, true) end,
+	target = function(self, t)
+		return {type = 'bolt', talent = t, range = util.getval(t.range, self, t),}
+	end,
+	action = function(self, t)
+		local _
+		local tg = util.getval(t.target, self, t)
+		local x, y = self:getTarget(tg)
+		if not x or not y then return end
+		_, x, y = self:canProject(tg, x, y)
+		local actor = game.level.map(x, y, ACTOR)
+		if not actor then return end
+
+		return true
+	end,
+	info = function(self, t)
+		local damage = util.getval(t.damage, self, t)
+		return ([[Lets out a carpet of choking black smoke to cover an area around you in radius %d for %d turns.
+Enemies inside the cloud are suffocated, silenced, blinded, and %d%% more susceptable to critical hits until they leave the cloud, with the effects persisting for %d turns after leaving it. You will get %d heat for every turn spent inside the cloud and gain %d%% of your cunning as stealth power and ranged defense for every tile deep you are inside of the cloud.
+Duration and critical chance scale with dexterity.]])
+			:format(util.getval(t.radius, self, t),
+							util.getval(t.duration, self, t),
+							util.getval(t.crit, self, t),
+							util.getval(t.effect_duration, self, t),
+							util.getval(t.heat_gain, self, t),
+							util.getval(t.stealth, self, t) * 100)
+	end,}
+--]==]
