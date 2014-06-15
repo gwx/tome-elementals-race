@@ -22,6 +22,7 @@ Mechanics
 - [Talent] Amorphous: Prevent it from teleporting you between two disjoint dust clouds.
 - [Talent] Cry of Eyal: Disable when you run out of max life.
 - [General] Make temporary terrain not teleport drops.
+- [Talent] Billowing Carpet: Update on move instead of every game turn.
 
 Considerations
 ==============

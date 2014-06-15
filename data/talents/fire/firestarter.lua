@@ -18,6 +18,7 @@ local eutil = require 'elementals-race.util'
 local ACTOR = require('engine.Map').ACTOR
 local TERRAIN = require('engine.Map').TERRAIN
 local stats = require 'engine.interface.ActorStats'
+local particles = require 'engine.Particles'
 
 newTalentType {
 	type = 'elemental/firestarter',
@@ -189,21 +190,30 @@ Duration and critical chance scale with dexterity.]])
 							util.getval(t.stealth, self, t) * 100)
 	end,}
 
---[==[
 newTalent {
 	name = 'Tendrils of Fire',
 	type = {'elemental/firestarter', 4,},
-	require = make_require4),
+	require = make_require(4),
 	points = 5,
 	cooldown = 26,
 	tactical = {DAMAGE = 2, DEBUFF = 1,},
+	mode = 'sustained',
+	iconOverlay = function(self, t, p)
+		local target = p.target
+		if not target then return '' end
+		local fnt = 'buff_font_small'
+		local effect = target:hasEffect('EFF_FIERY_BINDINGS')
+		if effect.src ~= self then return '' end
+		return tostring(math.ceil(effect.dur)), fnt
+	end,
 	range = 2,
 	duration = function(self, t) return math.floor(self:combatTalentScale(t, 2, 6)) end,
 	damage = function(self, t) return 25 + self:getDex(25, true) end,
+	heat_gain = 15,
 	target = function(self, t)
 		return {type = 'bolt', talent = t, range = util.getval(t.range, self, t),}
 	end,
-	action = function(self, t)
+	activate = function(self, t)
 		local _
 		local tg = util.getval(t.target, self, t)
 		local x, y = self:getTarget(tg)
@@ -212,18 +222,77 @@ newTalent {
 		local actor = game.level.map(x, y, ACTOR)
 		if not actor then return end
 
+		if not actor:canBe('knockback') then
+			game.logSeen(self, '%s resists %s\'s fiery tendrils!', actor.name:capitalize(), self.name)
+			self:useEnergy()
+			return
+		end
+
+		local duration = util.getval(t.duration, self, t)
+		local damage = util.getval(t.damage, self, t)
+		local heat_gain = util.getval(t.heat_gain, self, t)
+		actor:setEffect('EFF_FIERY_BINDINGS', duration, {
+											src = self, damage = damage, heat_gain = heat_gain,})
+
+		local effect = actor:hasEffect('EFF_FIERY_BINDINGS')
+		if effect and effect.src == self then
+			local p = {target = actor,}
+			t.update_particles(self, t, p)
+			return p
+		else
+			self:useEnergy()
+			return
+		end
+	end,
+	deactivate = function(self, t, p)
+		p.target:removeEffect('EFF_FIERY_BINDINGS', false, true)
+		if p.particles then self:removeParticles(p.particles) end
 		return true
+	end,
+	update_particles = function(self, t, p)
+		local p = p or self:isTalentActive(t.id)
+
+		if not p.target or p.target.dead or self.dead or
+			not game.level:hasEntity(p.target) or
+			not game.level:hasEntity(self)
+		then
+			if p.particles then
+				self:removeParticles(p.particles)
+				p.particles = nil
+			end
+			return
+		end
+
+		-- update particles position
+		if not p.particles or
+			p.particles.x ~= self.x or
+			p.particles.y ~= self.y or
+			p.particles.tx ~= p.target.x or
+			p.particles.ty ~= p.target.y
+		then
+			game.log('ADJUST')
+			if p.particles then
+				self:removeParticles(p.particles)
+			end
+			-- add updated particle emitter
+			local dx, dy = p.target.x - self.x, p.target.y - self.y
+			p.particles = particles.new(
+				'fiery_bindings', math.max(math.abs(dx), math.abs(dy)), {tx = dx, ty = dy,})
+			p.particles.tx = p.target.x
+			p.particles.ty = p.target.y
+			p.particles.x = self.x
+			p.particles.y = self.y
+			self:addParticles(p.particles)
+		end
 	end,
 	info = function(self, t)
 		local damage = util.getval(t.damage, self, t)
-		return ([[Lets out a carpet of choking black smoke to cover an area around you in radius %d for %d turns.
-Enemies inside the cloud are suffocated, silenced, blinded, and %d%% more susceptable to critical hits until they leave the cloud, with the effects persisting for %d turns after leaving it. You will get %d heat for every turn spent inside the cloud and gain %d%% of your cunning as stealth power and ranged defense for every tile deep you are inside of the cloud.
-Duration and critical chance scale with dexterity.]])
-			:format(util.getval(t.radius, self, t),
-							util.getval(t.duration, self, t),
-							util.getval(t.crit, self, t),
-							util.getval(t.effect_duration, self, t),
-							util.getval(t.heat_gain, self, t),
-							util.getval(t.stealth, self, t) * 100)
+		return ([[Snatches a nearby enemy with fiery wires, instantly pulling it to you and entangling it by your side for %d turns. #SLATE#(Accuracy vs. physical save, tests knockback immunity.)#LAST#
+While entangled the enemy is immobile and takes %d <%d> fire damage each turn. It is pulled along with you when you move.
+The entanglement is broken instantly if a gap forms between you and the target.
+Damage scales with dexterity.
+#GREY#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
+			:format(util.getval(t.duration, self, t),
+							Talents.damDesc(self, 'FIRE', self:heatScale(damage, 100)),
+							Talents.damDesc(self, 'FIRE', self:heatScale(damage)))
 	end,}
---]==]

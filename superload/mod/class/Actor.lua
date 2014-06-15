@@ -358,6 +358,18 @@ function _M:move(x, y, force)
 										 angle = util.getval(t.angle, self, t),})
 	end
 
+	-- Tendrils of Fire (source)
+	local tendrils = self:isTalentActive('T_TENDRILS_OF_FIRE')
+	if not nowhere and moved and tendrils then
+		local target = tendrils.target
+		if core.fov.distance(sx, sy, target.x, target.y) > 1 then
+			self:forceUseTalent('T_TENDRILS_OF_FIRE', {ignore_energy = true,})
+		elseif target:canMove(sx, sy) then
+			target:move(sx, sy, true)
+			self:callTalent('T_TENDRILS_OF_FIRE', 'update_particles')
+		end
+	end
+
 	self.moving = nil
 	if unleashed_activated then
 		self.never_move = unleashed_activated

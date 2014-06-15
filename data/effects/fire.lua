@@ -16,6 +16,7 @@
 
 local talents = require 'engine.interface.ActorTalents'
 local damDesc = talents.damDesc
+local damage_type = require 'engine.DamageType'
 local particles = require 'engine.Particles'
 local map = require 'engine.Map'
 
@@ -181,7 +182,6 @@ newEffect {
 		if not self:isTalentActive('T_STEALTH') then
 			local hide_chance = self.hide_chance
 			self.hide_chance = 100
-			game.log('stealth attempt')
 			self:forceUseTalent('T_STEALTH', {
 														force_level = self:getTalentLevel('T_STEALTH') or 1,
 														ignore_energy = true,
@@ -206,4 +206,45 @@ newEffect {
 	end,
 	on_timeout = function(self, eff)
 		self:incHeat(eff.heat_gain)
+	end,}
+
+newEffect {
+	name = 'FIERY_BINDINGS', image = 'talents/tendrils_of_fire.png',
+	desc = 'Fiery Bindings',
+	long_desc = function(self, eff)
+		local src = eff.src.unique and eff.src.name or eff.src.name:a_an()
+		return ([[Target is lashed to %s with tendrils of flame, taking %d fire damage every turn and moving along with them. This also generates %d heat for %s every turn.]])
+			:format(src,
+							damDesc(eff.src, 'FIRE', eff.src:heatScale(eff.damage)),
+							eff.heat_gain,
+							src)
+	end,
+	type = 'physical',
+	subtype = {pin = true, fire = true,},
+	status = 'detrimental',
+	parameters = {damage = 10,},
+	on_gain = function(self, eff)
+		return '#Target# is bound with fiery tendrils!', '+Fiery Bindings'
+	end,
+	on_lose = function(self, eff)
+		return '#Target# escapes the fiery tendrils!!', '-Fiery Bindings'
+	end,
+	activate = function(self, eff)
+		self:effectTemporaryValue(eff, 'never_move', 1)
+		if core.fov.distance(self.x, self.y, eff.src.x, eff.src.y) > 1 then
+			self:pull(eff.src.x, eff.src.y, 1000)
+		end
+	end,
+	deactivate = function(self, eff)
+		eff.src:forceUseTalent('T_TENDRILS_OF_FIRE', {ignore_energy = true,})
+		return true
+	end,
+	on_timeout = function(self, eff)
+		if core.fov.distance(eff.src.x, eff.src.y, self.x, self.y) > 1 then
+			self:removeEffect('EFF_FIERY_BINDINGS', false, true)
+		else
+			damage_type:get('FIRE').projector(
+				eff.src, self.x, self.y, 'FIRE', eff.src:heatScale(eff.damage))
+			eff.src:incHeat(eff.heat_gain)
+		end
 	end,}
