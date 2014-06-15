@@ -15,6 +15,8 @@
 
 
 local eutil = require 'elementals-race.util'
+local map = require 'engine.Map'
+local ACTOR = map.ACTOR
 
 local project_damage = function(src, x, y, type, dam)
 	type = DamageType[type]
@@ -77,5 +79,37 @@ newDamageType {
 		target:setEffect('EFF_BLINDING_SAND', effect_duration, {
 											 accuracy = accuracy,
 											 max = max,})
+		return 0
+	end,}
+
+-- Suffocate, silence, blind, and increased incoming crit chance.
+newDamageType {
+	name = 'billowing carpet', type = 'BILLOWING_CARPET',
+	projector = function(src, x, y, t, dam)
+		if type(dam) ~= 'table' then dam = {crit = dam} end
+		local crit = dam.crit or 5
+		local heat_gain = dam.heat_gain or 10
+		local stealth = dam.stealth or 0.10
+		local duration = dam.duration or 2
+		local air = dam.air or 12
+		local src = dam.src
+
+		local actor = game.level.map(x, y, ACTOR)
+		if src and actor == src then
+			local depth = 1
+			if dam.origin_x and dam.origin_y and dam.max_depth then
+				depth = dam.max_depth - core.fov.distance(dam.origin_x, dam.origin_y, x, y)
+			end
+			actor:setEffect('EFF_BILLOWING_CARPET_COVER', 1, {
+												heat_gain = heat_gain,
+												stealth = stealth * depth,})
+		elseif actor then
+			actor:setEffect('EFF_BILLOWING_CARPET', duration, {
+												 src = src,
+												 crit = crit,
+												 air = air,
+												 no_ct_effect = true,
+												 apply_power = src and src:combatAttack(),})
+		end
 		return 0
 	end,}

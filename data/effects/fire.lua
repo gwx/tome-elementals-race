@@ -58,3 +58,152 @@ newEffect {
 	on_timeout = function(self, eff)
 		self:incHeat(eff.heat)
 	end,}
+
+newEffect {
+	name = 'BILLOWING_CARPET', image = 'talents/billowing_carpet.png',
+	desc = 'Billowing Carpet',
+	long_desc = function(self, eff)
+		local blind, silence = '', ''
+		if eff.blind_dur then blind = (' blinded for %d turns,'):format(eff.blind_dur) end
+		if eff.silence_dur then
+			silence = (' silenced for %d turns,'):format(eff.silence_dur)
+		end
+		return ([[You are%s%s losing %d air every turn and are %d%% more likely to be hit with a critical.]])
+			:format(blind, silence, eff.air, eff.crit)
+	end,
+	type = 'physical',
+	subtype = {air = true, fire = true,},
+	status = 'detrimental',
+	parameters = {crit = 5, air = 12,},
+	on_gain = function(self, eff)
+		return '#Target# is covered by the billowing carpet!', '+Billowing Carpet'
+	end,
+	on_lose = function(self, eff)
+		return '#Target#\'s escapes from the billowing carpet!', '-Billowing Carpet'
+	end,
+	activate = function(self, eff)
+		if self:canBe('blind') then
+			eff.blind_id = self:addTemporaryValue('blind', 1)
+			eff.blind_dur = eff.dur
+		end
+		if self:canBe('silence') then
+			eff.silence_id = self:addTemporaryValue('silence', 1)
+			eff.silence_dur = eff.dur
+		end
+		eff.crit_id = self:addTemporaryValue('combat_crit_vulnerable', eff.crit)
+	end,
+	deactivate = function(self, eff)
+		if eff.blind_id then self:removeTemporaryValue('blind', eff.blind_id) end
+		if eff.silence_id then self:removeTemporaryValue('silence', eff.silence_id) end
+		self:removeTemporaryValue('combat_crit_vulnerable', eff.crit_id)
+	end,
+	on_merge = function(self, old, new)
+		if self:canBe('blind') then
+			if old.blind_id then
+				new.blind_id = old.blind_id
+				new.blind_dur = math.max(old.blind_dur, new.dur)
+			else
+				new.blind_id = self:addTemporaryValue('blind', 1)
+				new.blind_dur = eff.dur
+			end
+		else
+			new.blind_id = old.blind_id
+			new.blind_dur = old.blind_dur
+		end
+
+		if self:canBe('silence') then
+			if old.silence_id then
+				new.silence_id = old.silence_id
+				new.silence_dur = math.max(old.silence_dur, new.dur)
+			else
+				new.silence_id = self:addTemporaryValue('silence', 1)
+				new.silence_dur = eff.dur
+			end
+		else
+			new.silence_id = old.silence_id
+			new.silence_dur = old.silence_dur
+		end
+
+		if new.crit > old.crit then
+			self:removeTemporaryValue('combat_crit_vulnerable', old.crit_id)
+			new.crit_id = self:addTemporaryValue('combat_crit_vulnerable', new.crit)
+		else
+			new.crit_id = old.crit_id
+		end
+
+		new.air = math.max(old.air, new.air)
+
+		return new
+	end,
+	on_timeout = function(self, eff)
+		if eff.blind_dur then
+			eff.blind_dur = eff.blind_dur - 1
+			if eff.blind_dur <= 0 then
+				self:removeTemporaryValue('blind', eff.blind_id)
+				eff.blind_id = nil
+				eff.blind_dur = nil
+			end
+		end
+		if eff.silence_dur then
+			eff.silence_dur = eff.silence_dur - 1
+			if eff.silence_dur <= 0 then
+				self:removeTemporaryValue('silence', eff.silence_id)
+				eff.silence_id = nil
+				eff.silence_dur = nil
+			end
+		end
+
+		self:suffocate(eff.air, eff.src, (' was suffocated to death by %s\'s billowing carpet.')
+										 :format(eff.src.unique and eff.src.name or eff.src.name:a_an()))
+	end,}
+
+newEffect {
+	name = 'BILLOWING_CARPET_COVER', image = 'talents/billowing_carpet.png',
+	desc = 'Billowing Carpet Cover',
+	long_desc = function(self, eff)
+		return ([[You are covered by the billowing carpet, giving you %d heat every turn and increasing your stealth and defense by %d. (%d%% of your Cunning)]])
+			:format(eff.heat_gain, eff.stealth * self:getCun(), eff.stealth * 100)
+	end,
+	type = 'physical',
+	subtype = {nature = true, fire = true,},
+	status = 'beneficial',
+	parameters = {stealth = 0.1, heat_gain = 10,},
+	on_gain = function(self, eff)
+		return '#Target# is covered by the billowing carpet.', '+Billowing Carpet Cover'
+	end,
+	on_lose = function(self, eff)
+		return '#Target# has exited the billowing carpet.', '-Billowing Carpet Cover'
+	end,
+	activate = function(self, eff)
+		local bonus = self:getCun() * eff.stealth
+		self:effectTemporaryValue(eff, 'inc_stealth', bonus)
+		self:effectTemporaryValue(eff, 'combat_def', bonus)
+		if not self:isTalentActive('T_STEALTH') then
+			local hide_chance = self.hide_chance
+			self.hide_chance = 100
+			game.log('stealth attempt')
+			self:forceUseTalent('T_STEALTH', {
+														force_level = self:getTalentLevel('T_STEALTH') or 1,
+														ignore_energy = true,
+														ignore_cd = true,
+														ignore_ressources = true,})
+			self.hide_chance = hide_chance
+		end
+	end,
+	deactivate = function(self, eff)
+		if not eff.no_deactivate_stealth and
+			not self:knowTalent('T_STEALTH') and
+			self:isTalentActive('T_STEALTH')
+		then
+			self:forceUseTalent('T_STEALTH', {ignore_energy = true, ignore_cd = true,})
+		end
+	end,
+	on_merge = function(self, old, new)
+		old.no_deactivate_stealth = true
+		self.tempeffect_def.EFF_BILLOWING_CARPET_COVER.deactivate(self, old)
+		self.tempeffect_def.EFF_BILLOWING_CARPET_COVER.activate(self, new)
+		return new
+	end,
+	on_timeout = function(self, eff)
+		self:incHeat(eff.heat_gain)
+	end,}

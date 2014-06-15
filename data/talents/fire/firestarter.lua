@@ -137,3 +137,54 @@ Fire damage scales with dexterity.
 							Talents.damDesc(self, 'FIRE', self:heatScale(damage)),
 							util.getval(t.heat_gain, self, t))
 	end,}
+
+newTalent {
+	name = 'Billowing Carpet',
+	type = {'elemental/firestarter', 3,},
+	require = make_require(3),
+	points = 5,
+	cooldown = 21,
+	tactical = {ESCAPE = 2, DEBUFF = 1,},
+	range = 0,
+	radius = function(self, t) return math.floor(self:combatTalentScale(t, 3, 4.5)) end,
+	duration = function(self, t) return math.floor(self:elementalScale(t, 'dex', 2, 6)) end,
+	effect_duration = 2,
+	crit = function(self, t) return self:elementalScale(t, 'dex', 3, 10) end,
+	stealth = 0.15,
+	heat_gain = 15,
+	no_break_stealth = true,
+	target = function(self, t)
+		return {type = 'ball', talent = t, selffire = true,
+						range = util.getval(t.range, self, t),
+						radius = util.getval(t.radius, self, t),}
+	end,
+	action = function(self, t)
+		local _
+		local tg = util.getval(t.target, self, t)
+
+		local stealth = util.getval(t.stealth, self, t)
+		local duration = self:spellCrit(util.getval(t.duration, self, t))
+		local effect_duration = util.getval(t.effect_duration, self, t)
+		local heat_gain = util.getval(t.heat_gain, self, t)
+		local crit = util.getval(t.crit, self, t)
+		local effect = game.level.map:addEffect(
+			self, self.x, self.y, duration, 'BILLOWING_CARPET',
+			{src = self, origin_x = self.x, origin_y = self.y, stealth = stealth, heat_gain = heat_gain,
+			 duration = effect_duration, crit = crit, max_depth = tg.radius + 1,},
+			tg.radius, 5, nil, {type = 'smoke_storm',})
+		effect.name = ('%s\'s billowing carpet'):format(self.name:capitalize())
+		game:playSoundNear(self, 'talents/fire')
+		return true
+	end,
+	info = function(self, t)
+		local damage = util.getval(t.damage, self, t)
+		return ([[Lets out a carpet of choking black smoke to cover an area around you in radius %d for %d turns.
+Enemies inside the cloud are suffocated, silenced, blinded, and %d%% more susceptable to critical hits until they leave the cloud, with the effects persisting for %d turns after leaving it. You will get %d heat for every turn spent inside the cloud and gain %d%% of your cunning as stealth power and ranged defense for every tile deep you are inside of the cloud.
+Duration and critical chance scale with dexterity.]])
+			:format(util.getval(t.radius, self, t),
+							util.getval(t.duration, self, t),
+							util.getval(t.crit, self, t),
+							util.getval(t.effect_duration, self, t),
+							util.getval(t.heat_gain, self, t),
+							util.getval(t.stealth, self, t) * 100)
+	end,}
