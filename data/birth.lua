@@ -32,7 +32,7 @@ newBirthDescriptor {
 			__ALL__ = 'disallow',
 			Jadir = 'allow',
 			Asha = config.settings.cheat and 'allow' or 'disallow',
-			['Chaotic Elemental'] = config.settings.cheat and 'allow' or 'disallow',},
+			['Hybrid Elemental'] = config.settings.cheat and 'allow' or 'disallow',},
 		class = {
 			__ALL__ = 'disallow',
 			None = 'allow',},},
@@ -173,14 +173,14 @@ newBirthDescriptor {
 
 newBirthDescriptor {
 	type = 'subrace',
-	name = 'Chaotic Elemental',
+	name = 'Hybrid Elemental',
 	locked = function()
 		return profile.mod.allow_build.adventurer or
 			config.settings.cheat or
 			'hide'
 	end,
 	desc = {
-		'Any kind of elemental you want.',
+		'Some elementals do not fall strictly along the elemental lines, and may be composed of several different elements.',
 		'#GOLD#Stat modifiers:',
 		'#LIGHT_BLUE# * +2 Strength, +2 Dexterity, +2 Constitution',
 		'#LIGHT_BLUE# * +2 Magic, +2 Willpower, +2 Cunning',
@@ -194,7 +194,7 @@ newBirthDescriptor {
 		local tts = {}
 		local race = getBirthDescriptor('race', 'Elemental')
 		for elemental, allow in pairs(race.descriptor_choices.subrace) do
-			if elemental ~= '__ALL__' and elemental ~= 'Chaotic Elemental' then
+			if elemental ~= '__ALL__' and elemental ~= 'Hybrid Elemental' then
 				elemental = getBirthDescriptor('subrace', elemental)
 				if elemental.talents_types then
 					local tt = elemental.talents_types
@@ -225,7 +225,7 @@ newBirthDescriptor {
 		moddable_tile = "human_#sex#",
 		moddable_tile_base = "base_higher_01.png",
 		--moddable_tile_nude = true,
-		subtype = 'chaos',
+		subtype = 'hybrid',
 		max_life = 100,
 		life_rating = 10,
 		resolvers.inventorybirth{ id=true, transmo=true,
