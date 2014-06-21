@@ -248,3 +248,19 @@ newEffect {
 			eff.src:incHeat(eff.heat_gain)
 		end
 	end,}
+
+newEffect{
+	name = 'PARTIALLY_BLINDED', image = 'effects/blinded.png',
+	desc = 'Partially Blinded',
+	long_desc = function(self, eff)
+		return ('The target is partially blinded, reducing accuracy by %d.'):format(eff.power)
+	end,
+	type = 'physical',
+	subtype = {blind = true},
+	status = 'detrimental',
+	parameters = {power = 10,},
+	on_gain = function(self, err) return '#Target# struggles to see!', '+Partial Blindness' end,
+	on_lose = function(self, err) return '#Target# recovers sight.', '-Partial Blindness' end,
+	activate = function(self, eff)
+		self:effectTemporaryValue(eff, 'combat_atk', -eff.power)
+	end,}
