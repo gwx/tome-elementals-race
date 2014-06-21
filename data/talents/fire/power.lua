@@ -109,3 +109,59 @@ Debuff strength and duration increase with magic, damage with light radius and s
 							util.getval(t.duration, self, t),
 							util.getval(t.heat_gain, self, t))
 	end,}
+
+newTalent {
+	name = 'Microwave',
+	type = {'elemental/power', 2,},
+	require = make_require(2),
+	points = 5,
+	cooldown = 10,
+	heat_gain = 40,
+	lightning_damage = function(self, t, target)
+		return self:combatTalentSpellDamage(t, 20, 120) *
+			(100 + (target and target:combatArmor() or 0)) * 0.01
+	end,
+	fire_damage = function(self, t, lightning_damage, heat)
+		return (lightning_damage or util.getval(t.lightning_damage, self, t)) * (heat or self.heat) * 0.005
+	end,
+	armor = function(self, t) return self:elementalScale(t, 'mag', 20, 50) end,
+	duration = function(self, t) return 3 + math.floor(self:getMag(4, true)) end,
+	range = 3,
+	target = function(self, t)
+		return {type = 'hit', talent = t, selffire = false,
+						range = util.getval(t.range, self, t),}
+	end,
+	requires_target = true,
+	action = function(self, t)
+		local tg = util.getval(t.target, self, t)
+		local x, y, actor = self:getTarget(tg)
+		if not x or not y or not actor then return end
+		if core.fov.distance(self.x, self.y, x, y) > tg.range then return end
+
+		local lightning_damage = self:spellCrit(self:heatScale(util.getval(t.lightning_damage, self, t, actor)))
+		local fire_damage = util.getval(t.fire_damage, self, t, lightning_damage)
+		local armor = util.getval(t.armor, self, t)
+		local duration = util.getval(t.duration, self, t)
+
+		damage_type:get('LIGHTNING').projector(self, x, y, 'LIGHTNING', lightning_damage)
+		damage_type:get('FIRE').projector(self, x, y, 'FIRE', fire_damage)
+		actor:setEffect('EFF_COOKED', duration, {power = armor * actor:combatArmor() * 0.01,})
+		self:incHeat(util.getval(t.heat_gain, self, t))
+
+		game.level.map:particleEmitter(x, y, tg.radius, 'ball_lightning', {radius = tg.radius,})
+		game:playSoundNear(actor, 'talents/lightning')
+		return true
+	end,
+	info = function(self, t)
+		return ([[Sends out electromagentic waves to cook the target enemy in range of 3 alive in their armor. Target takes %d <%d> lightning damage, %d <%d> fire damage,  and loses %d%% armour for %d turns.
+This recovers %d heat if it hits anything.
+Debuff strength and duration increase with magic, damage with target's armour and spellpower.
+#GREY#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
+			:format(Talents.damDesc(self, 'LIGHTNING', self:heatScale(util.getval(t.lightning_damage, self, t), 100)),
+							Talents.damDesc(self, 'LIGHTNING', self:heatScale(util.getval(t.lightning_damage, self, t))),
+							Talents.damDesc(self, 'FIRE', self:heatScale(util.getval(t.fire_damage, self, t, nil, 100), 100)),
+							Talents.damDesc(self, 'FIRE', self:heatScale(util.getval(t.fire_damage, self, t))),
+							util.getval(t.armor, self, t),
+							util.getval(t.duration, self, t),
+							util.getval(t.heat_gain, self, t))
+	end,}

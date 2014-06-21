@@ -264,3 +264,19 @@ newEffect{
 	activate = function(self, eff)
 		self:effectTemporaryValue(eff, 'combat_atk', -eff.power)
 	end,}
+
+newEffect{
+	name = 'COOKED', image = 'talents/microwave.png',
+	desc = 'Cooked',
+	long_desc = function(self, eff)
+		return ('The target is cooked in it\'s armour, reducing it by %d.'):format(eff.power)
+	end,
+	type = 'physical',
+	subtype = {sunder = true, lightning = true,},
+	status = 'detrimental',
+	parameters = {power = 10,},
+	on_gain = function(self, err) return '#Target# is cooked!', '+Cooked' end,
+	on_lose = function(self, err) return '#Target# armour recovers.', '-Cooked' end,
+	activate = function(self, eff)
+		self:effectTemporaryValue(eff, 'combat_armor', -eff.power)
+	end,}
