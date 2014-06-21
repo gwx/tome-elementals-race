@@ -16,6 +16,7 @@
 
 local eutil = require 'elementals-race.util'
 local ACTOR = require('engine.Map').ACTOR
+local damage_type = require 'engine.DamageType'
 local stats = require 'engine.interface.ActorStats'
 
 newTalentType {
@@ -72,5 +73,58 @@ This recovers %d heat.
 							Talents.damDesc(self, 'FIRE', self:heatScale(damage)),
 							util.getval(t.radius, self, t),
 							util.getval(t.duration, self, t),
+							util.getval(t.heat_gain, self, t))
+	end,}
+
+newTalent {
+	name = 'Radiation',
+	type = {'elemental/pyrokinesis', 2,},
+	require = make_require(2),
+	mode = 'sustained',
+	points = 5,
+	cooldown = 26,
+	heat_gain = 2,
+	damage = function(self, t) return self:combatTalentSpellDamage(t, 5, 30) end,
+	radius = function(self, t, heat) return 1 + math.ceil((heat or self.heat) / 25) end,
+	range = 0,
+	target = function(self, t)
+		return {type = 'ball', talent = t, selffire = false,
+						range = util.getval(t.range, self, t),
+						radius = util.getval(t.radius, self, t),}
+	end,
+	activate = function(self, t) return {} end,
+	deactivate = function(self, t) return true end,
+	callbackOnActBase = function(self, t, p)
+		local tg = util.getval(t.target, self, t)
+
+		local indirect = self.indirect_damage
+		self.indirect_damage = true
+		local damage = self:spellCrit(self:heatScale(util.getval(t.damage, self, t)))
+		local heat_gain = util.getval(t.heat_gain, self, t)
+		local heat = 0
+		local projector = function(x, y, tg, self)
+			local actor = game.level.map(x, y, ACTOR)
+			if not actor then return end
+			heat = heat + heat_gain
+			damage_type:get('FIRE').projector(self, x, y, 'FIRE', damage)
+			--game.level.map:particleEmitter(x, y, 0.5, 'ball_fire', {radius = 0.5,})
+		end
+		self:project(tg, self.x, self.y, projector)
+		self.indirect_damage = indirect
+
+		self:incHeat(heat)
+
+		game.level.map:particleEmitter(self.x, self.y, tg.radius + 0.5, 'ball_fire', {radius = tg.radius + 0.5,})
+		game:playSoundNear(actor, 'talents/fire')
+		return true
+	end,
+	info = function(self, t)
+		local damage = util.getval(t.damage, self, t)
+		return ([[Unleashes fiery rage as an aura of intense heat, burning all enemies in radius %d <%d> dealing %d <%d> fire damage. You will get %d heat for every enemy hit. This talent will not reset your heat loss.
+#GREY#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
+			:format(util.getval(t.radius, self, t, 100),
+							util.getval(t.radius, self, t),
+							Talents.damDesc(self, 'FIRE', self:heatScale(damage, 100)),
+							Talents.damDesc(self, 'FIRE', self:heatScale(damage)),
 							util.getval(t.heat_gain, self, t))
 	end,}

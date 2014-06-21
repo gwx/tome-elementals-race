@@ -866,7 +866,7 @@ end
 local onTakeHit = _M.onTakeHit
 function _M:onTakeHit(value, src, death_note)
 	if eutil.get(src, 'knowTalent') and src:knowTalent('T_HEAT_POOL') and
-		not self.in_timed_effects and not src.in_timed_effects
+		not self.in_timed_effects and not src.in_timed_effects and not src.indirect_damage
 	then
 		src.turn_procs.did_direct_damage = true
 	end
