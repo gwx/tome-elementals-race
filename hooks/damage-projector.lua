@@ -30,6 +30,13 @@ hook = function(self, data)
 	local target = game.level.map(x, y, ACTOR)
 	local stopped
 
+	-- Lifepyre
+	local lifepyre = target:hasEffect 'EFF_LIFEPYRE'
+	if lifepyre then
+		target:setEffect('EFF_LIFEPYRE_HEALING', lifepyre.smearing, {
+											 healing = dam * lifepyre.healing * 0.01 / lifepyre.smearing,})
+	end
+
 	local convert_received = eutil.get(self, 'convert_received', type)
 	if convert_received and not convert_received.__disabled then
 		local total = 0

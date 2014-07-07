@@ -280,3 +280,47 @@ newEffect{
 	activate = function(self, eff)
 		self:effectTemporaryValue(eff, 'combat_armor', -eff.power)
 	end,}
+
+newEffect {
+	name = 'LIFEPYRE', image = 'talents/lifepyre.png',
+	desc = 'Lifepyre',
+	long_desc = function(self, eff)
+		return ('The target will heal %d%% of all damage taken #SLATE#(before resists)#LAST# over %d turns.'):format(eff.healing, eff.smearing)
+	end,
+	type = 'magical',
+	subtype = {healing = true, fire = true,},
+	status = 'beneficial',
+	parameters = {healing = 50, smearing = 10,},
+	on_gain = function(self, eff) return '#Target# burns brilliantly!', '+Lifepyre' end,
+	on_lose = function(self, eff) return '#Target# stops burning brilliantly.', '-Lifepyre' end,}
+
+newEffect {
+	name = 'LIFEPYRE_HEALING',
+	desc = 'Lifepyre Healing',
+	long_desc = function(self, eff)
+		return ('The target is regenerating %d per turn.'):format(eff.healing)
+	end,
+	type = 'magical',
+	subtype = {healing = true, fire = true, nature = true,},
+	status = 'beneficial',
+	parameters = {healing = 10,},
+	activate = function(self, eff)
+		eff.heal_id = self:addTemporaryValue('life_regen', eff.healing)
+
+		if core.shader.active(4) then
+			eff.particle1 = self:addParticles(particles.new("shader_shield", 1, {toback=true,  size_factor=1.5, y=-0.3, img="healarcane"}, {type="healing", time_factor=4000, noup=2.0, circleColor={0,0,0,0}, beamColor1 = {0.7,0.3,0.0,1.0,}, beamColor2 = {1.0,0.6,0.1,1.0,}, beamsCount=9}))
+			eff.particle2 = self:addParticles(particles.new("shader_shield", 1, {toback=false,  size_factor=1.5, y=-0.3, img="healarcane"}, {type="healing", time_factor=4000, noup=2.0, circleColor={0,0,0,0}, beamColor1 = {0.7,0.3,0.0,1.0,}, beamColor2 = {1.0,0.6,0.1,1.0,}, beamsCount=9}))
+		end
+	end,
+	deactivate = function(self, eff)
+		self:removeTemporaryValue('life_regen', eff.heal_id)
+		self:removeParticles(eff.particle1)
+		self:removeParticles(eff.particle2)
+	end,
+	on_merge = function(self, old, new)
+		self:removeTemporaryValue('life_regen', old.heal_id)
+		old.healing = (old.healing * old.dur + new.healing * new.dur) / new.dur
+		old.dur = new.dur
+		old.heal_id = self:addTemporaryValue('life_regen', old.healing)
+		return old
+	end,}

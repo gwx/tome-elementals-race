@@ -165,3 +165,32 @@ Debuff strength and duration increase with magic, damage with target's armour an
 							util.getval(t.duration, self, t),
 							util.getval(t.heat_gain, self, t))
 	end,}
+
+newTalent {
+	name = 'Lifepyre',
+	type = {'elemental/power', 3,},
+	require = make_require(3),
+	points = 5,
+	cooldown = 26,
+	heat_gain = 40,
+	healing = function(self, t) return self:combatTalentScale(t, 70, 90) end,
+	duration = 2,
+	smearing = function(self, t, heat)
+		return math.max(2, 5 - math.floor((heat or self:getHeat()) / 40))
+	end,
+	action = function(self, t)
+		self:incHeat(util.getval(t.heat_gain, self, t))
+		local duration = util.getval(t.duration, self, t)
+		self:setEffect('EFF_LIFEPYRE', duration, {
+										 healing = util.getval(t.healing, self, t),
+										 smearing = util.getval(t.smearing, self, t),})
+		return true
+	end,
+	info = function(self, t)
+		return ([[You undergo a rapid metamorphosis, absorbing any force that tries to harm you. For %d turns, heal %d%% of any damage you take #SLATE#(before resists)#LAST# over %d <%d> turns.
+#GREY#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
+			:format(util.getval(t.duration, self, t),
+							util.getval(t.healing, self, t),
+							util.getval(t.smearing, self, t, 100),
+							util.getval(t.smearing, self, t))
+	end,}
