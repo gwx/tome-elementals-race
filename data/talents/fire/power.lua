@@ -194,3 +194,30 @@ newTalent {
 							util.getval(t.smearing, self, t, 100),
 							util.getval(t.smearing, self, t))
 	end,}
+
+newTalent {
+	name = 'Charged Arms',
+	type = {'elemental/power', 4,},
+	require = make_require(4),
+	points = 5,
+	mode = 'passive',
+	dammod = function(self, t) return math.floor(self:combatTalentScale(t, 20, 40)) end,
+	crit_chance = function(self, t) return self:elementalScale(t, 'mag', 2, 16) end,
+	crit_power = function(self, t) return self:elementalScale(t, 'mag', 4, 32) end,
+	passives = function(self, t, p)
+		self:talentTemporaryValue(p, 'bonus_dammod', {mag = 0.01 * util.getval(t.dammod, self, t),})
+		local crit_chance = util.getval(t.crit_chance, self, t)
+		self:talentTemporaryValue(p, 'combat_physcrit', crit_chance)
+		self:talentTemporaryValue(p, 'combat_mindcrit', crit_chance)
+		self:talentTemporaryValue(p, 'combat_spellcrit', crit_chance)
+		self:talentTemporaryValue(p, 'combat_critical_power', util.getval(t.crit_power, self, t))
+	end,
+	recompute_passives = {stats = {stats.STAT_MAG,},},
+	info = function(self, t)
+		return ([[A touch of your hands charges up the weapons you carry with ambient forces. Grants an extra %d%% magic damage modifier to your attacks.
+Also increases all your critical hit chances by %d%% and the multiplier by %d%%.
+Critical hit chance and multiplier increase with magic.]])
+			:format(util.getval(t.dammod, self, t),
+							util.getval(t.crit_chance, self, t),
+							util.getval(t.crit_power, self, t))
+	end,}

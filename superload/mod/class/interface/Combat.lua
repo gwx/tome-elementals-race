@@ -135,4 +135,12 @@ function _M:elementalScalePower(t, power, min, max)
 	return min + self:combatTalentScale(t, 0, max - min) * (0.5 + power * 0.005)
 end
 
+-- bonus dammod
+local combatDamage = _M.combatDamage
+function _M:combatDamage(weapon, adddammod)
+	adddammod = table.clone(adddammod or {})
+	table.mergeAdd(adddammod, self.bonus_dammod or {})
+	return combatDamage(self, weapon, adddammod)
+end
+
 return _M
