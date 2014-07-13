@@ -84,11 +84,14 @@ hook = function(self, data)
 	end
 
 	-- Cry of Eyal
-	if self:attr('max_life_damage')then
-		local damage = math.min(self.life - 1, value)
+	if self:attr('max_life_damage') then
+		local damage = math.min(self.max_life - 1, value)
 		value = value - damage
 		self.max_life_damage_taken = (self.max_life_damage_taken or 0) + damage
 		self.max_life = self.max_life - damage
+		if self.max_life <= 1 and self:isTalentActive('T_CRY_OF_EYAL') then
+			self:forceUseTalent('T_CRY_OF_EYAL', {no_energy = true,})
+		end
 	end
 
 	data.value = value
