@@ -16,7 +16,7 @@
 long_name = 'Elementals Race'
 short_name = 'elementals-race'
 for_module = 'tome'
-version = {1,2,1,}
+version = {1,2,3,}
 weight = 110
 author = {'AlexMdle', 'grayswandir',}
 homepage = 'http://forums.te4.org/viewtopic.php?f=39&t=33157'

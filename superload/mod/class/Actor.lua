@@ -55,12 +55,16 @@ function _M:calculateResources()
 		local hit = self.hit_heat_regen or 0
 		local base = self.base_heat_regen or 0
 		local min = (self.min_heat_regen or 0) + util.getval(pool.regen_min, self, pool)
+		local rest = self.heat_rest or 0
 		if self.turn_procs.did_direct_damage then
 			self.heat_regen = hit
 		else
 			if self.heat_regen == hit then self.heat_regen = base end
 			local mod = util.getval(pool.regen_mod, self, pool)
 			self.heat_regen = math.max(min, self.heat_regen + mod)
+			if self.heat_regen < 0 and self.heat_regen + self.heat < rest then
+				self.heat_regen = rest - self.heat
+			end
 		end
 	end
 end

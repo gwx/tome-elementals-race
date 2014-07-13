@@ -74,8 +74,17 @@ hook = function(self, data)
 		value = self.life - 1
 	end
 
+	-- Lingering Fires
+	if self:attr('heat_absorb_damage_ratio') and value > self.life - self.die_at then
+		local over = math.max(0, value - (self.life - self.die_at))
+		local ratio = 1 / self:attr('heat_absorb_damage_ratio')
+		local loss = math.min(self:getHeat(), ratio * over)
+		self:incHeat(-loss)
+		value = value - (loss / ratio)
+	end
+
 	-- Cry of Eyal
-	if self:attr('max_life_damage') then
+	if self:attr('max_life_damage')then
 		local damage = math.min(self.life - 1, value)
 		value = value - damage
 		self.max_life_damage_taken = (self.max_life_damage_taken or 0) + damage

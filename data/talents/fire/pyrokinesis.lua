@@ -15,6 +15,7 @@
 
 
 local eutil = require 'elementals-race.util'
+local get = util.getval
 local ACTOR = require('engine.Map').ACTOR
 local damage_type = require 'engine.DamageType'
 local stats = require 'engine.interface.ActorStats'
@@ -185,4 +186,26 @@ This recovers %d heat if it hits anything.
 							util.getval(t.knockback, self, t, 100),
 							util.getval(t.knockback, self, t),
 							util.getval(t.heat_gain, self, t))
+	end,}
+
+newTalent {
+	name = 'Lingering Fires',
+	type = {'elemental/pyrokinesis', 4,},
+	require = make_require(4),
+	points = 5,
+	mode = 'passive',
+	min_heat = function(self, t) return self:elementalScalePower(t, 'spell', 5, 40) end,
+	damage_scale = function(self, t) return self:elementalScalePower(t, 'spell', 0.4, 1.0) end,
+	passives = function(self, t, p)
+		self:talentTemporaryValue(p, 'heat_rest', get(t.min_heat, self, t))
+		self:talentTemporaryValue(p, 'heat_absorb_damage_ratio', get(t.damage_scale, self, t))
+	end,
+	recompute_passives = {stats = {stats.STAT_MAG,},
+												attributes = {'combat_spellpower',},},
+	info = function(self, t)
+		return ([[Your body never truly cools down. Prevents heat degeneration from dropping you below %d heat.
+If you would take damage that would kill you, it will instead reduce your heat by %d%% of the damage taken. If this makes you run out of heat, you really do die.
+Minimal heat and damage to heat ratio increase with spellpower.]])
+			:format(get(t.min_heat, self, t),
+							100 / get(t.damage_scale, self, t))
 	end,}
