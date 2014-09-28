@@ -98,9 +98,9 @@ newBirthDescriptor {
 		[ActorTalents.T_JAGGED_BODY] = 1,},
 	experience = 1.4,
 	copy = {
-		moddable_tile = 'runic_golem',
+		moddable_tile = 'jadir',
 		moddable_tile_nude = true,
-		moddable_tile_base = 'base_04.png',
+		moddable_tile_base = 'base_01.png',
 		subtype = 'earth',
 		max_life = 130,
 		life_rating = 13,

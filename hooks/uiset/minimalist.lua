@@ -27,20 +27,18 @@ local shader = require "engine.Shader"
 
 	local sshat = self.sshat
 	local bshat = self.bshat
-	--local life_c = self.life_c
-	--local life_sha = self.life_sha
-	--local equi_c = self.equi_c
-	--local equi_sha = self.equi_sha
 	local shat = self.shat
 	local fshat = self.fshat
-	local fshat_life_dark = self.fshat_life_dark
-	local fshat_life = self.fshat_life
-	local fshat_equi_dark = self.fshat_equi_dark
-	local fshat_equi = self.fshat_equi
-	local fshat_mana_dark = self.fshat_mana_dark
-	local fshat_mana = self.fshat_mana
 	local font_sha = self.font_sha
 	local sfont_sha = self.sfont_sha
+
+	local fshat_jb_dark = {core.display.loadImage('/data/gfx/ui/resources/front_jaggedbody_dark.png'):glTexture()}
+	local fshat_jb = {core.display.loadImage('/data/gfx/ui/resources/front_jaggedbody.png'):glTexture()}
+	local fshat_essence_dark = {core.display.loadImage('/data/gfx/ui/resources/front_essence_dark.png'):glTexture()}
+	local fshat_essence = {core.display.loadImage('/data/gfx/ui/resources/front_essence.png'):glTexture()}
+	local fshat_heat_dark = {core.display.loadImage('/data/gfx/ui/resources/front_heat_dark.png'):glTexture()}
+	local fshat_heat = {core.display.loadImage('/data/gfx/ui/resources/front_heat.png'):glTexture()}
+
 
 	local jb_c = {90/255, 90/255, 90/255}
 	local jb_sha = shader.new("resources", {require_shader=4, delay_load=true, color=jb_c, speed=1000, distort={1.5,1.5}})
@@ -74,8 +72,8 @@ local shader = require "engine.Shader"
 		dt[1]:toScreenFull(2+x+144, 2+y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 0, 0, 0, 0.7 * a)
 		dt[1]:toScreenFull(x+144, y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 1, 1, 1, a)
 
-		local front = fshat_life_dark
-		if player.jaggedbody >= player.max_jaggedbody then front = fshat_life end
+		local front = fshat_jb_dark
+		if player.jaggedbody >= player.max_jaggedbody then front = fshat_jb end
 		front[1]:toScreenFull(x, y, front[6], front[7], front[2], front[3], 1, 1, 1, a)
 		self:showResourceTooltip(bx+x*scale, by+y*scale, fshat[6], fshat[7], "res:jaggedbody", self.TOOLTIP_JAGGEDBODY)
 		x, y = self:resourceOrientStep(orient, bx, by, scale, x, y, fshat[6], fshat[7])
@@ -113,8 +111,8 @@ local shader = require "engine.Shader"
 		dt[1]:toScreenFull(2+x+139, 2+y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 0, 0, 0, 0.7 * a)
 		dt[1]:toScreenFull(x+139, y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 1, 1, 1, a)
 
-		local front = fshat_equi_dark
-		if player.essence >= max then front = fshat_equi end
+		local front = fshat_essence_dark
+		if player.essence >= max then front = fshat_essence end
 		front[1]:toScreenFull(x, y, front[6], front[7], front[2], front[3], 1, 1, 1, a)
 		self:showResourceTooltip(bx+x*scale, by+y*scale, fshat[6], fshat[7], "res:essence", self.TOOLTIP_ESSENCE)
 		x, y = self:resourceOrientStep(orient, bx, by, scale, x, y, fshat[6], fshat[7])
@@ -148,8 +146,8 @@ local shader = require "engine.Shader"
 		dt[1]:toScreenFull(2+x+144, 2+y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 0, 0, 0, 0.7 * a)
 		dt[1]:toScreenFull(x+144, y+10 + (shat[7]-dt[7])/2, dt[6], dt[7], dt[2], dt[3], 1, 1, 1, a)
 
-		local front = fshat_mana_dark
-		if player.heat >= player.max_heat then front = fshat_mana end
+		local front = fshat_heat_dark
+		if player.heat >= player.max_heat then front = fshat_heat end
 		front[1]:toScreenFull(x, y, front[6], front[7], front[2], front[3], 1, 1, 1, a)
 		self:showResourceTooltip(bx+x*scale, by+y*scale, fshat[6], fshat[7], "res:heat", self.TOOLTIP_HEAT)
 		x, y = self:resourceOrientStep(orient, bx, by, scale, x, y, fshat[6], fshat[7])

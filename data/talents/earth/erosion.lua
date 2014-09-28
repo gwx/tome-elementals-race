@@ -308,14 +308,13 @@ newTalent {
 		p.__CLASSNAME = 'tracker'
 		p.crystals = {}
 		p.count = 0
-		-- TODO Crystal image
 		local projector = function(x, y, tg, self)
 			p.count = p.count + 1
 			local trap = require 'mod.class.Trap'
 			local crystal = trap.new {
 				name = 'silicine slicers', type = 'physical',
 				id_by_type = true, unided_name = 'strewn crystals',
-				display = '^', color = colors.WHITE, --image =
+				display = '^', color = colors.WHITE, image = 'trap/silicine_slicers.png',
 				faction = self.faction,
 				summoner = self, summoner_gain_exp = true,
 				temporary = duration,

@@ -268,7 +268,7 @@ newTalent {
 			name = 'Genesis Plate',
 			slot = 'BODY',
 			type = 'armor', subtype = 'massive',
-			display = '[', colors = colors.BLACK, image = 'object/artifact/plate_armor_of_the_king.png',
+			display = '[', colors = colors.BLACK, image = 'object/artifact/genesis_plate.png',
 			moddable_tile = resolvers.moddable_tile('massive'),
 			encumber = 20,
 			require = {'T_PLATE_OF_GENESIS'},
