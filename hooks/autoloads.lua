@@ -1,5 +1,3 @@
--- Elementals Race, for Tales of Maj'Eyal.
---
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +11,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-for _, name in pairs {'earth', 'fire', 'misc'} do
-	load('/data-elementals-race/effects/'..name..'.lua')
-end
+local addon = __loading_addon
+class:bindHook('ToME:load', function(self, data)
+		util.load_dir('/data-'..addon..'/autoloads/')
+		end)

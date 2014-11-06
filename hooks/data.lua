@@ -18,9 +18,6 @@ local hook = function(self, data)
   local load_data = function(loader, name)
     require(loader):loadDefinition('/data-elementals-race/'..name..'.lua')
   end
-  load_data('engine.interface.ActorTalents', 'talents')
-  load_data('engine.interface.ActorTemporaryEffects', 'effects')
-	load_data('engine.Birther', 'birth')
   load_data('engine.DamageType', 'damage-types')
 end
 class:bindHook('ToME:load', hook)

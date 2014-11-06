@@ -1,5 +1,3 @@
--- Elementals Race, for Tales of Maj'Eyal.
---
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation, either version 3 of the License, or
@@ -92,10 +90,9 @@ newBirthDescriptor {
 		['elemental/tectonic'] = {false, 0.3,},
 		['elemental/earth-metamorphosis'] = {false, 0.3,},},
 	talents = {
---		[ActorTalents.T_HEAVY_ARMS] = 1,
-		[ActorTalents.T_PINPOINT_TOSS] = 1,
-		[ActorTalents.T_EARTHEN_GUN] = 1,
-		[ActorTalents.T_JAGGED_BODY] = 1,},
+		T_PINPOINT_TOSS = 1,
+		T_EARTHEN_GUN = 1,
+		T_JAGGED_BODY = 1,},
 	experience = 1.4,
 	copy = {
 		moddable_tile = 'jadir',
@@ -152,8 +149,8 @@ newBirthDescriptor {
 		['elemental/magma'] = {false, 0.3,},
 		['elemental/fire-metamorphosis'] = {false, 0.3,},},
 	talents = {
-		[ActorTalents.T_WRATHFUL_STRIKE] = 1,
-		[ActorTalents.T_FIREDANCER] = 1,},
+		T_WRATHFUL_STRIKE = 1,
+		T_FIREDANCER = 1,},
 	experience = 1.4,
 	copy = {
 		moddable_tile = "human_#sex#",

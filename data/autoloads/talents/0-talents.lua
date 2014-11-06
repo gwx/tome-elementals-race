@@ -1,5 +1,3 @@
--- Elementals Race, for Tales of Maj'Eyal.
---
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation, either version 3 of the License, or
@@ -13,22 +11,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 newTalentType {
 	type = 'elemental/other',
 	name = 'Misc. Elemental Talents',
 	description = 'More Talents.',}
-
-for folder, files in pairs {
-	earth = {'misc', 'mountain', 'avalanche', 'symbiosis', 'geokinesis',
-					 'geothermal', 'eyal-resolver', 'erosion',
-					 'earth-metamorphosis', 'tectonic', 'cliffside',},
-	fire = {'misc', 'brand', 'heat', 'firestarter', 'pyrokinesis',
-					'power',},}
-do
-	for _, file in pairs(files) do
-		load('/data-elementals-race/talents/'..folder..'/'..file..'.lua')
-	end
-end
-
-load('/data-elementals-race/talents/misc.lua')
