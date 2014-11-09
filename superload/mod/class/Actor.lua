@@ -569,8 +569,12 @@ function _M:incJaggedbody(v)
 end
 
 -- Heat
+_M.sustainCallbackCheck.callbackOnIncHeat = 'talents_on_inc_heat'
 local incHeat = _M.incHeat
 function _M:incHeat(v)
+	local t = {value = v,}
+	if self:fireTalentCheck('callbackOnIncHeat', t) then v = t.value end
+
 	local heat = self:getHeat()
 	incHeat(self, v)
 	local overflow = heat + v - self:getHeat()
