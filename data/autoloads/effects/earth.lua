@@ -304,7 +304,10 @@ Any action but an attack will halve this bonus. Standing still will remove it co
 		new.move = math.min(new.max, old.move + new.move)
 		new.move_id = self:addTemporaryValue('movement_speed', new.move * 0.01)
 		return new
-	end,}
+	end,
+	callbackOnWait = function(self, eff)
+		self:removeEffect('EFF_BRUTISH_STRIDE', true, true)
+		end,}
 
 newEffect {
 	name = 'UNLEASHED', image = 'talents/unleashed.png',

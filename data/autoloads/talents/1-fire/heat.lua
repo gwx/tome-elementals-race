@@ -132,7 +132,7 @@ newTalent {
 	mode = 'passive',
 	power = function(self, t) return self:elementalScalePower(t, 'spell', 1, 1.7) end,
 	radius = function(self, t) return self:combatTalentScale(t, 1, 4) end,
-	do_overflow = function(self, t)
+	callbackOnWait = function(self, t)
 		if self:attr('heat_overflow') then
 			local tg = {type = 'ball', range = 0, radius = util.getval(t.radius, self, t),
 									talent = t, selffire = false,}

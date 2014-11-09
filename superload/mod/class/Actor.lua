@@ -631,33 +631,6 @@ function _M:breakStepUp()
 	end
 end
 
--- So we can check wait action.
-local postUseTalent = _M.postUseTalent
-function _M:postUseTalent(ab, ret, silent)
-  self.__talent_running_post = ab
-  local ret = {postUseTalent(self, ab, ret, silent)}
-  self.__talent_running_post = nil
-  return unpack(ret)
-end
-
--- On Wait.
-local useEnergy = _M.useEnergy
-function _M:useEnergy(val)
-  useEnergy(self, val)
-  if not self.__talent_running and
-    not self.__talent_running_post
-  then
-		if self:hasEffect('EFF_BRUTISH_STRIDE') and not self.moving then
-			self:removeEffect('EFF_BRUTISH_STRIDE', nil, true)
-		end
-  end
-
-	-- Heat Overflow
-	if self:attr('heat_overflow') then
-		self:callTalent('T_HEAT_OVERFLOW', 'do_overflow')
-	end
-end
-
 -- Completely override project.
 function _M:project(t, x, y, damtype, dam, particles)
 	-- Mistargeting
@@ -913,13 +886,6 @@ function _M:on_set_temporary_effect(eff_id, e, p)
 			self:startTalentCooldown('T_SPARK_OF_DEFIANCE')
 		end
 	end
-end
-
--- Do things.
-local act = _M.act
-function _M:act()
-	game.current_actor = self
-	return act(self)
 end
 
 -- Set a flag so we know if we're currently doing timed effects.
