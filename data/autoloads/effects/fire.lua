@@ -328,15 +328,15 @@ newEffect {
 newEffect {
 	name = 'CREMATED',
 	desc = 'Cremated',
+	image = 'talents/cremation.png',
 	long_desc = function(self, eff)
 		return ('The target is subject to intense heat, decreasing its healing modifier by %d%%.')
 			:format(eff.power)
 		end,
-	type = 'physical',
+	type = 'other',
 	subtype = {fire = true,},
-	no_remove = true,
 	parameters = {power = 100,},
 	activate = function(self, eff)
-		return self:autoTemporaryValues({}, {healing_factor = -0.01 * eff.power,})
+		self:autoTemporaryValues(eff, {healing_factor = -0.01 * eff.power,})
 		end,
-	deactivate = function(self, eff) end,}
+	deactivate = function(self, eff) return true end,}

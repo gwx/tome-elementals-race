@@ -16,6 +16,7 @@
 
 local DamageType = require 'engine.DamageType'
 local eutil = require 'elementals-race.util'
+local get = util.getval
 local hook
 
 -- Actor:takeHit
@@ -136,34 +137,40 @@ hook = function(self, data)
 end
 class:bindHook('Actor:actBase:Effects', hook)
 
--- Actor:preUseTalent
-hook = function(self, data)
-	local ab, silent, fake = data.t, data.silent, data.fale
-	-- Check for essence requirements.
-	if ab.mode == 'sustained' then
-		if ab.sustain_essence and
-			((self.sustain_essence or 0) + ab.sustain_essence) > 99 -- 100 will cause div by 0 later.
-		then
-			if not silent then
-				game.logPlayer(self, 'You do not have enough essence to activate %s.', ab.name)
-			end
-			return true
-		end
-	elseif not self:attr('force_talent_ignore_ressources') then
-		if ab.essence and self:essenceCost(ab.essence) > self:getEssence() then
-			if not silent then
-				game.logPlayer(self, 'You do not have enough essence to cast %s.', ab.name)
-			end
-			return true
-		end
-	end
+class:bindHook('Actor:preUseTalent', function(self, data)
+		local ab, silent, fake = data.t, data.silent, data.fale
+		-- Check for essence requirements.
+		if ab.mode == 'sustained' then
+			if ab.sustain_essence and
+				((self.sustain_essence or 0) + ab.sustain_essence) > 99 -- 100 will cause div by 0 later.
+			then
+				if not silent then
+					game.logPlayer(self, 'You do not have enough essence to activate %s.', ab.name)
+					end
+				return true
+				end
+		elseif not self:attr('force_talent_ignore_ressources') then
+			if ab.essence and self:essenceCost(ab.essence) > self:getEssence() then
+				if not silent then
+					game.logPlayer(self, 'You do not have enough essence to cast %s.', ab.name)
+					end
+				return true
+				end
 
-	-- Check for a on_pre_deactivate.
-	if (ab.mode == "sustained" and self:isTalentActive(ab.id)) and
-		ab.on_pre_deactivate and not ab.on_pre_deactivate(self, ab, silent, fake)
-	then return true end
-end
-class:bindHook('Actor:preUseTalent', hook)
+			if ab.heat and ab.heat > self:getHeat() then
+				if not silent then
+					game.logPlayer(self, 'You do not have enough heat to cast %s.', ab.name)
+					end
+				return true
+				end
+
+			end
+
+		-- Check for a on_pre_deactivate.
+		if (ab.mode == "sustained" and self:isTalentActive(ab.id)) and
+			ab.on_pre_deactivate and not ab.on_pre_deactivate(self, ab, silent, fake)
+		then return true end
+		end)
 
 -- Actor:postUseTalent
 hook = function(self, data)
@@ -197,22 +204,29 @@ end
 class:bindHook('Actor:postUseTalent', hook)
 
 -- Actor:getTalentFullDescription:ressources
-hook = function(self, data)
-	local t, d = data.t, data.str
-	if t.essence then
-		local percent = util.getval(t.essence, self, t) * (100 + self:combatFatigue()) * 0.01
-		local amount = self:essenceCost(percent, true)
-		local str = ('%.1f%% (%.1f)'):format(percent, amount)
-		d:add({'color',0x6f,0xff,0x83}, 'Essence cost: ', {'color',164,190,77}, str, true)
-	end
-	if t.sustain_essence then
-		local percent = util.getval(t.sustain_essence, self, t)
-		local amount = self:realMaxEssence() * percent * 0.01
-		local str = ('%d%% (%.1f)'):format(percent, amount)
-		d:add({'color',0x6f,0xff,0x83}, 'Sustain essence cost: ', {'color',164,190,77}, str, true)
-	end
-end
-class:bindHook('Actor:getTalentFullDescription:ressources', hook)
+class:bindHook('Actor:getTalentFullDescription:ressources', function(self, data)
+		local t, d = data.t, data.str
+		if t.essence then
+			local percent = util.getval(t.essence, self, t) * (100 + self:combatFatigue()) * 0.01
+			local amount = self:essenceCost(percent, true)
+			local str = ('%.1f%% (%.1f)'):format(percent, amount)
+			d:add({'color',0x6f,0xff,0x83}, 'Essence cost: ', {'color',164,190,77}, str, true)
+			end
+		if t.sustain_essence then
+			local percent = get(t.sustain_essence, self, t)
+			local amount = self:realMaxEssence() * percent * 0.01
+			local str = ('%d%% (%.1f)'):format(percent, amount)
+			d:add({'color',0x6f,0xff,0x83}, 'Sustain essence cost: ', {'color',164,190,77}, str, true)
+			end
+		local heat = get(t.heat, self, t)
+		if heat and heat ~= 0 then
+			local gain = heat < 0
+			if gain then heat = self:heatGain(-heat) end
+			local str = (heat >= 10 and '%d' or '%.1f'):format(heat)
+			d:add({'color',0x6f,0xff,0x83,}, 'Heat ', gain and 'gain' or 'cost', ': ',
+				{'color', 255, 97, 0,}, str, true)
+			end
+		end)
 
 -- self:triggerHook{"Actor:move", moved=moved, force=force, ox=ox, oy=oy}
 -- Actor:move

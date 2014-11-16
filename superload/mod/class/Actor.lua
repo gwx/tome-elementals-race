@@ -81,7 +81,13 @@ end
 function _M:essenceCost(percent, no_fatigue)
 	local fatigue = no_fatigue and 1 or (100 + self:combatFatigue()) * 0.01
 	return percent * self:realMaxEssence() * 0.01 * fatigue
-end
+	end
+
+-- Retrieve the actual heat gain.
+function _M:heatGain(heat, no_fatigue)
+	local fatigue = no_fatigue and 1 or (100 - self:combatFatigue()) * 0.01
+	return heat * fatigue
+	end
 
 -- Get the actualy max essence, minus sustains.
 function _M:realMaxEssence()
@@ -92,7 +98,7 @@ end
 function _M:heatScale(amount, heat)
 	heat = heat or self:getHeat()
 	return amount * util.bound(math.sqrt(heat / 30), 0.5, 2)
-end
+	end
 
 -- Recompute the passives on a given talent.
 function _M:recomputePassives(talent)
@@ -572,6 +578,8 @@ end
 _M.sustainCallbackCheck.callbackOnIncHeat = 'talents_on_inc_heat'
 local incHeat = _M.incHeat
 function _M:incHeat(v)
+	if v > 0 then v = v * (100 - self:combatFatigue()) * 0.01 end
+
 	local t = {value = v,}
 	if self:fireTalentCheck('callbackOnIncHeat', t) then v = t.value end
 

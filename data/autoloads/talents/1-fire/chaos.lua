@@ -303,7 +303,6 @@ newTalent {
 	require = make_require(4),
 	mode = 'sustained',
 	cooldown = 36,
-	heat = 20,
 	heat_per = 20,
 	range = 0,
 	radius = 6,
@@ -315,7 +314,21 @@ newTalent {
 	fire_damage = function(self, t)
 		return self:scale {low = 100, high = 200, t, 'dex', after = 'damage',}
 		end,
+	on_pre_use = function(self, t, silent)
+		if self:getHeat() < get(t.heat_per, self, t) then
+			if not silent then game.logPlayer(self, 'You do not have enough heat to cast Cremation.') end
+			return false
+			end
+		return true
+		end,
 	trigger = function(self, t, p)
+		if self:getHeat() < p.heat_per then
+			self:forceUseTalent(t.id, {ignore_energy = true,})
+			return
+			end
+
+		self:incHeat(-p.heat_per)
+
 		local tg, x, y = p.tg, self.x + p.dx, self.y + p.dy
 		local damage = self:spellCrit(self:heatScale(get(t.fire_damage, self, t)))
 		self:project(tg, x, y, function(x, y)
@@ -323,6 +336,7 @@ newTalent {
 				if not actor then return end
 				if not actor.on_cremation or actor:on_cremation(self) then
 					self:projectOn(actor, 'FIRE', damage)
+					actor:setEffect('EFF_CREMATED', 1, {src = self,})
 					end
 				end)
 		game.level.map:particleEmitter(self.x, self.y, tg.radius, 'breath_fire',
@@ -341,12 +355,7 @@ newTalent {
 	callbackOnWait = function(self, t)
 		if not self:isTalentActive(t.id) then return end
 		local p = self:isTalentActive 'T_CREMATION'
-		if self:getHeat() < p.heat_per then
-			self:forceUseTalent(t.id, {ignore_energy = true,})
-		else
-			t.trigger(self, t, p)
-			self:incHeat(-p.heat_per)
-			end
+		t.trigger(self, t, p)
 		end,
 	callbackOnMove = function(self, t)
 		if self:isTalentActive(t.id) then self:forceUseTalent(t.id, {ignore_energy = true,}) end
