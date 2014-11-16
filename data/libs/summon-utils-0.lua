@@ -1,5 +1,3 @@
--- Elementals Race, for Tales of Maj'Eyal.
---
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation, either version 3 of the License, or
@@ -13,17 +11,20 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-long_name = 'Elementals Race'
-short_name = 'elementals-race'
-for_module = 'tome'
-version = {1, 2, 5,}
-weight = 110
-author = {'grayswandir', 'AlexMdle',}
-homepage = 'http://forums.te4.org/viewtopic.php?f=39&t=33157'
-description = 'Elementals Race'
-tags = {'race', 'elemental'}
 
-overload = true
-superload = true
-hooks = true
-data = true
+superload('mod.class.Actor', function(_M)
+		function _M:setupSummon(summon)
+			summon.unused_stats = 0
+			summon.unused_talents = 0
+			summon.unused_generics = 0
+			summon.unused_talents_types = 0
+			summon.no_inventory_access = true
+			summon.no_points_on_levelup = true
+			summon.save_hotkeys = true
+			summon.ai_state = summon.ai_state or {}
+			summon.ai_state.tactic_leash = 10
+			summon.ai_talents = table.get(self, 'stored_ai_talents', summon.name) or {}
+			summon.silent_levelup = true
+			end
+
+		end)

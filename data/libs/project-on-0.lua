@@ -1,5 +1,3 @@
--- Elementals Race, for Tales of Maj'Eyal.
---
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation, either version 3 of the License, or
@@ -13,17 +11,10 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-long_name = 'Elementals Race'
-short_name = 'elementals-race'
-for_module = 'tome'
-version = {1, 2, 5,}
-weight = 110
-author = {'grayswandir', 'AlexMdle',}
-homepage = 'http://forums.te4.org/viewtopic.php?f=39&t=33157'
-description = 'Elementals Race'
-tags = {'race', 'elemental'}
-
-overload = true
-superload = true
-hooks = true
-data = true
+-- Convenience function for projecting directly.
+superload('mod.class.Actor', function(_M)
+		function _M:projectOn(actor, type, damage)
+			if not actor or not actor.x or not actor.y then return end
+			return engine.DamageType:get(type).projector(self, actor.x, actor.y, type, damage)
+			end
+		end)

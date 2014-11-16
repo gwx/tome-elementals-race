@@ -324,3 +324,19 @@ newEffect {
 		old.heal_id = self:addTemporaryValue('life_regen', old.healing)
 		return old
 	end,}
+
+newEffect {
+	name = 'CREMATED',
+	desc = 'Cremated',
+	long_desc = function(self, eff)
+		return ('The target is subject to intense heat, decreasing its healing modifier by %d%%.')
+			:format(eff.power)
+		end,
+	type = 'physical',
+	subtype = {fire = true,},
+	no_remove = true,
+	parameters = {power = 100,},
+	activate = function(self, eff)
+		return self:autoTemporaryValues({}, {healing_factor = -0.01 * eff.power,})
+		end,
+	deactivate = function(self, eff) end,}
