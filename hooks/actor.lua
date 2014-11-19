@@ -198,6 +198,9 @@ hook = function(self, data)
 			self:incEssence(-value)
 			self:incJaggedbody(value * 0.33)
 		end
+
+		local heat = get(ab.heat, self, ab)
+		if heat and heat ~= 0 then self:incHeat(-heat) end
 	end
 	data.trigger = trigger
 	return true
