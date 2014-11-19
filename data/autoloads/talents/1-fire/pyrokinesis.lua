@@ -43,6 +43,7 @@ newTalent {
 	radius = 1,
 	range = 5,
 	duration = 3,
+	speed = 'spell',
 	target = function(self, t)
 		return {type = 'ball', talent = t, selffire = false,
 			range = get(t.range, self, t),
@@ -90,6 +91,7 @@ newTalent {
 			range = get(t.range, self, t),
 			radius = get(t.radius, self, t),}
 		end,
+	speed = 'spell',
 	activate = function(self, t) return {} end,
 	deactivate = function(self, t) return true end,
 	callbackOnActBase = function(self, t, p)
@@ -139,6 +141,7 @@ newTalent {
 		end,
 	range = 4,
 	radius = 3,
+	speed = 'spell',
 	target = function(self, t)
 		return {type = 'ball', talent = t, selffire = false, nowarning = true,
 			range = get(t.range, self, t),

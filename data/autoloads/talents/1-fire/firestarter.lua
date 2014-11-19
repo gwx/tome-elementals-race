@@ -75,7 +75,7 @@ newTalent {
 	range = function(self, t) return self:scale {low = 2.5, high = 6.5, t, after = 'floor',} end,
 	damage = function(self, t) return self:scale {low = 10, high = 25, t, 'dex', after = 'damage',} end,
 	heat_gain = 25,
-	no_energy = 'fake',
+	speed = 'movement',
 	target = function(self, t)
 		return {type = 'hit', range = get(t.range, self, t), talent = t,}
 	end,
@@ -144,6 +144,7 @@ newTalent {
 	cooldown = 21,
 	tactical = {ESCAPE = 2, DEBUFF = 1,},
 	range = 0,
+	speed = 'spell',
 	radius = function(self, t) return self:scale {low = 3, high = 4.5, t, after = 'floor',} end,
 	duration = function(self, t) return self:scale {low = 2, high = 6.5, t, 'dex', after = 'floor',} end,
 	effect_duration = 2,
@@ -210,7 +211,8 @@ newTalent {
 	heat_gain = 15,
 	target = function(self, t)
 		return {type = 'bolt', talent = t, range = get(t.range, self, t),}
-	end,
+		end,
+	speed = 'spell',
 	activate = function(self, t)
 		local _
 		local tg = get(t.target, self, t)

@@ -103,6 +103,7 @@ newTalent {
 	power = function(self, t) return self:scale {low = 1, high = 2.2, t, 'spell',} end,
 	duration = 4,
 	heat_gain = 0.75,
+	speed = 'spell',
 	action = function(self, t)
 		local heat = self:getHeat()
 		self:incHeat(-heat)

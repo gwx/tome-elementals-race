@@ -36,6 +36,7 @@ newTalent {
 	heat_inc = function(self, t) return self:scale {low = 20, high = 40, t} end,
 	activate = function(self, t) return {current_heat = 0, last_heat = 0} end,
 	deactivate = function(self, t) return true end,
+	speed = 'spell',
 	callbackOnIncHeat = function(self, t, heat)
 		if self:attr '__inhibit_backburner' then return end
 		if heat.value < 0 then return end
@@ -71,6 +72,7 @@ newTalent {
 	recovery_range = 3,
 	recovery_heat = 20,
 	recovery_cooldown = 2,
+	speed = 'spell',
 	target = function(self, t)
 		return {type = 'ball', range = 0, radius = 1, talent = t,}
 		end,
@@ -306,6 +308,7 @@ newTalent {
 	heat_per = 20,
 	range = 0,
 	radius = 6,
+	speed = 'spell',
 	target = function(self, t) return {
 			type = 'cone', cone_angle = 90,
 			range = get(t.range, self, t),

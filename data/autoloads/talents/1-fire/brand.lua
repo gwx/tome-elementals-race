@@ -36,6 +36,7 @@ newTalent {
 	tactical = {ATTACK = 3,},
 	range = 1,
 	no_energy = 'fake',
+	speed = 'weapon',
 	damage = function(self, t) return self:scale {low = 1, high = 1.7, t, 'str',} end,
 	fire = function(self, t) return self:scale {low = 50, high = 80, t,} end,
 	heat = 0, -- Make you learn heat pool.
@@ -98,6 +99,7 @@ newTalent {
 	min_heat_regen = -5,
 	hit_heat_regen = 5,
 	cooldown = 26,
+	speed = 'combat',
 	power = function(self, t) return self:scale {low = 8, high = 18, t, 'str', after = 'floor',} end,
 	fire = function(self, t) return self:scale {low = 16, high = 48, t, 'str', after = 'damage',} end,
 	activate = function(self, t)
@@ -132,6 +134,7 @@ newTalent {
 	tactical = {ATTACK = 3,},
 	range = 1,
 	hits = 5,
+	speed = 'weapon',
 	damage = function(self, t) return self:scale {low = 0.2, high = 0.4, t, 'str',} end,
 	heat_gain = 4,
 	action = function(self, t)
@@ -176,6 +179,7 @@ newTalent {
 	fire = function(self, t) return self:scale {low = 10, high = 17, t, 'str',} end,
 	duration = function(self, t) return self:scale {low = 2, high = 5, t, after = 'floor',} end,
 	heat = -100,
+	speed = 'combat',
 	action = function(self, t)
 		self:resetHeat()
 		self:setEffect('EFF_ERUPTION', get(t.duration, self, t), {

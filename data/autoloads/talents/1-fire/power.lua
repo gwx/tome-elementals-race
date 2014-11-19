@@ -58,6 +58,7 @@ newTalent {
 			range = get(t.range, self, t),
 			radius = get(t.radius, self, t),}
 		end,
+	speed = 'spell',
 	action = function(self, t)
 		local tg = get(t.target, self, t)
 
@@ -115,6 +116,7 @@ newTalent {
 	points = 5,
 	cooldown = 10,
 	heat_gain = 40,
+	speed = 'spell',
 	lightning_damage = function(self, t, armor)
 		return self:scale {low = 0, high = 160, t, 'spell', 25 + (armor or 0) * 1.5, after = 'damage',}
 		end,
@@ -172,6 +174,7 @@ newTalent {
 	points = 5,
 	cooldown = 26,
 	heat_gain = 40,
+	speed = 'spell',
 	healing = function(self, t) return self:scale {low = 70, high = 90, t,} end,
 	duration = 2,
 	smearing = function(self, t, heat)
