@@ -19,7 +19,7 @@ local TextzoneList = require 'engine.ui.TextzoneList'
 local TreeList = require 'engine.ui.TreeList'
 local Separator = require 'engine.ui.Separator'
 
-if not table.get('grayswandir', 'class') then table.set(_G, 'grayswandir', 'class', {}) end
+if not select(2, table.get('grayswandir', 'class')) then table.set(_G, 'grayswandir', 'class', {}) end
 
 local STD = {}
 grayswandir.class.SelectTalentDialog = class.make(STD)
