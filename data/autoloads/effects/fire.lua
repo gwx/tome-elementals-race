@@ -340,3 +340,39 @@ newEffect {
 		self:autoTemporaryValues(eff, {healing_factor = -0.01 * eff.power,})
 		end,
 	deactivate = function(self, eff) return true end,}
+
+newEffect {
+	name = 'SEARING_VISIONS',
+	desc = 'Searing Visions',
+	image = 'talents/mindflare.png',
+	long_desc = function(self, eff)
+		if not eff.src or eff.src.dead then return 'ERROR: No Source.' end
+		local talents = table.mapv(function(tid) return self:getTalentFromId(tid).name end, eff.talents)
+		return ('Target is plagued by visions of dancing flame. Using one of the following talents will deal them %d #SLATE#[spell crit]#LAST# #LIGHT_RED#fire#LAST# damage:\n%s')
+			:format(
+				eff.src:damDesc('FIRE', eff.fire_damage),
+				table.concat(talents, '\n'))
+		end,
+	type = 'mental',
+	subtype = {fire = true,},
+	parameters = {fire_damage = 10, talent_count = 2,},
+	callbackOnTalentPost = function(self, eff, ab, ret, silent)
+		for _, talent_id in pairs(eff.talents) do
+			if talent_id == ab.id then
+				eff.src:projectOn(self, 'FIRE', eff.src:mindCrit(eff.fire_damage))
+				return
+				end end
+		end,
+	activate = function(self, eff)
+		-- Grab all talents.
+		eff.talents = {}
+		for id, level in pairs(self.talents) do
+			local talent = self:getTalentFromId(id)
+			local usable = talent.mode == 'activated' or
+				(talent.mode == 'sustained' and not self:isTalentActive(id))
+			if usable and not talent.innate then table.insert(eff.talents, id) end
+			end
+		table.shuffle(eff.talents)
+		while #eff.talents > eff.talent_count do table.remove(eff.talents) end
+		end,
+	deactivate = function(self, eff) return true end,}
