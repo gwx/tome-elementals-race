@@ -157,7 +157,8 @@ class:bindHook('Actor:preUseTalent', function(self, data)
 				return true
 				end
 
-			if ab.heat and ab.heat > self:getHeat() then
+			local heat = get(ab.heat, self, ab)
+			if heat and heat > self:getHeat() then
 				if not silent then
 					game.logPlayer(self, 'You do not have enough heat to cast %s.', ab.name)
 					end

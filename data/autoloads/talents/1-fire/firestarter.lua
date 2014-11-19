@@ -1,5 +1,3 @@
--- Elementals Race, for Tales of Maj'Eyal.
---
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation, either version 3 of the License, or
@@ -13,7 +11,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
+local get = util.getval
 local eutil = require 'elementals-race.util'
 local ACTOR = require('engine.Map').ACTOR
 local TERRAIN = require('engine.Map').TERRAIN
@@ -38,32 +36,33 @@ newTalent {
 	type = {'elemental/firestarter', 1,},
 	require = make_require(1),
 	points = 5,
+	heat = 0, -- Make you learn heat pool.
 	mode = 'passive',
-	speed = function(self, t) return self:elementalScale(t, 'dex', 0.03, 0.2) end,
-	accuracy = function(self, t) return self:elementalScale(t, 'dex', 10, 40) end,
-	crit = function(self, t) return self:elementalScale(t, 'dex', 2, 10) end,
-	heat_gain = function(self, t) return math.floor(self:combatTalentScale(t, 2, 6)) end,
+	speed = function(self, t) return self:scale {low = 0.03, high = 0.2, t, 'dex',} end,
+	accuracy = function(self, t) return self:scale {low = 10, high = 40, t, 'dex',} end,
+	crit = function(self, t) return self:scale {low = 2, high = 10, t, 'dex',} end,
+	heat_gain = function(self, t) return self:scale {low = 2, high = 6, t, after = 'floor',} end,
 	heat_threshold = 50,
 	passives = function(self, t, p)
-		self:talentTemporaryValue(p, 'global_speed_add', self:heatScale(util.getval(t.speed, self, t)))
-		self:talentTemporaryValue(p, 'combat_atk', self:heatScale(util.getval(t.accuracy, self, t)))
-		self:talentTemporaryValue(p, 'combat_physcrit', self:heatScale(util.getval(t.crit, self, t)))
-		self:talentTemporaryValue(p, 'heat_step_threshold', util.getval(t.heat_threshold, self, t))
-		self:talentTemporaryValue(p, 'heat_step_gain', util.getval(t.heat_gain, self, t))
+		self:talentTemporaryValue(p, 'global_speed_add', self:heatScale(get(t.speed, self, t)))
+		self:talentTemporaryValue(p, 'combat_atk', self:heatScale(get(t.accuracy, self, t)))
+		self:talentTemporaryValue(p, 'combat_physcrit', self:heatScale(get(t.crit, self, t)))
+		self:talentTemporaryValue(p, 'heat_step_threshold', get(t.heat_threshold, self, t))
+		self:talentTemporaryValue(p, 'heat_step_gain', get(t.heat_gain, self, t))
 	end,
 	recompute_passives = {stats = {stats.STAT_DEX,},},
 	info = function(self, t)
-		local speed = util.getval(t.speed, self, t) * 100
-		local accuracy = util.getval(t.accuracy, self, t)
-		local crit = util.getval(t.crit, self, t)
-		return ([[Increases your global speed by %d%% <%d%%>, your accuracy by %d <%d> and physical crit chance by %d%% <%d%%>. These scale with dexterity.
-You recover %d heat with every tile you moved, provided you are under %d heat.
-#GREY#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
+		local speed = get(t.speed, self, t) * 100
+		local accuracy = get(t.accuracy, self, t)
+		local crit = get(t.crit, self, t)
+		return ([[Increases your global speed by %d%% <%d%%> #SLATE#[*, dex]#LAST#, your accuracy by %d <%d> #SLATE#[*, dex]#LAST# and physical crit chance by %d%% <%d%%> #SLATE#[*, dex]#LAST#.
+You recover %d #SLATE#[*]#LAST# #FF6100#heat#LAST# with every tile you move, provided you are under #FF6100#%d heat#LAST#.
+#SLATE#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
 			:format(self:heatScale(speed, 100), self:heatScale(speed),
 							self:heatScale(accuracy, 100), self:heatScale(accuracy),
 							self:heatScale(crit, 100), self:heatScale(crit),
-							util.getval(t.heat_gain, self, t),
-							util.getval(t.heat_threshold, self, t))
+							get(t.heat_gain, self, t),
+							get(t.heat_threshold, self, t))
 	end,}
 
 newTalent {
@@ -73,23 +72,22 @@ newTalent {
 	points = 5,
 	cooldown = 16,
 	tactical = {ESCAPE = 2,},
-	range = function(self, t) return self:combatTalentScale(t, 2, 6) end,
-	damage = function(self, t) return self:elementalScale(t, 'dex', 10, 25) end,
-	heat = 0, -- Make you learn heat pool.
+	range = function(self, t) return self:scale {low = 2.5, high = 6.5, t, after = 'floor',} end,
+	damage = function(self, t) return self:scale {low = 10, high = 25, t, 'dex', after = 'damage',} end,
 	heat_gain = 25,
 	no_energy = 'fake',
 	target = function(self, t)
-		return {type = 'hit', range = util.getval(t.range, self, t), talent = t,}
+		return {type = 'hit', range = get(t.range, self, t), talent = t,}
 	end,
 	action = function(self, t)
 		local _
-		local tg = util.getval(t.target, self, t)
+		local tg = get(t.target, self, t)
 		local x, y = self:getTarget(tg)
 		if not x or not y then return end
 		_, x, y = self:canProject(tg, x, y)
 		if not self:canMove(x, y) then return end
 
-		local damage = self:heatScale(util.getval(t.damage, self, t))
+		local damage = self:heatScale(get(t.damage, self, t))
 		local duration = 1
 		local hit = false
 
@@ -121,22 +119,21 @@ newTalent {
 			self:setMoveAnim(ox, oy, 8, 5)
 		end
 
-		if hit then self:incHeat(util.getval(t.heat_gain, self, t)) end
+		if hit then self:incHeat(get(t.heat_gain, self, t)) end
 
 		game:playSoundNear(self, 'talents/fire')
 
 		return true
 	end,
 	info = function(self, t)
-		local damage = util.getval(t.damage, self, t)
-		return ([[Rushes through enemies to target position up to %d tiles away, creating a wake of flames in the path. The flames deal %d <%d> fire damage to anything standing in them. The furthest flame lasts 1 turn, with each closer flame lasting 1 more turn. If you strike any enemies during the rush, you will gain %d heat.
-This is a movement action.
-Fire damage scales with dexterity.
-#GREY#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
-			:format(util.getval(t.range, self, t),
-							Talents.damDesc(self, 'FIRE', self:heatScale(damage, 100)),
-							Talents.damDesc(self, 'FIRE', self:heatScale(damage)),
-							util.getval(t.heat_gain, self, t))
+		local damage = get(t.damage, self, t)
+		return ([[Rushes through enemies to target position up to %d #SLATE#[*]#LAST# tiles away, creating a wake of flames in the path. The flames deal %d <%d> #SLATE#[*, dex, spell crit]#LAST# #LIGHT_RED#fire#LAST# damage to anything standing in them. The furthest flame lasts 1 turn, with each closer flame lasting 1 more turn. If you strike any enemies during the rush, you will gain #FF6100#%d heat#LAST#.
+#SLATE#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
+			:format(
+				get(t.range, self, t),
+				self:damDesc('FIRE', self:heatScale(damage, 100)),
+				self:damDesc('FIRE', self:heatScale(damage)),
+				self:heatGain(get(t.heat_gain, self, t)))
 	end,}
 
 newTalent {
@@ -147,27 +144,27 @@ newTalent {
 	cooldown = 21,
 	tactical = {ESCAPE = 2, DEBUFF = 1,},
 	range = 0,
-	radius = function(self, t) return math.floor(self:combatTalentScale(t, 3, 4.5)) end,
-	duration = function(self, t) return math.floor(self:elementalScale(t, 'dex', 2, 6)) end,
+	radius = function(self, t) return self:scale {low = 3, high = 4.5, t, after = 'floor',} end,
+	duration = function(self, t) return self:scale {low = 2, high = 6.5, t, 'dex', after = 'floor',} end,
 	effect_duration = 2,
-	crit = function(self, t) return self:elementalScale(t, 'dex', 3, 10) end,
+	crit = function(self, t) return self:scale {low = 3, high = 10, t, 'dex',} end,
 	stealth = 0.15,
 	heat_gain = 15,
 	no_break_stealth = true,
 	target = function(self, t)
 		return {type = 'ball', talent = t, selffire = true,
-						range = util.getval(t.range, self, t),
-						radius = util.getval(t.radius, self, t),}
+						range = get(t.range, self, t),
+						radius = get(t.radius, self, t),}
 	end,
 	action = function(self, t)
 		local _
-		local tg = util.getval(t.target, self, t)
+		local tg = get(t.target, self, t)
 
-		local stealth = util.getval(t.stealth, self, t)
-		local duration = self:spellCrit(util.getval(t.duration, self, t))
-		local effect_duration = util.getval(t.effect_duration, self, t)
-		local heat_gain = util.getval(t.heat_gain, self, t)
-		local crit = util.getval(t.crit, self, t)
+		local stealth = get(t.stealth, self, t)
+		local duration = self:spellCrit(get(t.duration, self, t))
+		local effect_duration = get(t.effect_duration, self, t)
+		local heat_gain = get(t.heat_gain, self, t)
+		local crit = get(t.crit, self, t)
 		local effect = game.level.map:addEffect(
 			self, self.x, self.y, duration, 'BILLOWING_CARPET',
 			{src = self, origin_x = self.x, origin_y = self.y, stealth = stealth, heat_gain = heat_gain,
@@ -178,16 +175,17 @@ newTalent {
 		return true
 	end,
 	info = function(self, t)
-		local damage = util.getval(t.damage, self, t)
-		return ([[Lets out a carpet of choking black smoke to cover an area around you in radius %d for %d turns.
-Enemies inside the cloud are suffocated, silenced, blinded, and %d%% more susceptable to critical hits until they leave the cloud, with the effects persisting for %d turns after leaving it. You will get %d heat for every turn spent inside the cloud and gain %d%% of your cunning as stealth power and ranged defense for every tile deep you are inside of the cloud.
+		local damage = get(t.damage, self, t)
+		return ([[Lets out a carpet of choking black smoke to cover an area around you in radius %d #SLATE#[*]#LAST# for %d #SLATE#[*, dex]#LAST# turns.
+Enemies inside the cloud are suffocated, silenced, blinded, and %d%% #SLATE#[*, dex]#LAST# more susceptable to critical hits until they leave the cloud, with the effects persisting for %d turns after leaving it. You will get #FF6100#%d heat#LAST# for every turn spent inside the cloud and gain %d%% of your cunning as stealth power and ranged defense for every tile deep you are inside of the cloud.
 Duration and critical chance scale with dexterity.]])
-			:format(util.getval(t.radius, self, t),
-							util.getval(t.duration, self, t),
-							util.getval(t.crit, self, t),
-							util.getval(t.effect_duration, self, t),
-							util.getval(t.heat_gain, self, t),
-							util.getval(t.stealth, self, t) * 100)
+			:format(
+				get(t.radius, self, t),
+				get(t.duration, self, t),
+				get(t.crit, self, t),
+				get(t.effect_duration, self, t),
+				get(t.heat_gain, self, t),
+				get(t.stealth, self, t) * 100)
 	end,}
 
 newTalent {
@@ -207,15 +205,15 @@ newTalent {
 		return tostring(math.ceil(effect.dur)), fnt
 	end,
 	range = 2,
-	duration = function(self, t) return math.floor(self:combatTalentScale(t, 2, 6)) end,
-	damage = function(self, t) return 25 + self:getDex(25, true) end,
+	duration = function(self, t) return self:scale {low = 2, high = 6, t, after = 'floor',} end,
+	damage = function(self, t) return self:scale {low = 25, high = 60, 'dex',} end,
 	heat_gain = 15,
 	target = function(self, t)
-		return {type = 'bolt', talent = t, range = util.getval(t.range, self, t),}
+		return {type = 'bolt', talent = t, range = get(t.range, self, t),}
 	end,
 	activate = function(self, t)
 		local _
-		local tg = util.getval(t.target, self, t)
+		local tg = get(t.target, self, t)
 		local x, y = self:getTarget(tg)
 		if not x or not y then return end
 		_, x, y = self:canProject(tg, x, y)
@@ -228,9 +226,9 @@ newTalent {
 			return
 		end
 
-		local duration = util.getval(t.duration, self, t)
-		local damage = util.getval(t.damage, self, t)
-		local heat_gain = util.getval(t.heat_gain, self, t)
+		local duration = get(t.duration, self, t)
+		local damage = get(t.damage, self, t)
+		local heat_gain = get(t.heat_gain, self, t)
 		actor:setEffect('EFF_FIERY_BINDINGS', duration, {
 											src = self, damage = damage, heat_gain = heat_gain,})
 
@@ -286,13 +284,13 @@ newTalent {
 		end
 	end,
 	info = function(self, t)
-		local damage = util.getval(t.damage, self, t)
-		return ([[Snatches a nearby enemy with fiery wires, instantly pulling it to you and entangling it by your side for %d turns. #SLATE#(Accuracy vs. physical save, tests knockback immunity.)#LAST#
-While entangled the enemy is immobile and takes %d <%d> fire damage each turn. It is pulled along with you when you move.
+		local damage = get(t.damage, self, t)
+		return ([[Snatches a nearby enemy with fiery wires, instantly pulling it to you and entangling it by your side #SLATE#[acc vs. phys, knockback]#LAST# for %d #SLATE#[*]#LAST# turns.
+While entangled the enemy is immobile and takes %d <%d> #SLATE#[dex]#LAST# #LIGHT_RED#fire#LAST# damage each turn. It is pulled along with you when you move.
 The entanglement is broken instantly if a gap forms between you and the target.
-Damage scales with dexterity.
-#GREY#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
-			:format(util.getval(t.duration, self, t),
-							Talents.damDesc(self, 'FIRE', self:heatScale(damage, 100)),
-							Talents.damDesc(self, 'FIRE', self:heatScale(damage)))
+#SLATE#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
+			:format(
+				get(t.duration, self, t),
+				self:damDesc('FIRE', self:heatScale(damage, 100)),
+				self:damDesc('FIRE', self:heatScale(damage)))
 	end,}

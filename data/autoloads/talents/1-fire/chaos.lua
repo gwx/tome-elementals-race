@@ -55,7 +55,7 @@ newTalent {
 		end,
 	info = function(self, t)
 		return ([[Your flames burn hotter, but take longer to set in.
-While this talent is active you generate %d%% #SLATE#[*]#LAST# more heat from all sources, but smeared over 2 turns.]]):format(get(t.heat_inc, self, t))
+While this talent is active you generate %d%% #SLATE#[*]#LAST# more #FF6100#heat#LAST# from all sources, but smeared over 2 turns.]]):format(get(t.heat_inc, self, t))
 		end,}
 
 newTalent {
@@ -219,9 +219,9 @@ newTalent {
 		return ([[A spark alone suffices to start more fires. Suffices to say, a living spark like yours can bring forth even more devastating things.
 Creates up to %d duplicates of your fiery being adjacent to yourself, each costing %d heat.
 Each duplicate is uncontrollable and attacks in blind rage, with no use of your talents. They have -%d%% #SLATE#[*, dex]#LAST# all damage modifier and take %d%% #SLATE#[*, dex]#LAST# as much damage from enemies. 50%% of their damage dealt is converted to #LIGHT_RED#fire#LAST# damage.
-Duplicates are able to generate heat.
+Duplicates are able to generate #FF6100#heat#LAST#.
 
-Their life force is tethered to you - if they remain within range %d of you when dying, you regain up %d heat based on their current heat and the cooldown of this talent is reduced by %d.
+Their life force is tethered to you - if they remain within range %d of you when dying, you regain up #FF6100#%d heat#LAST# based on their current heat and the cooldown of this talent is reduced by %d.
 Activating this talent will instantly extinguish all already active duplicates.]])
 			:format(
 				get(t.max_count, self, t),
@@ -229,7 +229,7 @@ Activating this talent will instantly extinguish all already active duplicates.]
 				get(t.damage_penalty, self, t),
 				get(t.damaged_mult, self, t),
 				get(t.recovery_range, self, t),
-				get(t.heat_per, self, t),
+				self:heatGain(get(t.heat_per, self, t)),
 				get(t.recovery_cooldown, self, t))
 		end,}
 

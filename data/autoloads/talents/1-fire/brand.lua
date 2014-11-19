@@ -1,5 +1,3 @@
--- Elementals Race, for Tales of Maj'Eyal.
---
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
 -- the Free Software Foundation, either version 3 of the License, or
@@ -12,7 +10,6 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 
 local eutil = require 'elementals-race.util'
 local ACTOR = require('engine.Map').ACTOR
@@ -44,31 +41,31 @@ newTalent {
 	heat = 0, -- Make you learn heat pool.
 	heat_gain = 25,
 	target = function(self, t)
-		return {type = 'hit', range = util.getval(t.range, self, t), talent = t,}
+		return {type = 'hit', range = get(t.range, self, t), talent = t,}
 	end,
 	action = function(self, t)
 		local _
-		local tg = util.getval(t.target, self, t)
+		local tg = get(t.target, self, t)
 		local x, y = self:getTarget(tg)
 		if not x or not y then return end
 		_, x, y = self:canProject(tg, x, y)
 		local actor = game.level.map(x, y, ACTOR)
 		if not actor then return end
 
-		local damage = self:heatScale(util.getval(t.damage, self, t) - 1) + 1
-		local fire = util.bound(self:getHeat() * 0.01 * util.getval(t.fire, self, t), 0, 100)
+		local damage = self:heatScale(get(t.damage, self, t) - 1) + 1
+		local fire = util.bound(self:getHeat() * 0.01 * get(t.fire, self, t), 0, 100)
 
 		-- Add fire conversion to weapons.
 		local f = eutil.attr_changer(fire)
-		local mainhand = eutil.get(self:getInven('MAINHAND'), 1, 'combat')
-		local offhand = eutil.get(self:getInven('OFFHAND'), 1, 'combat')
-		local psionic = eutil.get(self:getInven('PSIONIC_FOCUS'), 1, 'combat')
+		local mainhand = table.get(self:getInven('MAINHAND'), 1, 'combat')
+		local offhand = table.get(self:getInven('OFFHAND'), 1, 'combat')
+		local psionic = table.get(self:getInven('PSIONIC_FOCUS'), 1, 'combat')
 		if mainhand then eutil.update(f, mainhand, 'convert_damage', 'FIRE') end
 		if offhand then eutil.update(f, offhand, 'convert_damage', 'FIRE') end
 		if psionic then eutil.update(f, psionic, 'convert_damage', 'FIRE') end
 
 		if self:attackTarget(actor, nil, damage) then
-			self:incHeat(util.getval(t.heat_gain, self, t))
+			self:incHeat(get(t.heat_gain, self, t))
 		end
 
 		-- Remove fire conversion from weapons.
@@ -80,8 +77,8 @@ newTalent {
 		return true
 	end,
 	info = function(self, t)
-		local damage = util.getval(t.damage, self, t) * 100
-		local fire = util.getval(t.fire, self, t)
+		local damage = get(t.damage, self, t) * 100
+		local fire = get(t.fire, self, t)
 		return ([[Strike the target enemy for %d%% <%d%%> #SLATE#[*, str]#LAST# weapon damage, %d%% <%d%%> #SLATE#[*]#LAST# of which is converted to #LIGHT_RED#fire#LAST# damage. If this hits, gain #FF6100#%d heat#LAST#.
 #SLATE#Numbers shown are for 100 heat, numbers in <brackets> are the actual amounts based on your current heat.]])
 			:format(self:heatScale(damage - 100, 100) + 100,
@@ -105,12 +102,12 @@ newTalent {
 	fire = function(self, t) return self:scale {low = 16, high = 48, t, 'str', after = 'damage',} end,
 	activate = function(self, t)
 		local p = {}
-		self:talentTemporaryValue(p, 'combat_dam', util.getval(t.power, self, t))
+		self:talentTemporaryValue(p, 'combat_dam', get(t.power, self, t))
 		self:talentTemporaryValue(p, 'melee_project_percent', {
-																FIRE = self:heatScale(util.getval(t.fire, self, t))})
-		self:talentTemporaryValue(p, 'base_heat_regen', util.getval(t.base_heat_regen, self, t))
-		self:talentTemporaryValue(p, 'min_heat_regen', util.getval(t.min_heat_regen, self, t))
-		self:talentTemporaryValue(p, 'hit_heat_regen', util.getval(t.hit_heat_regen, self, t))
+																FIRE = self:heatScale(get(t.fire, self, t))})
+		self:talentTemporaryValue(p, 'base_heat_regen', get(t.base_heat_regen, self, t))
+		self:talentTemporaryValue(p, 'min_heat_regen', get(t.min_heat_regen, self, t))
+		self:talentTemporaryValue(p, 'hit_heat_regen', get(t.hit_heat_regen, self, t))
 		return p
 	end,
 	deactivate = function(self, t) return true end,
@@ -119,7 +116,7 @@ newTalent {
 		return ([[Increases your physical power by %d #SLATE#[*, str]#LAST# and adds an additional %d%% <%d%%> #SLATE#[*, str]#LAST# #LIGHT_RED#fire#LAST# damage to your weapon attacks.
 This costs #FF6100#%d heat#LAST# per turn, but you will gain a net #FF6100#%d heat#LAST# on any turn on which you deal damage.
 #SLATE#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
-			:format(util.getval(t.power, self, t),
+			:format(get(t.power, self, t),
 							self:heatScale(fire, 100),
 							self:heatScale(fire),
 							-get(t.base_heat_regen, self, t),
@@ -145,7 +142,7 @@ newTalent {
 
 		if #actors == 0 then return end
 
-		local damage = self:heatScale(util.getval(t.damage, self, t) - 0.1) + 0.1
+		local damage = self:heatScale(get(t.damage, self, t) - 0.1) + 0.1
 		local heat_gain = get(t.heat_gain, self, t)
 		for i = 1, get(t.hits, self, t) do
 			local actor = rng.table(actors)
@@ -162,7 +159,7 @@ newTalent {
 		local damage = get(t.damage, self, t) * 100
 		return ([[Randomly strikes nearby enemies %d times for %d%% <%d%%> #SLATE#[*, str]#LAST# weapon damage, gaining #FF6100#%.1f heat#LAST# for every hit.
 #SLATE#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
-			:format(util.getval(t.hits, self, t),
+			:format(get(t.hits, self, t),
 							self:heatScale(damage - 10, 100) + 10,
 							self:heatScale(damage - 10) + 10,
 							self:heatGain(get(t.heat_gain, self, t)))
@@ -181,8 +178,8 @@ newTalent {
 	heat = -100,
 	action = function(self, t)
 		self:resetHeat()
-		self:setEffect('EFF_ERUPTION', util.getval(t.duration, self, t), {
-										 fire = util.getval(t.fire, self, t),})
+		self:setEffect('EFF_ERUPTION', get(t.duration, self, t), {
+										 fire = get(t.fire, self, t),})
 		game:playSoundNear(self, 'talents/fire')
 		return true
 	end,
