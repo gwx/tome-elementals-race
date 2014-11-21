@@ -138,7 +138,7 @@ newTalent {
 	damage = function(self, t) return self:scale {low = 0.2, high = 0.4, t, 'str',} end,
 	heat_gain = 4,
 	action = function(self, t)
-		local tg = {type = 'ball', range = 0, radius = get(t.range, self, t), selffire = false,}
+		local tg = {type = 'ball', range = 0, radius = get(t.range, self, t), friendlyfire = false,}
 		local actors = {}
 		local is_hostile = function(target) return self:reactionToward(target) < 0 end
 		self:project(tg, self.x, self.y, eutil.actor_grabber(actors, is_hostile))

@@ -35,7 +35,7 @@ newTalent {
 	require = make_require(1),
 	points = 5,
 	mode = 'passive',
-	resist = function(self, t) return self:scale {low = 3, high = 8, t, 'spell',} end,
+	resist = function(self, t) return self:scale {low = 2, high = 16, t, 'spell', synergy = 0.2,} end,
 	heat_conversion = 50,
 	armor = function(self, t) return self:scale {low = 4, high = 12, t, 'spell',} end,
 	hardiness = function(self, t) return self:scale {low = 10, high = 20, t, 'spell',} end,
@@ -134,7 +134,7 @@ newTalent {
 	callbackOnWait = function(self, t)
 		if self:attr('heat_overflow') then
 			local tg = {type = 'ball', range = 0, radius = get(t.radius, self, t),
-									talent = t, selffire = false,}
+									talent = t, friendlyfire = false,}
 			self:project(tg, self.x, self.y, 'FIRE', get(t.power, self, t) * self.heat_overflow)
 			game:playSoundNear(self, 'talents/fire')
 			game.level.map:particleEmitter(self.x, self.y, tg.radius, 'ball_fire', {radius = tg.radius,})

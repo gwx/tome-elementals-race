@@ -54,7 +54,7 @@ newTalent {
 		end,
 	range = 0,
 	target = function(self, t)
-		return {type = 'ball', talent = t, selffire = false,
+		return {type = 'ball', talent = t, friendlyfire = false,
 			range = get(t.range, self, t),
 			radius = get(t.radius, self, t),}
 		end,
@@ -125,7 +125,7 @@ newTalent {
 	duration = function(self, t) return self:scale {low = 3, high = 7, 'mag', after = 'floor',} end,
 	range = 3,
 	target = function(self, t)
-		return {type = 'hit', talent = t, selffire = false,
+		return {type = 'hit', talent = t, friendlyfire = false,
 			range = get(t.range, self, t),}
 		end,
 	requires_target = true,

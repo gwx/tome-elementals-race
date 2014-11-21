@@ -45,7 +45,7 @@ newTalent {
 	duration = 3,
 	speed = 'spell',
 	target = function(self, t)
-		return {type = 'ball', talent = t, selffire = false,
+		return {type = 'ball', talent = t, friendlyfire = false,
 			range = get(t.range, self, t),
 			radius = get(t.radius, self, t),}
 		end,
@@ -87,7 +87,7 @@ newTalent {
 	radius = function(self, t, heat) return 1 + math.ceil((heat or self.heat) / 25) end,
 	range = 0,
 	target = function(self, t)
-		return {type = 'ball', talent = t, selffire = false,
+		return {type = 'ball', talent = t, friendlyfire = false,
 			range = get(t.range, self, t),
 			radius = get(t.radius, self, t),}
 		end,
@@ -143,7 +143,7 @@ newTalent {
 	radius = 3,
 	speed = 'spell',
 	target = function(self, t)
-		return {type = 'ball', talent = t, selffire = false, nowarning = true,
+		return {type = 'ball', talent = t, friendlyfire = false, nowarning = true,
 			range = get(t.range, self, t),
 			radius = get(t.radius, self, t),}
 		end,

@@ -77,7 +77,7 @@ newTalent {
 	heat_gain = 25,
 	speed = 'movement',
 	target = function(self, t)
-		return {type = 'hit', range = get(t.range, self, t), talent = t,}
+		return {type = 'hit', range = get(t.range, self, t), talent = t, friendlyfire = false,}
 	end,
 	action = function(self, t)
 		local _
@@ -153,7 +153,7 @@ newTalent {
 	heat_gain = 15,
 	no_break_stealth = true,
 	target = function(self, t)
-		return {type = 'ball', talent = t, selffire = true,
+		return {type = 'ball', talent = t, friendlyfire = true,
 						range = get(t.range, self, t),
 						radius = get(t.radius, self, t),}
 	end,
