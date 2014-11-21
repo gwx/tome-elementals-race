@@ -376,3 +376,56 @@ newEffect {
 		while #eff.talents > eff.talent_count do table.remove(eff.talents) end
 		end,
 	deactivate = function(self, eff) return true end,}
+
+newEffect {
+	name = 'THIRD_DEGREE',
+	desc = 'Third Degree',
+	image = 'talents/third_degree.png',
+	long_desc = function(self, eff)
+		local damage = eff.power
+		local max_damage = eff.power
+		for i = 1, 2 do
+			damage = damage + eff.damage_amounts[i] / math.pow(2, eff.turns_since_damage[i])
+			max_damage = max_damage + eff.damage_amounts[i]
+			end
+		return ([[Visions of flame burn the target's mind. This will deal %d #YELLOW#mind#LAST# damage next turn, decreasing over time. Taking #LIGHT_RED#fire#LAST# damage will bring it up to %d.]])
+			:format(damage, max_damage)
+		end,
+	type = 'mental',
+	subtype = {fire = true,},
+	parameters = {},
+	activate = function(self, eff)
+		eff.turns_since_damage = {0, 0,}
+		eff.damage_amounts = {0, 0,}
+		end,
+	on_merge = function(self, old, new)
+		old.dur = new.dur
+		old.power = old.power + new.power
+		return old
+		end,
+	deactivate = function(self, eff) return true end,
+	callbackOnTakeDamage = function(self, eff, src, x, y, type, dam, tmp, no_martyr)
+		if 'FIRE' ~= type then return end
+		for i = 1, 2 do eff.turns_since_damage[i] = 0 end
+		end,
+	on_timeout = function(self, eff)
+		local damage = eff.power
+		for i = 1, 2 do
+			damage = damage + eff.damage_amounts[i] / math.pow(2, eff.turns_since_damage[i])
+			end
+
+		if damage <= 0 then return self:removeEffect('EFF_THIRD_DEGREE', true) end
+
+		eff.src:projectOn(self, 'MIND', damage)
+
+		table.remove(eff.turns_since_damage)
+		table.remove(eff.damage_amounts)
+
+		table.insert(eff.turns_since_damage, 1, 0)
+		table.insert(eff.damage_amounts, 1, eff.power)
+		eff.power = 0
+
+		for i, turns in pairs(eff.turns_since_damage) do
+			eff.turns_since_damage[i] = turns + 1
+			end
+		end,}

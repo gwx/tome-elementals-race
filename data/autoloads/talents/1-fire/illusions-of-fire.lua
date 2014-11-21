@@ -80,3 +80,27 @@ The vivid psychic link of flames is then imprinted upon %d #SLATE#[*]#LAST# rand
 				self:damDesc('FIRE', self:heatScale(get(t.fire_damage, self, t), 100)),
 				self:damDesc('FIRE', self:heatScale(get(t.fire_damage, self, t))))
 		end,}
+
+newTalent {
+	name = 'Third Degree',
+	type = {'elemental/illusions-of-fire', 1,},
+	require = make_require(1),
+	points = 5,
+	mode = 'passive',
+	damage_percent = function(self, t) return self:scale {low = 10, high = 26, t, 'wil', synergy = 0.25,} end,
+	duration = 3,
+	callbackOnDealDamage = function(self, t, val, target, dead, death_note)
+		game.log('%s:  |%s|%s|%s', death_note.damtype, val, t, target)
+		if death_note.damtype ~= 'FIRE' then return end
+		if not target.setEffect then return end
+		target:setEffect('EFF_THIRD_DEGREE', 3, {
+				src = self, power = val * 0.01 * get(t.damage_percent, self, t),})
+		end,
+	info = function(self, t)
+		return ([[Your fires keep burning in the mind of your victims, long after they have died down.
+%d%% #SLATE#[*, wil, crit]#LAST# of any #LIGHT_RED#fire#LAST# damage you deal keeps burning your enemies for %d more turns, dealing #YELLOW#mind#LAST# damage.
+The amount of damage will halve each turn, but being hit by #LIGHT_RED#fire#LAST# damage will bring it back up to the original amount. This will not affect the duration.]])
+			:format(
+				get(t.damage_percent, self, t),
+				get(t.duration, self, t))
+		end,}
