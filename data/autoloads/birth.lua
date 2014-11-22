@@ -30,7 +30,7 @@ newBirthDescriptor {
 			__ALL__ = 'disallow',
 			Jadir = 'allow',
 			Asha = 'allow',
-			['Hybrid Elemental'] = config.settings.cheat and 'allow' or 'disallow',},
+			['Hybrid Elemental'] = 'allow',},
 		class = {
 			__ALL__ = 'disallow',
 			None = 'allow',},},
