@@ -60,6 +60,7 @@ newTalent {
 		local duration = util.getval(t.duration, self, t)
 		actor:setEffect('EFF_BURNING', duration, {src = self, power = damage,})
 
+		game.level.map:particleEmitter(x, y, 1.5, 'ball_fire', {radius = 1.5,})
 		game:playSoundNear(actor, 'talents/fire')
 		return true
 		end,
@@ -99,13 +100,21 @@ newTalent {
 
 		local indirect = self.indirect_damage
 		self.indirect_damage = true
+
+		-- Don't display crit message.
+		local temp = rawget(game, 'logSeen')
+		game.logSeen = function() end
 		local damage = self:spellCrit(self:heatScale(get(t.damage, self, t)))
+		game.logSeen = temp
+
 		local heat_gain = get(t.heat_gain, self, t)
 		local heat = 0
+		local hit = false
 		local projector = function(x, y, tg, self)
 			local actor = game.level.map(x, y, ACTOR)
 			if not actor then return end
 			heat = heat + heat_gain
+			hit = true
 			damage_type:get('FIRE').projector(self, x, y, 'FIRE', damage)
 			end
 		self:project(tg, self.x, self.y, projector)
@@ -113,8 +122,10 @@ newTalent {
 
 		self:incHeat(heat)
 
-		game.level.map:particleEmitter(self.x, self.y, tg.radius + 0.5, 'ball_fire', {radius = tg.radius + 0.5,})
-		game:playSoundNear(actor, 'talents/fire')
+		if hit then
+			game.level.map:particleEmitter(self.x, self.y, tg.radius + 0.5, 'ball_fire', {radius = tg.radius + 0.5,})
+			game:playSoundNear(self, 'talents/fire')
+			end
 		return true
 		end,
 	info = function(self, t)
