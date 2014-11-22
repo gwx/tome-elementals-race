@@ -23,7 +23,7 @@ newTalentType {
 
 local make_require = function(tier)
 	return {
-		stat = {str = function(level) return 12 + tier * 8 + level * 2 end,},
+		stat = {mag = function(level) return 12 + tier * 8 + level * 2 end,},
 		level = function(level) return 5 + tier * 4 + level end,}
 end
 
@@ -33,18 +33,18 @@ newTalent {
 	require = make_require(1),
 	points = 5,
 	mode = 'passive',
-	combat_dam = function(self, t) return self:scale {low = 5, high = 30, t, 'str',} end,
+	combat_dam = function(self, t) return self:scale {low = 5, high = 30, t, 'mag',} end,
 	fire_pen = function(self, t) return self:scale {low = 5, high = 21, t,} end,
-	lite = function(self, t) return self:scale {low = 1, high = 5, t, 'str', after = 'floor',} end,
+	lite = function(self, t) return self:scale {low = 1, high = 5, t, 'mag', after = 'floor',} end,
 	passives = function(self, t, p)
 		self:autoTemporaryValues(p, {
 				combat_dam = get(t.combat_dam, self, t),
 				resists_pen = {FIRE = get(t.fire_pen, self, t),},
 				lite = get(t.lite, self, t),})
 		end,
-	recompute_passives = {stats = {Stats.STAT_STR,},},
+	recompute_passives = {stats = {Stats.STAT_MAG,},},
 	info = function(self, t)
-		return ([[You glow red with might, increasing your physical power by %d #SLATE#[*, str]#LAST#, your #LIGHT_RED#fire#LAST# penetration by %d%% #SLATE#[*]#LAST#, and your light radius by %d #SLATE#[*, str]#LAST#.]])
+		return ([[You glow red with might, increasing your physical power by %d #SLATE#[*, mag]#LAST#, your #LIGHT_RED#fire#LAST# penetration by %d%% #SLATE#[*]#LAST#, and your light radius by %d #SLATE#[*, mag]#LAST#.]])
 			:format(
 				get(t.combat_dam, self, t),
 				get(t.fire_pen, self, t),
@@ -95,7 +95,7 @@ newTalent {
 	require = make_require(3),
 	points = 5,
 	mode = 'passive',
-	resists_percent = function(self, t) return self:scale {low = 50, high = 135, t, 'str',} end,
+	resists_percent = function(self, t) return self:scale {low = 50, high = 135, t, 'mag',} end,
 	resists = function(self, t) return get(t.resists_percent, self, t) * self:combatArmor() * 0.0001 end,
 	passives = function(self, t, p)
 		local resist = get(t.resists, self, t)
@@ -105,14 +105,14 @@ newTalent {
 				stun_immune = resist,})
 		end,
 	recompute_passives = {
-		stats = {Stats.STAT_STR,},
+		stats = {Stats.STAT_MAG,},
 		attributes = {'combat_armor',},},
 	callbackOnCanBe = function(self, t, what)
 		if 'stun' == what or 'pin' == what then self:updateTalentPassives(t.id) end
 		end,
 	info = function(self, t)
 		return ([[Nothing can weigh down your flames.
-Allows you to wear heavy armour. %d%% #SLATE#[*, str]#LAST# of your armour rating is added to your pin and stun resistance. (Currently %d%%.)]])
+Allows you to wear heavy armour. %d%% #SLATE#[*, mag]#LAST# of your armour rating is added to your pin and stun resistance. (Currently %d%%.)]])
 			:format(
 				get(t.resists_percent, self, t),
 				get(t.resists, self, t) * 100)

@@ -25,7 +25,7 @@ newTalentType {
 
 local make_require = function(tier)
 	return {
-		stat = {mag = function(level) return 2 + tier * 8 + level * 2 end,},
+		stat = {str = function(level) return 2 + tier * 8 + level * 2 end,},
 		level = function(level) return -5 + tier * 4 + level end,}
 end
 
@@ -35,10 +35,10 @@ newTalent {
 	require = make_require(1),
 	points = 5,
 	mode = 'passive',
-	resist = function(self, t) return self:scale {low = 2, high = 16, t, 'spell', synergy = 0.2,} end,
+	resist = function(self, t) return self:scale {low = 2, high = 16, t, 'phys', synergy = 0.2,} end,
 	heat_conversion = 50,
-	armor = function(self, t) return self:scale {low = 4, high = 12, t, 'spell',} end,
-	hardiness = function(self, t) return self:scale {low = 10, high = 20, t, 'spell',} end,
+	armor = function(self, t) return self:scale {low = 4, high = 12, t, 'phys',} end,
+	hardiness = function(self, t) return self:scale {low = 10, high = 20, t, 'phys',} end,
 	passives = function(self, t, p)
 		local convert = get(t.heat_conversion, self, t)
 		local conversions = {FIRE = convert, LIGHTNING = convert, ARCANE = convert, LIGHT = convert,}
@@ -49,10 +49,10 @@ newTalent {
 		self:talentTemporaryValue(p, 'combat_armor', get(t.armor, self, t))
 		self:talentTemporaryValue(p, 'combat_armor_hardiness', get(t.hardiness, self, t))
 	end,
-	recompute_passives = {stats = {stats.STAT_MAG,},
-												attributes = {'combat_spellpower',},},
+	recompute_passives = {stats = {stats.STAT_STR,},
+												attributes = {'combat_dam',},},
 	info = function(self, t)
-		return ([[Grants %d%% #SLATE#[*, spell]#LAST# resistance to #LIGHT_RED#Fire#LAST#, #ROYAL_BLUE#Lightning#LAST#, #PURPLE#Arcane#LAST#, and #YELLOW#Light#LAST#. %d%% of resisted damage of those types is absorbed as #FF6100#heat#LAST#. Also increases your armor by %d #SLATE#[*, spell]#LAST# and armor hardiness by %d%% #SLATE#[*, spell]#LAST#.]])
+		return ([[Grants %d%% #SLATE#[*, spell]#LAST# resistance to #LIGHT_RED#Fire#LAST#, #ROYAL_BLUE#Lightning#LAST#, #PURPLE#Arcane#LAST#, and #YELLOW#Light#LAST#. %d%% of resisted damage of those types is absorbed as #FF6100#heat#LAST#. Also increases your armor by %d #SLATE#[*, phys]#LAST# and armor hardiness by %d%% #SLATE#[*, phys]#LAST#.]])
 			:format(
 				get(t.resist, self, t),
 				self:heatGain(get(t.heat_conversion, self, t)),
@@ -100,7 +100,7 @@ newTalent {
 	cooldown = 24,
 	tactical = {HEAL = 3,},
 	range = 0,
-	power = function(self, t) return self:scale {low = 1, high = 2.2, t, 'spell',} end,
+	power = function(self, t) return self:scale {low = 1, high = 2.2, t, 'phys',} end,
 	duration = 4,
 	heat_gain = 0.75,
 	speed = 'spell',
@@ -115,7 +115,7 @@ newTalent {
 		return true
 	end,
 	info = function(self, t)
-		return ([[Consume all your #FF6100#heat#LAST# to heal %d%% #SLATE#[*, spell]#LAST# as much life.
+		return ([[Consume all your #FF6100#heat#LAST# to heal %d%% #SLATE#[*, phys]#LAST# as much life.
 Recovers %d%% of consumed heat over %d turns.]])
 			:format(
 				get(t.power, self, t) * 100,
@@ -129,7 +129,7 @@ newTalent {
 	require = make_require(4),
 	points = 5,
 	mode = 'passive',
-	power = function(self, t) return self:scale {low = 1, high = 1.7, t, 'spell',} end,
+	power = function(self, t) return self:scale {low = 1, high = 1.7, t, 'phys',} end,
 	radius = function(self, t) return self:scale {low = 1.5, high = 4.5, t, after = 'floor',} end,
 	callbackOnWait = function(self, t)
 		if self:attr('heat_overflow') then
@@ -142,7 +142,7 @@ newTalent {
 		self.heat_overflow = 0
 	end,
 	info = function(self, t)
-		return ([[Your fiery touch knows no bound - should you gain heat in excess of your maximum heat, this unused heat will scorch all enemies in radius %d #SLATE#[*]#LAST# with %d%% #SLATE#[*, spell]#LAST# as much #LIGHT_RED#fire#LAST# damage.]])
+		return ([[Your fiery touch knows no bound - should you gain heat in excess of your maximum heat, this unused heat will scorch all enemies in radius %d #SLATE#[*]#LAST# with %d%% #SLATE#[*, phys]#LAST# as much #LIGHT_RED#fire#LAST# damage.]])
 			:format(
 				get(t.radius, self, t),
 				get(t.power, self, t) * 100)
