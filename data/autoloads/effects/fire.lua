@@ -429,3 +429,32 @@ newEffect {
 			eff.turns_since_damage[i] = turns + 1
 			end
 		end,}
+
+newEffect {
+	name = 'BURNING_HYSTERIA',
+	desc = 'Burning Hysteria',
+	image = 'talents/elemental_mass_hysteria.png',
+	long_desc = function(self, eff)
+		return ([[Flames have seared the target's mind, reducing their mindpower and mind save by %d.]])
+			:format(eff.reduction)
+		end,
+	type = 'mental',
+	subtype = {fire = true,},
+	parameters = {reduction = 5, reduction_max = 25,},
+	activate = function(self, eff)
+		eff.reduction = math.min(eff.reduction, eff.reduction_max)
+		self:autoTemporaryValues(eff, {
+				combat_mindresist = -eff.reduction,
+				combat_mindpower = -eff.reduction,})
+		end,
+	on_merge = function(self, old, new)
+		old.dur = math.max(old.dur, new.dur)
+		self:autoTemporaryValuesRemove(old)
+		old.reduction_max = math.max(old.reduction_max, new.reduction_max)
+		old.reduction = math.min(old.reduction + new.reduction, old.reduction_max)
+		self:autoTemporaryValues(old, {
+				combat_mindresist = -old.reduction,
+				combat_mindpower = -old.reduction,})
+		return old
+		end,
+	deactivate = function(self, eff) return true end,}
