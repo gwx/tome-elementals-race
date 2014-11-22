@@ -154,7 +154,8 @@ newTalent {
 	radius = 3,
 	speed = 'spell',
 	target = function(self, t)
-		return {type = 'ball', talent = t, friendlyfire = false, nowarning = true,
+		return {type = 'ball', talent = t, friendlyfire = false,
+			nowarning = true, nolock = true,
 			range = get(t.range, self, t),
 			radius = get(t.radius, self, t),}
 		end,

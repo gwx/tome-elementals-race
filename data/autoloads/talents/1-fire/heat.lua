@@ -52,7 +52,7 @@ newTalent {
 	recompute_passives = {stats = {stats.STAT_STR,},
 												attributes = {'combat_dam',},},
 	info = function(self, t)
-		return ([[Grants %d%% #SLATE#[*, spell]#LAST# resistance to #LIGHT_RED#Fire#LAST#, #ROYAL_BLUE#Lightning#LAST#, #PURPLE#Arcane#LAST#, and #YELLOW#Light#LAST#. %d%% of resisted damage of those types is absorbed as #FF6100#heat#LAST#. Also increases your armor by %d #SLATE#[*, phys]#LAST# and armor hardiness by %d%% #SLATE#[*, phys]#LAST#.]])
+		return ([[Grants %d%% #SLATE#[*, phys]#LAST# resistance to #LIGHT_RED#Fire#LAST#, #ROYAL_BLUE#Lightning#LAST#, #PURPLE#Arcane#LAST#, and #YELLOW#Light#LAST#. %d%% of resisted damage of those types is absorbed as #FF6100#heat#LAST#. Also increases your armor by %d #SLATE#[*, phys]#LAST# and armor hardiness by %d%% #SLATE#[*, phys]#LAST#.]])
 			:format(
 				get(t.resist, self, t),
 				self:heatGain(get(t.heat_conversion, self, t)),
