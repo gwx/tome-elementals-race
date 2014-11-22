@@ -101,8 +101,8 @@ This recovers #FF6100#%d heat#LAST# if it hits anything.
 				get(t.radius, self, t),
 				self:damDesc('LIGHT', self:heatScale(light_damage, 100)),
 				self:damDesc('LIGHT', self:heatScale(light_damage)),
-				self:heatScale(fire_desc * get(t.fire_damage_mult, self, t), 100),
-				self:heatScale(fire_desc * get(t.fire_damage_mult, self, t)),
+				fire_desc * get(t.fire_damage_mult, self, t, 100),
+				fire_desc * get(t.fire_damage_mult, self, t),
 				get(t.stealth, self, t),
 				get(t.accuracy, self, t),
 				get(t.duration, self, t),
@@ -152,7 +152,7 @@ newTalent {
 		end,
 	info = function(self, t)
 		local lightning_damage = get(t.lightning_damage, self, t)
-		local fire_mult = self:damDesc('FIRE', 1) / self:damDesc('LIGHTNING', 1) * get(t.fire_damage_mult, self, t)
+		local fire_mult = self:damDesc('FIRE', 1) / self:damDesc('LIGHTNING', 1)
 		return ([[Sends out electromagentic waves to cook the target enemy in range of %d alive in their armor. Target takes %d <%d> #SLATE#[*, spell, target's armor, crit]#LAST# #ROYAL_BLUE#lightning#LAST# damage, %d%% <%d%%> as much #LIGHT_RED#fire#LAST# damage, and loses %d%% #SLATE#[*, mag]#LAST# armour for %d #SLATE#[mag]#LAST# turns.
 This recovers #FF6100#%d heat#LAST# if it hits anything.
 #SLATE#Numbers shown are for 100%% heat, numbers in <brackets> are the actual amounts based on your current heat.]])
@@ -160,8 +160,8 @@ This recovers #FF6100#%d heat#LAST# if it hits anything.
 				get(t.range, self, t),
 				self:damDesc('LIGHTNING', self:heatScale(lightning_damage, 100)),
 				self:damDesc('LIGHTNING', self:heatScale(lightning_damage)),
-				self:heatScale(fire_mult, 100),
-				self:heatScale(fire_mult),
+				get(t.fire_damage_mult, self, t, 100) * fire_mult,
+				get(t.fire_damage_mult, self, t) * fire_mult,
 				get(t.armor, self, t),
 				get(t.duration, self, t),
 				get(t.heat_gain, self, t))
