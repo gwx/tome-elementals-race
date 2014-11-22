@@ -114,8 +114,8 @@ newTalent {
 	damage_percent = function(self, t) return self:scale {low = 10, high = 26, t, 'wil', synergy = 0.25,} end,
 	duration = 3,
 	callbackOnDealDamage = function(self, t, val, target, dead, death_note)
-		if death_note.damtype ~= 'FIRE' then return end
-		if not target.setEffect then return end
+		if not death_note or death_note.damtype ~= 'FIRE' then return end
+		if not target or not target.setEffect then return end
 		target:setEffect('EFF_THIRD_DEGREE', 3, {
 				src = self, power = val * 0.01 * get(t.damage_percent, self, t),})
 		end,
@@ -199,7 +199,7 @@ newTalent {
 	reduction_max = function(self, t) return self:scale {low = 20, high = 60, t, 'mind',} end,
 	burst_chance = function(self, t) return self:scale {low = 30, high = 70, t, 'mind',} end,
 	callbackOnDealDamage = function(self, t, val, target, dead, death_note)
-		if death_note.damtype ~= 'FIRE' then return end
+		if not death_note or death_note.damtype ~= 'FIRE' then return end
 		if not target or not target.setEffect then return end
 		local count = math.floor(val / get(t.damage_div, self, t))
 		if count <= 0 then return end
