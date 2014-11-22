@@ -335,6 +335,7 @@ newEffect {
 		end,
 	type = 'other',
 	subtype = {fire = true,},
+	status = 'detrimental',
 	parameters = {power = 100,},
 	activate = function(self, eff)
 		self:autoTemporaryValues(eff, {healing_factor = -0.01 * eff.power,})
@@ -355,6 +356,7 @@ newEffect {
 		end,
 	type = 'mental',
 	subtype = {fire = true,},
+	status = 'detrimental',
 	parameters = {fire_damage = 10, talent_count = 2,},
 	callbackOnTalentPost = function(self, eff, ab, ret, silent)
 		for _, talent_id in pairs(eff.talents) do
@@ -393,6 +395,7 @@ newEffect {
 		end,
 	type = 'mental',
 	subtype = {fire = true,},
+	status = 'detrimental',
 	parameters = {},
 	activate = function(self, eff)
 		eff.turns_since_damage = {0, 0,}
@@ -440,6 +443,7 @@ newEffect {
 		end,
 	type = 'mental',
 	subtype = {fire = true,},
+	status = 'detrimental',
 	parameters = {reduction = 5, reduction_max = 25,},
 	activate = function(self, eff)
 		eff.reduction = math.min(eff.reduction, eff.reduction_max)
@@ -456,5 +460,33 @@ newEffect {
 				combat_mindresist = -old.reduction,
 				combat_mindpower = -old.reduction,})
 		return old
+		end,
+	deactivate = function(self, eff) return true end,}
+
+newEffect {
+	name = 'ENERGY',
+	desc = 'Energy',
+	image = 'talents/energy.png',
+	long_desc = function(self, eff)
+		return ([[All #LIGHT_RED#fire#LAST# damage dealt by target is converted to #ROYAL_BLUE#lightning#LAST# damage. Target gains +%d%% to all #ROYAL_BLUE#lightning#LAST# damage done. Target gains +%d%% spell critical chance.]])
+			:format(eff.inc, eff.crit)
+		end,
+	type = 'magical',
+	subtype = {fire = true,},
+	status = 'beneficial',
+	parameters = {crit = 0,},
+	activate = function (self, eff)
+		if not eff.inc then
+			local fire = self.inc_damage.FIRE or 0
+			local lightning = self.inc_damage.LIGHTNING or 0
+			if fire > lightning then
+				eff.inc = fire - lightning
+			else
+				eff.inc = 0
+				end end
+		self:autoTemporaryValues(eff, {
+				fire_convert_to = {'LIGHTNING', 100,},
+				inc_damage = {LIGHTNING = eff.inc,},
+				combat_spellcrit = eff.crit,})
 		end,
 	deactivate = function(self, eff) return true end,}

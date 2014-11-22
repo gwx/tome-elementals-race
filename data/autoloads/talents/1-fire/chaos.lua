@@ -338,8 +338,8 @@ newTalent {
 				local actor = game.level.map(x, y, Map.ACTOR)
 				if not actor then return end
 				if not actor.on_cremation or actor:on_cremation(self) then
-					self:projectOn(actor, 'FIRE', damage)
 					actor:setEffect('EFF_CREMATED', 1, {src = self,})
+					self:projectOn(actor, 'FIRE', damage)
 					end
 				end)
 		game.level.map:particleEmitter(self.x, self.y, tg.radius, 'breath_fire',
