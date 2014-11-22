@@ -29,7 +29,7 @@ newBirthDescriptor {
 		subrace = {
 			__ALL__ = 'disallow',
 			Jadir = 'allow',
-			Asha = config.settings.cheat and 'allow' or 'disallow',
+			Asha = 'allow',
 			['Hybrid Elemental'] = config.settings.cheat and 'allow' or 'disallow',},
 		class = {
 			__ALL__ = 'disallow',
